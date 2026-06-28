@@ -5,15 +5,71 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  
+}
+
+enum StatusMatricula {
+  PENDENTE
+  ATIVA
+  CANCELADA
+  CONCLUIDA
+}
+
+model Responsavel {
+  id             String   @id @default(cuid())
+  nome           String
+  cpf            String?  @unique
+  email          String?
+  telefone       String
+  profissao      String?
+  endereco       String?
+  criadoEm       DateTime @default(now())
+  atualizadoEm   DateTime @updatedAt
+
+  alunos         Aluno[]
+}
+
+model Turma {
+  id            String   @id @default(cuid())
+  nome          String
+  segmento      String
+  turno         String
+  capacidade    Int
+
+  alunos        Aluno[]
 }
 
 model Aluno {
-  id           String   @id @default(uuid())
-  nome         String
-  turma        String
-  responsavel  String
-  telefone     String
-  status       String   @default("Ativo")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                String   @id @default(cuid())
+  nome              String
+  dataNascimento    DateTime
+  sexo              String?
+  cpf               String?
+  certidaoNascimento String?
+  alergias          String?
+  observacoes       String?
+
+  responsavelId     String
+  turmaId           String?
+
+  responsavel       Responsavel @relation(fields: [responsavelId], references: [id])
+  turma             Turma?      @relation(fields: [turmaId], references: [id])
+
+  matriculas        Matricula[]
+
+  criadoEm          DateTime @default(now())
+  atualizadoEm      DateTime @updatedAt
+}
+
+model Matricula {
+  id             String   @id @default(cuid())
+  anoLetivo      Int
+  dataMatricula  DateTime @default(now())
+  status         StatusMatricula @default(PENDENTE)
+
+  alunoId        String
+
+  aluno          Aluno @relation(fields: [alunoId], references: [id])
+
+  criadoEm       DateTime @default(now())
 }
