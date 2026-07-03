@@ -5,17 +5,20 @@ type AppLayoutProps = {
   children: React.ReactNode;
 };
 
-export function AppLayout({ children }: AppLayoutProps) {
+export default function AppLayout({ children }: AppLayoutProps) {
   return (
-    <main className="min-h-screen bg-[#F6F4EF] text-[#201A14]">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="flex min-h-screen">
         <Sidebar />
 
-        <section className="flex-1">
+        <div className="flex min-w-0 flex-1 flex-col">
           <Topbar />
-          <div className="p-8">{children}</div>
-        </section>
+
+          <main className="flex-1 px-8 py-8">
+            {children}
+          </main>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
