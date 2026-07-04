@@ -67,7 +67,7 @@ const groups = [
       },
       {
         label: "Comunicação",
-        href: "#",
+        href: "/comunicacao",
         icon: Send,
       },
       {
