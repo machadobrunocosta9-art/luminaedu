@@ -62,7 +62,7 @@ const groups = [
       },
       {
         label: "Financeiro",
-        href: "#",
+        href: "/financeiro",
         icon: CreditCard,
       },
       {
