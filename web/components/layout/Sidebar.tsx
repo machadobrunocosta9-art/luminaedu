@@ -37,12 +37,12 @@ const groups = [
       },
       {
         label: "Responsáveis",
-        href: "#",
+        href: "/responsaveis",
         icon: UsersRound,
       },
       {
         label: "Turmas",
-        href: "#",
+        href: "/turmas",
         icon: BookOpen,
       },
     ],
