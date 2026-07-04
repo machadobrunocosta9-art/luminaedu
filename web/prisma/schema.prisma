@@ -5,60 +5,99 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  
 }
 
 enum StatusMatricula {
   PENDENTE
+  EM_ANALISE
+  AGUARDANDO_DOCUMENTOS
+  AGUARDANDO_PAGAMENTO
   ATIVA
   CANCELADA
   CONCLUIDA
 }
 
-model Responsavel {
-  id             String   @id @default(cuid())
-  nome           String
-  cpf            String?  @unique
-  email          String?
-  telefone       String
-  profissao      String?
-  endereco       String?
-  criadoEm       DateTime @default(now())
-  atualizadoEm   DateTime @updatedAt
+enum StatusTarefa {
+  A_FAZER
+  EM_ANDAMENTO
+  AGUARDANDO
+  CONCLUIDA
+}
 
-  alunos         Aluno[]
+enum PrioridadeTarefa {
+  BAIXA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+model Escola {
+  id           String   @id @default(cuid())
+  nome         String
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  responsaveis Responsavel[]
+  alunos       Aluno[]
+  turmas       Turma[]
+  matriculas   Matricula[]
+  tarefas      Tarefa[]
+}
+
+model Responsavel {
+  id           String   @id @default(cuid())
+  nome         String
+  cpf          String?  @unique
+  email        String?
+  telefone     String
+  profissao    String?
+  endereco     String?
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  escolaId     String
+  escola       Escola @relation(fields: [escolaId], references: [id])
+
+  alunos       Aluno[]
 }
 
 model Turma {
-  id            String   @id @default(cuid())
-  nome          String
-  segmento      String
-  turno         String
-  capacidade    Int
+  id           String   @id @default(cuid())
+  nome         String
+  segmento     String
+  turno        String
+  capacidade   Int
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
 
-  alunos        Aluno[]
+  escolaId     String
+  escola       Escola @relation(fields: [escolaId], references: [id])
+
+  alunos       Aluno[]
 }
 
 model Aluno {
-  id                String   @id @default(cuid())
-  nome              String
-  dataNascimento    DateTime
-  sexo              String?
-  cpf               String?
-  certidaoNascimento String?
-  alergias          String?
-  observacoes       String?
+  id                  String   @id @default(cuid())
+  nome                String
+  dataNascimento      DateTime
+  sexo                String?
+  cpf                 String?
+  certidaoNascimento  String?
+  alergias            String?
+  observacoes         String?
+  criadoEm            DateTime @default(now())
+  atualizadoEm        DateTime @updatedAt
 
-  responsavelId     String
-  turmaId           String?
+  escolaId            String
+  responsavelId       String
+  turmaId             String?
 
-  responsavel       Responsavel @relation(fields: [responsavelId], references: [id])
-  turma             Turma?      @relation(fields: [turmaId], references: [id])
+  escola              Escola @relation(fields: [escolaId], references: [id])
+  responsavel         Responsavel @relation(fields: [responsavelId], references: [id])
+  turma               Turma? @relation(fields: [turmaId], references: [id])
 
-  matriculas        Matricula[]
-
-  criadoEm          DateTime @default(now())
-  atualizadoEm      DateTime @updatedAt
+  matriculas          Matricula[]
+  tarefas             Tarefa[]
 }
 
 model Matricula {
@@ -66,10 +105,35 @@ model Matricula {
   anoLetivo      Int
   dataMatricula  DateTime @default(now())
   status         StatusMatricula @default(PENDENTE)
+  criadoEm       DateTime @default(now())
+  atualizadoEm   DateTime @updatedAt
 
+  escolaId       String
   alunoId        String
 
+  escola         Escola @relation(fields: [escolaId], references: [id])
   aluno          Aluno @relation(fields: [alunoId], references: [id])
 
+  tarefas        Tarefa[]
+}
+
+model Tarefa {
+  id             String @id @default(cuid())
+  titulo         String
+  descricao      String?
+  setor          String
+  responsavel    String?
+  status         StatusTarefa @default(A_FAZER)
+  prioridade     PrioridadeTarefa @default(MEDIA)
+  prazo          DateTime?
   criadoEm       DateTime @default(now())
+  atualizadoEm   DateTime @updatedAt
+
+  escolaId       String
+  alunoId        String?
+  matriculaId    String?
+
+  escola         Escola @relation(fields: [escolaId], references: [id])
+  aluno          Aluno? @relation(fields: [alunoId], references: [id])
+  matricula      Matricula? @relation(fields: [matriculaId], references: [id])
 }

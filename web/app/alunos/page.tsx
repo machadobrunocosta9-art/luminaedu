@@ -1,110 +1,130 @@
-import Link from "next/link";
-import { AppLayout } from "@/components/layout/AppLayout";
+import AppLayout from "@/components/layout/AppLayout";
 import { prisma } from "@/lib/prisma";
 
-export default async function AlunosPage() {
+export const dynamic = "force-dynamic";
+
+async function getAlunos() {
   const alunos = await prisma.aluno.findMany({
     orderBy: {
-      nome: "asc",
+      criadoEm: "desc",
+    },
+    include: {
+      responsavel: true,
+      turma: true,
     },
   });
 
+  return alunos;
+}
+
+export default async function AlunosPage() {
+  const alunos = await getAlunos();
+
   return (
     <AppLayout>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#A17A00]">
-            Pessoas
-          </p>
-          <h1 className="mt-2 text-4xl font-bold">Alunos</h1>
-          <p className="mt-2 text-[#807568]">
-            Gerencie os alunos cadastrados na escola.
-          </p>
-        </div>
+      <div className="mb-8">
+        <p className="text-sm font-medium text-muted-foreground">
+          Centro do Aluno
+        </p>
 
-        <button className="rounded-2xl bg-[#F4B400] px-6 py-4 font-bold text-[#201A14]">
-          Novo aluno
-        </button>
+        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-foreground">
+          Alunos
+        </h1>
+
+        <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
+          Consulte os alunos cadastrados, responsáveis vinculados e informações
+          principais da vida escolar.
+        </p>
       </div>
 
-      <div className="rounded-[28px] border border-black/5 bg-white p-6 shadow-sm">
-        <div className="mb-6 flex gap-4">
-          <input
-            className="w-full rounded-2xl border border-black/10 px-4 py-3 outline-none focus:border-[#F4B400]"
-            placeholder="Pesquisar aluno..."
-          />
+      <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">
+              Alunos cadastrados
+            </h2>
 
-          <select className="rounded-2xl border border-black/10 px-4 py-3">
-            <option>Todas as turmas</option>
-            <option>Maternal</option>
-            <option>1º Ano</option>
-            <option>2º Ano</option>
-            <option>4º Ano</option>
-          </select>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {alunos.length} aluno{alunos.length === 1 ? "" : "s"} encontrado
+              {alunos.length === 1 ? "" : "s"}.
+            </p>
+          </div>
 
-          <select className="rounded-2xl border border-black/10 px-4 py-3">
-            <option>Todos os status</option>
-            <option>Ativo</option>
-            <option>Pendente</option>
-            <option>Inativo</option>
-          </select>
+          <button className="rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
+            Novo aluno
+          </button>
         </div>
 
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b text-left text-sm text-[#807568]">
-              <th className="py-4">Aluno</th>
-              <th>Responsável</th>
-              <th>Turma</th>
-              <th>Telefone</th>
-              <th>Status</th>
-              <th></th>
-            </tr>
-          </thead>
+        {alunos.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-8 text-center">
+            <h3 className="font-semibold text-foreground">
+              Nenhum aluno cadastrado ainda.
+            </h3>
 
-          <tbody>
-            {alunos.map((aluno) => (
-              <tr key={aluno.id} className="border-b last:border-none">
-                <td className="py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F6F4EF] font-bold">
-                      {aluno.nome[0]}
-                    </div>
-                    <div>
-                      <p className="font-bold">{aluno.nome}</p>
-                      <p className="text-sm text-[#807568]">Cadastro básico</p>
-                    </div>
-                  </div>
-                </td>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Quando os alunos forem criados, eles aparecerão aqui.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-border">
+            <table className="w-full border-collapse bg-card text-left text-sm">
+              <thead className="bg-muted/60">
+                <tr>
+                  <th className="px-5 py-4 font-semibold text-muted-foreground">
+                    Aluno
+                  </th>
+                  <th className="px-5 py-4 font-semibold text-muted-foreground">
+                    Responsável
+                  </th>
+                  <th className="px-5 py-4 font-semibold text-muted-foreground">
+                    Turma
+                  </th>
+                  <th className="px-5 py-4 font-semibold text-muted-foreground">
+                    Nascimento
+                  </th>
+                  <th className="px-5 py-4 font-semibold text-muted-foreground">
+                    Cadastro
+                  </th>
+                </tr>
+              </thead>
 
-                <td>{aluno.responsavel}</td>
-                <td>{aluno.turma}</td>
-                <td>{aluno.telefone}</td>
-
-                <td>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-bold ${
-                      aluno.status === "Ativo"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
+              <tbody>
+                {alunos.map((aluno) => (
+                  <tr
+                    key={aluno.id}
+                    className="border-t border-border transition hover:bg-muted/35"
                   >
-                    {aluno.status}
-                  </span>
-                </td>
+                    <td className="px-5 py-4">
+                      <div className="font-semibold text-foreground">
+                        {aluno.nome}
+                      </div>
 
-                <td className="text-right">
-                  <Link
-                    href={`/alunos/${aluno.id}`}
-                    className="rounded-xl border border-black/10 px-4 py-2 text-sm font-bold"
-                  >
-                    Abrir
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        ID: {aluno.id.slice(0, 8)}
+                      </div>
+                    </td>
+
+                    <td className="px-5 py-4 text-muted-foreground">
+                      {aluno.responsavel.nome}
+                    </td>
+
+                    <td className="px-5 py-4 text-muted-foreground">
+                      {aluno.turma ? aluno.turma.nome : "Sem turma"}
+                    </td>
+
+                    <td className="px-5 py-4 text-muted-foreground">
+                      {aluno.dataNascimento.toLocaleDateString("pt-BR")}
+                    </td>
+
+                    <td className="px-5 py-4 text-muted-foreground">
+                      {aluno.criadoEm.toLocaleDateString("pt-BR")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </AppLayout>
   );

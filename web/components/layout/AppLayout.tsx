@@ -1,3 +1,4 @@
+import FloatingLumi from "./FloatingLumi";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
@@ -14,11 +15,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar />
 
-          <main className="flex-1 px-8 py-8">
-            {children}
-          </main>
+          <main className="flex-1 px-8 py-8">{children}</main>
         </div>
       </div>
+
+      <FloatingLumi />
     </div>
   );
 }
