@@ -144,8 +144,14 @@ export default function Sidebar() {
 
       <div className="mt-6 border-t border-white/10 pt-4">
         <Link
-          href="#"
-          className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-white/58 transition hover:bg-white/[0.07] hover:text-white"
+          href="/configuracoes"
+          className={[
+            "flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition",
+            pathname === "/configuracoes" ||
+            pathname.startsWith("/configuracoes/")
+              ? "bg-white/12 text-white shadow-sm ring-1 ring-white/10"
+              : "text-white/58 hover:bg-white/[0.07] hover:text-white",
+          ].join(" ")}
         >
           <Settings size={18} />
           <span>Configurações</span>
