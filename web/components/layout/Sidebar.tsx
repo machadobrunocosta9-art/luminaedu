@@ -57,7 +57,7 @@ const groups = [
       },
       {
         label: "Acadêmico",
-        href: "#",
+        href: "/academico",
         icon: BookOpen,
       },
       {
