@@ -72,7 +72,7 @@ const groups = [
       },
       {
         label: "Documentos",
-        href: "#",
+        href: "/documentos",
         icon: FileText,
       },
       {
