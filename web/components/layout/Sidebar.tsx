@@ -8,6 +8,7 @@ import {
   CreditCard,
   FileText,
   GraduationCap,
+  HeartPulse,
   LayoutDashboard,
   Send,
   Settings,
@@ -49,6 +50,11 @@ const groups = [
   {
     title: "Operação",
     items: [
+      {
+        label: "Pulse",
+        href: "/pulse",
+        icon: HeartPulse,
+      },
       {
         label: "Acadêmico",
         href: "#",

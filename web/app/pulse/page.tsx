@@ -1,7 +1,53 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+
+function getString(formData: FormData, key: string) {
+  const value = formData.get(key);
+
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim();
+}
+
+async function atualizarStatus(formData: FormData) {
+  "use server";
+
+  const tarefaId = getString(formData, "tarefaId");
+  const status = getString(formData, "status");
+
+  const statusPermitidos = [
+    "A_FAZER",
+    "EM_ANDAMENTO",
+    "AGUARDANDO",
+    "CONCLUIDA",
+  ];
+
+  if (!tarefaId || !statusPermitidos.includes(status)) {
+    throw new Error("Dados inválidos para atualizar a tarefa.");
+  }
+
+  await prisma.tarefa.update({
+    where: {
+      id: tarefaId,
+    },
+    data: {
+      status: status as
+        | "A_FAZER"
+        | "EM_ANDAMENTO"
+        | "AGUARDANDO"
+        | "CONCLUIDA",
+    },
+  });
+
+  revalidatePath("/pulse");
+  revalidatePath("/dashboard");
+}
 
 function formatStatus(status: string) {
   const labels: Record<string, string> = {
@@ -59,14 +105,25 @@ async function getPulseData() {
   });
 
   const abertas = tarefas.filter((tarefa) => tarefa.status !== "CONCLUIDA");
-  const criticas = tarefas.filter((tarefa) => tarefa.prioridade === "CRITICA");
-  const financeiro = tarefas.filter((tarefa) => tarefa.setor === "Financeiro");
+
+  const andamento = tarefas.filter(
+    (tarefa) => tarefa.status === "EM_ANDAMENTO"
+  );
+
+  const aguardando = tarefas.filter(
+    (tarefa) => tarefa.status === "AGUARDANDO"
+  );
+
+  const concluidas = tarefas.filter(
+    (tarefa) => tarefa.status === "CONCLUIDA"
+  );
 
   return {
     tarefas,
     abertas,
-    criticas,
-    financeiro,
+    andamento,
+    aguardando,
+    concluidas,
   };
 }
 
@@ -91,26 +148,15 @@ export default async function PulsePage() {
           </p>
         </div>
 
-        <button className="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
+        <Link
+          href="/pulse/novo"
+          className="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+        >
           Nova tarefa
-        </button>
+        </Link>
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-4">
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Tarefas
-          </p>
-
-          <div className="mt-4 text-4xl font-semibold text-foreground">
-            {data.tarefas.length}
-          </div>
-
-          <p className="mt-2 text-sm text-muted-foreground">
-            registradas no Pulse
-          </p>
-        </div>
-
         <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Abertas
@@ -127,29 +173,43 @@ export default async function PulsePage() {
 
         <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Críticas
+            Em andamento
           </p>
 
           <div className="mt-4 text-4xl font-semibold text-foreground">
-            {data.criticas.length}
+            {data.andamento.length}
           </div>
 
           <p className="mt-2 text-sm text-muted-foreground">
-            exigem atenção imediata
+            sendo executadas agora
           </p>
         </div>
 
         <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Financeiro
+            Aguardando
           </p>
 
           <div className="mt-4 text-4xl font-semibold text-foreground">
-            {data.financeiro.length}
+            {data.aguardando.length}
           </div>
 
           <p className="mt-2 text-sm text-muted-foreground">
-            tarefas do setor financeiro
+            dependem de outra etapa
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            Concluídas
+          </p>
+
+          <div className="mt-4 text-4xl font-semibold text-foreground">
+            {data.concluidas.length}
+          </div>
+
+          <p className="mt-2 text-sm text-muted-foreground">
+            finalizadas no Pulse
           </p>
         </div>
       </div>
@@ -183,7 +243,12 @@ export default async function PulsePage() {
             {data.tarefas.map((tarefa) => (
               <div
                 key={tarefa.id}
-                className="rounded-3xl border border-border bg-background p-5 transition hover:border-primary/30 hover:bg-primary/5"
+                className={[
+                  "rounded-3xl border border-border bg-background p-5 transition hover:border-primary/30",
+                  tarefa.status === "CONCLUIDA"
+                    ? "opacity-70"
+                    : "hover:bg-primary/5",
+                ].join(" ")}
               >
                 <div className="mb-4 flex items-start justify-between gap-4">
                   <div>
@@ -233,6 +298,51 @@ export default async function PulsePage() {
                       Matrícula {tarefa.matricula.anoLetivo}
                     </span>
                   )}
+                </div>
+
+                <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
+                  <form action={atualizarStatus}>
+                    <input type="hidden" name="tarefaId" value={tarefa.id} />
+                    <input
+                      type="hidden"
+                      name="status"
+                      value="EM_ANDAMENTO"
+                    />
+
+                    <button
+                      type="submit"
+                      disabled={tarefa.status === "EM_ANDAMENTO"}
+                      className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      Iniciar
+                    </button>
+                  </form>
+
+                  <form action={atualizarStatus}>
+                    <input type="hidden" name="tarefaId" value={tarefa.id} />
+                    <input type="hidden" name="status" value="AGUARDANDO" />
+
+                    <button
+                      type="submit"
+                      disabled={tarefa.status === "AGUARDANDO"}
+                      className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      Aguardar
+                    </button>
+                  </form>
+
+                  <form action={atualizarStatus}>
+                    <input type="hidden" name="tarefaId" value={tarefa.id} />
+                    <input type="hidden" name="status" value="CONCLUIDA" />
+
+                    <button
+                      type="submit"
+                      disabled={tarefa.status === "CONCLUIDA"}
+                      className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      Concluir
+                    </button>
+                  </form>
                 </div>
               </div>
             ))}

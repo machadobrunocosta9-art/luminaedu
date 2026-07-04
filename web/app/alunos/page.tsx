@@ -1,5 +1,6 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -22,37 +23,40 @@ export default async function AlunosPage() {
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <p className="text-sm font-medium text-muted-foreground">
-          Centro do Aluno
-        </p>
+      <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">
+            Centro do Aluno
+          </p>
 
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-foreground">
-          Alunos
-        </h1>
+          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-foreground">
+            Alunos
+          </h1>
 
-        <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
-          Consulte os alunos cadastrados, responsáveis vinculados e informações
-          principais da vida escolar.
-        </p>
+          <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
+            Consulte os alunos cadastrados, responsáveis vinculados e
+            informações principais da vida escolar.
+          </p>
+        </div>
+
+        <Link
+          href="/alunos/novo"
+          className="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+        >
+          Novo aluno
+        </Link>
       </div>
 
       <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">
-              Alunos cadastrados
-            </h2>
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-foreground">
+            Alunos cadastrados
+          </h2>
 
-            <p className="mt-1 text-sm text-muted-foreground">
-              {alunos.length} aluno{alunos.length === 1 ? "" : "s"} encontrado
-              {alunos.length === 1 ? "" : "s"}.
-            </p>
-          </div>
-
-          <button className="rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
-            Novo aluno
-          </button>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {alunos.length} aluno{alunos.length === 1 ? "" : "s"} encontrado
+            {alunos.length === 1 ? "" : "s"}.
+          </p>
         </div>
 
         {alunos.length === 0 ? (

@@ -5,10 +5,30 @@ import DashboardStats, {
 } from "@/components/dashboard/DashboardStats";
 import AgendaCard from "@/components/dashboard/AgendaCard";
 import PulsePanel from "@/components/dashboard/PulsePanel";
-import RecentActivity from "@/components/dashboard/RecentActivity";
+import RecentActivity, {
+  RecentActivityItem,
+} from "@/components/dashboard/RecentActivity";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
+
+function formatTime(date: Date) {
+  return date.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatTaskStatus(status: string) {
+  const labels: Record<string, string> = {
+    A_FAZER: "criada",
+    EM_ANDAMENTO: "iniciada",
+    AGUARDANDO: "colocada em espera",
+    CONCLUIDA: "concluída",
+  };
+
+  return labels[status] ?? "atualizada";
+}
 
 async function getDashboardData() {
   const [
@@ -17,6 +37,7 @@ async function getDashboardData() {
     matriculasEmAndamento,
     pendenciasFinanceiras,
     tarefas,
+    atividadesRecentes,
   ] = await Promise.all([
     prisma.aluno.count(),
 
@@ -64,6 +85,16 @@ async function getDashboardData() {
         status: true,
       },
     }),
+
+    prisma.tarefa.findMany({
+      orderBy: {
+        atualizadoEm: "desc",
+      },
+      take: 5,
+      include: {
+        aluno: true,
+      },
+    }),
   ]);
 
   const stats: DashboardStat[] = [
@@ -93,12 +124,22 @@ async function getDashboardData() {
     },
   ];
 
+  const activities: RecentActivityItem[] = atividadesRecentes.map((tarefa) => ({
+    id: tarefa.id,
+    time: formatTime(tarefa.atualizadoEm),
+    title: `Tarefa ${formatTaskStatus(tarefa.status)}`,
+    description: tarefa.aluno
+      ? `${tarefa.titulo} — aluno: ${tarefa.aluno.nome}.`
+      : `${tarefa.titulo} — setor: ${tarefa.setor}.`,
+  }));
+
   return {
     alunos,
     tarefasAbertas,
     matriculasEmAndamento,
     pendenciasFinanceiras,
     tarefas,
+    activities,
     stats,
   };
 }
@@ -122,7 +163,7 @@ export default async function DashboardPage() {
         <AgendaCard />
       </div>
 
-      <RecentActivity />
+      <RecentActivity activities={data.activities} />
     </AppLayout>
   );
 }
