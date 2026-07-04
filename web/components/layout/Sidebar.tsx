@@ -77,7 +77,7 @@ const groups = [
       },
       {
         label: "Relatórios",
-        href: "#",
+        href: "/relatorios",
         icon: BarChart3,
       },
     ],
