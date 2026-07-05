@@ -222,4 +222,3 @@ export default async function ResponsaveisPage() {
     </AppLayout>
   );
 }
-

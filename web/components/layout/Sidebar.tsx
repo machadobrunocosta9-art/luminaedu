@@ -13,73 +13,27 @@ import {
   Send,
   Settings,
   UserRound,
-  UsersRound,
 } from "lucide-react";
 
 const groups = [
   {
     title: "Principal",
     items: [
-      {
-        label: "Dashboard",
-        href: "/dashboard",
-        icon: LayoutDashboard,
-      },
-      {
-        label: "Matrículas",
-        href: "/matriculas",
-        icon: GraduationCap,
-      },
-      {
-        label: "Alunos",
-        href: "/alunos",
-        icon: UserRound,
-      },
-      {
-        label: "Responsáveis",
-        href: "/responsaveis",
-        icon: UsersRound,
-      },
-      {
-        label: "Turmas",
-        href: "/turmas",
-        icon: BookOpen,
-      },
+      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { label: "Matrículas", href: "/matriculas", icon: GraduationCap },
+      { label: "Alunos", href: "/alunos", icon: UserRound },
+      { label: "Turmas", href: "/turmas", icon: BookOpen },
     ],
   },
   {
     title: "Operação",
     items: [
-      {
-        label: "Pulse",
-        href: "/pulse",
-        icon: HeartPulse,
-      },
-      {
-        label: "Acadêmico",
-        href: "/academico",
-        icon: BookOpen,
-      },
-      {
-        label: "Financeiro",
-        href: "/financeiro",
-        icon: CreditCard,
-      },
-      {
-        label: "Comunicação",
-        href: "/comunicacao",
-        icon: Send,
-      },
-      {
-        label: "Documentos",
-        href: "/documentos",
-        icon: FileText,
-      },
-      {
-        label: "Relatórios",
-        href: "/relatorios",
-        icon: BarChart3,
-      },
+      { label: "Pulse", href: "/pulse", icon: HeartPulse },
+      { label: "Acadêmico", href: "/academico", icon: BookOpen },
+      { label: "Financeiro", href: "/financeiro", icon: CreditCard },
+      { label: "Comunicação", href: "/comunicacao", icon: Send },
+      { label: "Documentos", href: "/documentos", icon: FileText },
+      { label: "Relatórios", href: "/relatorios", icon: BarChart3 },
     ],
   },
 ];
@@ -160,4 +114,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-

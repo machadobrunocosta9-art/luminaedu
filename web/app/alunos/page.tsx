@@ -1,370 +1,237 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { prisma } from "@/lib/prisma";
+import {
+  ArrowRight,
+  GraduationCap,
+  Plus,
+  Search,
+  UserRound,
+  UsersRound,
+} from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
+function formatDate(date?: Date | null) {
+  if (!date) return "Não informado";
 
-function getString(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "UTC",
+  }).format(date);
 }
 
-async function criarAluno(formData: FormData) {
-  "use server";
-
-  const nomeAluno = getString(formData, "nomeAluno");
-  const dataNascimento = getString(formData, "dataNascimento");
-  const sexo = getString(formData, "sexo");
-  const alergias = getString(formData, "alergias");
-  const observacoes = getString(formData, "observacoes");
-  const turmaId = getString(formData, "turmaId");
-
-  const nomeResponsavel = getString(formData, "nomeResponsavel");
-  const telefoneResponsavel = getString(formData, "telefoneResponsavel");
-  const emailResponsavel = getString(formData, "emailResponsavel");
-  const cpfResponsavel = getString(formData, "cpfResponsavel");
-
-  if (!nomeAluno || !dataNascimento || !turmaId || !nomeResponsavel || !telefoneResponsavel) {
-    throw new Error("Preencha os campos obrigatórios.");
-  }
-
-  const escola = await prisma.escola.upsert({
-    where: {
-      id: "lumina-demo-school",
-    },
-    update: {},
-    create: {
-      id: "lumina-demo-school",
-      nome: "Jardim Escola Girassol Encantado",
-    },
-  });
-
-  const turma = await prisma.turma.findFirst({
-    where: {
-      id: turmaId,
-      escolaId: escola.id,
-    },
-  });
-
-  if (!turma) {
-    throw new Error("Turma não encontrada.");
-  }
-
-  const responsavel = await prisma.responsavel.create({
-    data: {
-      nome: nomeResponsavel,
-      telefone: telefoneResponsavel,
-      email: emailResponsavel || null,
-      cpf: cpfResponsavel || null,
-      escolaId: escola.id,
-    },
-  });
-
-  const aluno = await prisma.aluno.create({
-    data: {
-      nome: nomeAluno,
-      dataNascimento: new Date(dataNascimento),
-      sexo: sexo || null,
-      alergias: alergias || null,
-      observacoes: observacoes || null,
-      escolaId: escola.id,
-      responsavelId: responsavel.id,
-      turmaId: turma.id,
-    },
-  });
-
-  const matricula = await prisma.matricula.create({
-    data: {
-      anoLetivo: 2026,
-      status: "PENDENTE",
-      escolaId: escola.id,
-      alunoId: aluno.id,
-    },
-  });
-
-  await prisma.tarefa.createMany({
-    data: [
-      {
-        titulo: "Conferir documentos da matrícula",
-        descricao: `Conferir documentos iniciais de ${aluno.nome}.`,
-        setor: "Secretaria",
-        prioridade: "ALTA",
-        escolaId: escola.id,
-        alunoId: aluno.id,
-        matriculaId: matricula.id,
-      },
-      {
-        titulo: "Confirmar pagamento da matrícula",
-        descricao: `Verificar pagamento inicial da matrícula de ${aluno.nome}.`,
-        setor: "Financeiro",
-        prioridade: "MEDIA",
-        escolaId: escola.id,
-        alunoId: aluno.id,
-        matriculaId: matricula.id,
-      },
-    ],
-  });
-
-  redirect("/alunos");
-}
-
-async function getFormData() {
-  const escola = await prisma.escola.upsert({
-    where: {
-      id: "lumina-demo-school",
-    },
-    update: {},
-    create: {
-      id: "lumina-demo-school",
-      nome: "Jardim Escola Girassol Encantado",
-    },
-  });
-
-  const turmas = await prisma.turma.findMany({
-    where: {
-      escolaId: escola.id,
-    },
+export default async function AlunosPage() {
+  const alunos = await prisma.aluno.findMany({
     orderBy: {
-      nome: "asc",
+      criadoEm: "desc",
+    },
+    include: {
+      responsavel: true,
+      turma: true,
+      matriculas: {
+        orderBy: {
+          criadoEm: "desc",
+        },
+        take: 1,
+      },
+      ocorrencias: true,
+      tarefas: true,
     },
   });
-
-  return {
-    turmas,
-  };
-}
-
-export default async function NovoAlunoPage() {
-  const data = await getFormData();
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <p className="text-sm font-medium text-muted-foreground">
-          Centro do Aluno
-        </p>
+      <div className="mb-8 flex items-start justify-between gap-6">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">
+            Centro do Aluno
+          </p>
 
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-foreground">
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+            Alunos
+          </h1>
+
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Acesse o prontuário digital de cada aluno, com responsáveis,
+            matrícula, financeiro, documentos, ocorrências, comunicação e
+            histórico escolar.
+          </p>
+        </div>
+
+        <Link
+          href="/alunos/novo"
+          className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+        >
+          <Plus size={18} />
           Novo aluno
-        </h1>
-
-        <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
-          Cadastre um aluno, vincule um responsável, escolha a turma e inicie
-          automaticamente o fluxo de matrícula no Pulse.
-        </p>
+        </Link>
       </div>
 
-      <form
-        action={criarAluno}
-        className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr]"
-      >
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-foreground">
-            Dados do aluno
-          </h2>
+      <div className="mb-6 grid gap-4 md:grid-cols-4">
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-foreground">
+            <UserRound size={20} />
+          </div>
 
-          <p className="mt-1 text-sm text-muted-foreground">
-            Informações principais para iniciar o cadastro.
+          <p className="text-sm text-muted-foreground">Total de alunos</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">
+            {alunos.length}
           </p>
+        </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium text-foreground">
-                Nome do aluno *
-              </label>
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-foreground">
+            <GraduationCap size={20} />
+          </div>
 
-              <input
-                name="nomeAluno"
-                required
-                placeholder="Ex: João Pedro Silva"
-                className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary"
-              />
-            </div>
+          <p className="text-sm text-muted-foreground">Com turma</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">
+            {alunos.filter((aluno) => aluno.turma).length}
+          </p>
+        </div>
 
-            <div>
-              <label className="text-sm font-medium text-foreground">
-                Data de nascimento *
-              </label>
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-foreground">
+            <UsersRound size={20} />
+          </div>
 
-              <input
-                name="dataNascimento"
-                required
-                type="date"
-                className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary"
-              />
-            </div>
+          <p className="text-sm text-muted-foreground">Responsáveis</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">
+            {new Set(alunos.map((aluno) => aluno.responsavelId)).size}
+          </p>
+        </div>
 
-            <div>
-              <label className="text-sm font-medium text-foreground">
-                Sexo
-              </label>
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-foreground">
+            <Search size={20} />
+          </div>
 
-              <select
-                name="sexo"
-                className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary"
-              >
-                <option value="">Não informado</option>
-                <option value="Feminino">Feminino</option>
-                <option value="Masculino">Masculino</option>
-              </select>
-            </div>
+          <p className="text-sm text-muted-foreground">Prontuários</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">
+            {alunos.length}
+          </p>
+        </div>
+      </div>
 
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium text-foreground">
-                Turma *
-              </label>
+      <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <div>
+            <h2 className="font-semibold text-foreground">
+              Lista de alunos
+            </h2>
 
-              {data.turmas.length === 0 ? (
-                <div className="mt-2 rounded-2xl border border-dashed border-border bg-muted/40 p-4">
-                  <p className="text-sm font-medium text-foreground">
-                    Nenhuma turma cadastrada.
-                  </p>
-
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Crie uma turma antes de cadastrar o aluno.
-                  </p>
-
-                  <Link
-                    href="/turmas/novo"
-                    className="mt-4 inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
-                  >
-                    Criar turma
-                  </Link>
-                </div>
-              ) : (
-                <select
-                  name="turmaId"
-                  required
-                  defaultValue=""
-                  className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary"
-                >
-                  <option value="" disabled>
-                    Selecione uma turma
-                  </option>
-
-                  {data.turmas.map((turma) => (
-                    <option key={turma.id} value={turma.id}>
-                      {turma.nome} — {turma.segmento} — {turma.turno}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium text-foreground">
-                Alergias
-              </label>
-
-              <input
-                name="alergias"
-                placeholder="Ex: Lactose, dipirona, amendoim..."
-                className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium text-foreground">
-                Observações
-              </label>
-
-              <textarea
-                name="observacoes"
-                rows={4}
-                placeholder="Informações importantes sobre o aluno..."
-                className="mt-2 w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary"
-              />
-            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Clique em um aluno para abrir o prontuário digital completo.
+            </p>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-foreground">
-            Responsável
-          </h2>
+        {alunos.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+            <p className="font-medium text-foreground">
+              Nenhum aluno cadastrado ainda
+            </p>
 
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pessoa responsável pelo aluno.
-          </p>
-
-          <div className="mt-6 space-y-5">
-            <div>
-              <label className="text-sm font-medium text-foreground">
-                Nome do responsável *
-              </label>
-
-              <input
-                name="nomeResponsavel"
-                required
-                placeholder="Ex: Maria Silva"
-                className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-foreground">
-                Telefone *
-              </label>
-
-              <input
-                name="telefoneResponsavel"
-                required
-                placeholder="Ex: (21) 99999-0000"
-                className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-foreground">
-                E-mail
-              </label>
-
-              <input
-                name="emailResponsavel"
-                type="email"
-                placeholder="Ex: responsavel@email.com"
-                className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-foreground">
-                CPF
-              </label>
-
-              <input
-                name="cpfResponsavel"
-                placeholder="Ex: 000.000.000-00"
-                className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary"
-              />
-            </div>
-          </div>
-
-          <div className="mt-8 flex flex-col gap-3">
-            <button
-              type="submit"
-              disabled={data.turmas.length === 0}
-              className="rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45"
-            >
-              Cadastrar aluno
-            </button>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Cadastre o primeiro aluno para iniciar o fluxo de matrícula.
+            </p>
 
             <Link
-              href="/alunos"
-              className="rounded-2xl border border-border bg-background px-5 py-3 text-center text-sm font-semibold text-foreground transition hover:bg-muted"
+              href="/alunos/novo"
+              className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
             >
-              Cancelar
+              <Plus size={18} />
+              Cadastrar aluno
             </Link>
           </div>
-        </div>
-      </form>
+        ) : (
+          <div className="space-y-3">
+            {alunos.map((aluno) => {
+              const matricula = aluno.matriculas[0];
+
+              return (
+                <Link
+                  key={aluno.id}
+                  href={`/alunos/${aluno.id}`}
+                  className="group block rounded-2xl border border-border bg-background p-5 transition hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="flex items-center justify-between gap-5">
+                    <div className="flex min-w-0 items-center gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted text-foreground">
+                        <UserRound size={22} />
+                      </div>
+
+                      <div className="min-w-0">
+                        <h3 className="truncate font-semibold text-foreground">
+                          {aluno.nome}
+                        </h3>
+
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {aluno.turma?.nome ?? "Sem turma"} · Responsável:{" "}
+                          {aluno.responsavel.nome}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="hidden items-center gap-3 md:flex">
+                      <div className="rounded-2xl bg-muted px-4 py-3 text-right">
+                        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                          Matrícula
+                        </p>
+
+                        <p className="mt-1 text-sm font-medium text-foreground">
+                          {matricula ? matricula.status : "Sem matrícula"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl bg-muted px-4 py-3 text-right">
+                        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                          Nascimento
+                        </p>
+
+                        <p className="mt-1 text-sm font-medium text-foreground">
+                          {formatDate(aluno.dataNascimento)}
+                        </p>
+                      </div>
+
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition group-hover:bg-primary group-hover:text-primary-foreground">
+                        <ArrowRight size={18} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 md:grid-cols-3">
+                    <div className="rounded-2xl bg-muted p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Ocorrências
+                      </p>
+                      <p className="mt-1 font-semibold text-foreground">
+                        {aluno.ocorrencias.length}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-muted p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Pulse vinculado
+                      </p>
+                      <p className="mt-1 font-semibold text-foreground">
+                        {aluno.tarefas.length}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-muted p-3">
+                      <p className="text-xs text-muted-foreground">
+                        E-mail do responsável
+                      </p>
+                      <p className="mt-1 truncate font-semibold text-foreground">
+                        {aluno.responsavel.email || "Não informado"}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </AppLayout>
   );
 }
-
