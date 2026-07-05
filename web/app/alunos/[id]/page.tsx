@@ -233,6 +233,72 @@ export default async function AlunoDetalhePage({
         </div>
       </div>
 
+      <section className="mb-8 rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <div className="mb-5">
+          <h2 className="font-semibold text-foreground">Ações rápidas</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Registre rapidamente os principais documentos do prontuário.
+          </p>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-5">
+          <Link
+            href={`/alunos/${aluno.id}/ocorrencias/novo?tipo=ADVERTENCIA`}
+            className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <ShieldAlert size={22} className="mb-3 text-foreground" />
+            <p className="font-semibold text-foreground">Nova advertência</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Registro formal para o responsável.
+            </p>
+          </Link>
+
+          <Link
+            href={`/alunos/${aluno.id}/ocorrencias/novo?tipo=SUSPENSAO`}
+            className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <AlertTriangle size={22} className="mb-3 text-foreground" />
+            <p className="font-semibold text-foreground">Nova suspensão</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Inclui período e motivo.
+            </p>
+          </Link>
+
+          <Link
+            href={`/alunos/${aluno.id}/ocorrencias/novo?tipo=RELATORIO`}
+            className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <NotebookText size={22} className="mb-3 text-foreground" />
+            <p className="font-semibold text-foreground">Novo relatório</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Relatório pedagógico ou comportamental.
+            </p>
+          </Link>
+
+          <Link
+            href={`/alunos/${aluno.id}/ocorrencias/novo?tipo=ATENDIMENTO`}
+            className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <UsersRound size={22} className="mb-3 text-foreground" />
+            <p className="font-semibold text-foreground">Atendimento</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Registro de conversa ou orientação.
+            </p>
+          </Link>
+
+          <Link
+            href={`/alunos/${aluno.id}/ocorrencias/novo?tipo=OCORRENCIA`}
+            className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
+          >
+            <ClipboardList size={22} className="mb-3 text-foreground" />
+            <p className="font-semibold text-foreground">Ocorrência</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Registro geral no histórico.
+            </p>
+          </Link>
+        </div>
+      </section>
+
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-6">
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
@@ -329,19 +395,28 @@ export default async function AlunoDetalhePage({
           </section>
 
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-                <ClipboardList size={19} />
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
+                  <ClipboardList size={19} />
+                </div>
+
+                <div>
+                  <h2 className="font-semibold text-foreground">
+                    Ocorrências e relatórios
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Advertências, suspensões, atendimentos e relatórios do aluno
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <h2 className="font-semibold text-foreground">
-                  Ocorrências e relatórios
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Advertências, suspensões, atendimentos e relatórios do aluno
-                </p>
-              </div>
+              <Link
+                href={`/alunos/${aluno.id}/ocorrencias/novo`}
+                className="hidden rounded-2xl border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-muted md:inline-flex"
+              >
+                Novo registro
+              </Link>
             </div>
 
             {aluno.ocorrencias.length === 0 ? (

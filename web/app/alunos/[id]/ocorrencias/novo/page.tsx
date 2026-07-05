@@ -16,7 +16,76 @@ type NovaOcorrenciaPageProps = {
   params: Promise<{
     id: string;
   }>;
+  searchParams: Promise<{
+    tipo?: string;
+  }>;
 };
+
+const tiposPermitidos = [
+  "OCORRENCIA",
+  "ADVERTENCIA",
+  "SUSPENSAO",
+  "RELATORIO",
+  "ATENDIMENTO",
+  "RESUMO",
+];
+
+function normalizarTipo(tipo?: string) {
+  if (!tipo) return "OCORRENCIA";
+
+  const tipoMaiusculo = tipo.toUpperCase();
+
+  if (tiposPermitidos.includes(tipoMaiusculo)) {
+    return tipoMaiusculo;
+  }
+
+  return "OCORRENCIA";
+}
+
+function getTituloPadrao(tipo: string) {
+  const labels: Record<string, string> = {
+    OCORRENCIA: "Nova ocorrência",
+    ADVERTENCIA: "Nova advertência",
+    SUSPENSAO: "Nova suspensão",
+    RELATORIO: "Novo relatório",
+    ATENDIMENTO: "Novo atendimento",
+    RESUMO: "Novo resumo",
+  };
+
+  return labels[tipo] ?? "Nova ocorrência";
+}
+
+function getPlaceholderTitulo(tipo: string) {
+  const labels: Record<string, string> = {
+    OCORRENCIA: "Ex: Ocorrência em sala de aula",
+    ADVERTENCIA: "Ex: Advertência por comportamento",
+    SUSPENSAO: "Ex: Suspensão por conduta inadequada",
+    RELATORIO: "Ex: Relatório pedagógico do aluno",
+    ATENDIMENTO: "Ex: Atendimento com a coordenação",
+    RESUMO: "Ex: Resumo de acompanhamento",
+  };
+
+  return labels[tipo] ?? "Ex: Ocorrência em sala de aula";
+}
+
+function getTextoAjuda(tipo: string) {
+  const labels: Record<string, string> = {
+    OCORRENCIA:
+      "Registre de forma simples o que aconteceu. A Lumina vai transformar em texto formal no prontuário.",
+    ADVERTENCIA:
+      "Descreva o comportamento observado e as orientações dadas. A Lumina vai gerar um texto formal de advertência.",
+    SUSPENSAO:
+      "Informe o motivo da suspensão e, se necessário, o período. A Lumina vai gerar o texto formal para o prontuário.",
+    RELATORIO:
+      "Escreva os pontos principais do acompanhamento. A Lumina vai organizar em formato de relatório.",
+    ATENDIMENTO:
+      "Registre o atendimento realizado com aluno, família ou equipe escolar.",
+    RESUMO:
+      "Escreva os pontos principais. A Lumina vai organizar um resumo para consulta futura.",
+  };
+
+  return labels[tipo] ?? labels.OCORRENCIA;
+}
 
 function gerarTextoSugerido({
   tipo,
@@ -88,8 +157,12 @@ Este registro ficará salvo no prontuário digital do aluno.`;
 
 export default async function NovaOcorrenciaPage({
   params,
+  searchParams,
 }: NovaOcorrenciaPageProps) {
   const { id } = await params;
+  const { tipo } = await searchParams;
+
+  const tipoInicial = normalizarTipo(tipo);
 
   const aluno = await prisma.aluno.findUnique({
     where: {
@@ -111,7 +184,7 @@ export default async function NovaOcorrenciaPage({
   async function criarOcorrencia(formData: FormData) {
     "use server";
 
-    const tipo = String(formData.get("tipo") || "OCORRENCIA");
+    const tipo = normalizarTipo(String(formData.get("tipo") || "OCORRENCIA"));
     const titulo = String(formData.get("titulo") || "").trim();
     const descricao = String(formData.get("descricao") || "").trim();
 
@@ -172,7 +245,7 @@ export default async function NovaOcorrenciaPage({
     await prisma.tarefa.create({
       data: {
         titulo: `Acompanhar ${titulo}`,
-        descricao: `Nova ocorrência registrada no prontuário do aluno ${alunoEncontrado.nome}. Tipo: ${tipo}.`,
+        descricao: `Novo registro criado no prontuário do aluno ${alunoEncontrado.nome}. Tipo: ${tipo}.`,
         setor:
           tipo === "ADVERTENCIA" || tipo === "SUSPENSAO"
             ? "Acadêmico"
@@ -218,12 +291,12 @@ export default async function NovaOcorrenciaPage({
             </p>
 
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-              Nova ocorrência
+              {getTituloPadrao(tipoInicial)}
             </h1>
 
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Registre ocorrência, advertência, suspensão, relatório ou
-              atendimento no histórico do aluno.
+              Registre ocorrência, advertência, suspensão, relatório,
+              atendimento ou resumo no histórico do aluno.
             </p>
           </div>
 
@@ -276,7 +349,7 @@ export default async function NovaOcorrenciaPage({
                 name="tipo"
                 required
                 className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm outline-none transition focus:border-primary"
-                defaultValue="OCORRENCIA"
+                defaultValue={tipoInicial}
               >
                 <option value="OCORRENCIA">Ocorrência</option>
                 <option value="ADVERTENCIA">Advertência</option>
@@ -295,7 +368,7 @@ export default async function NovaOcorrenciaPage({
               <input
                 name="titulo"
                 required
-                placeholder="Ex: Advertência por comportamento"
+                placeholder={getPlaceholderTitulo(tipoInicial)}
                 className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary"
               />
             </div>
@@ -334,7 +407,7 @@ export default async function NovaOcorrenciaPage({
               name="descricao"
               required
               rows={8}
-              placeholder="Descreva de forma simples o que aconteceu. A Lumi vai transformar isso em um texto mais formal no prontuário."
+              placeholder={getTextoAjuda(tipoInicial)}
               className="w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-muted-foreground focus:border-primary"
             />
           </div>
@@ -346,6 +419,11 @@ export default async function NovaOcorrenciaPage({
                 name="enviarParaResponsavel"
                 type="checkbox"
                 className="mt-1 h-4 w-4 rounded border-border"
+                defaultChecked={
+                  tipoInicial === "ADVERTENCIA" ||
+                  tipoInicial === "SUSPENSAO" ||
+                  tipoInicial === "RELATORIO"
+                }
               />
 
               <div className="flex-1">
@@ -391,7 +469,7 @@ export default async function NovaOcorrenciaPage({
               type="submit"
               className="rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
             >
-              Salvar ocorrência
+              Salvar registro
             </button>
           </div>
         </section>
@@ -416,9 +494,7 @@ export default async function NovaOcorrenciaPage({
 
             <div className="rounded-2xl bg-muted p-4">
               <p className="text-sm leading-6 text-foreground">
-                Escreva a descrição de forma simples. Ao salvar, a Lumina vai
-                criar um texto final mais profissional para o prontuário do
-                aluno.
+                {getTextoAjuda(tipoInicial)}
               </p>
             </div>
           </section>
@@ -480,8 +556,8 @@ export default async function NovaOcorrenciaPage({
 
             <div className="space-y-3 text-sm leading-6 text-muted-foreground">
               <p>
-                Advertências, suspensões e relatórios ficarão salvos no
-                prontuário digital do aluno.
+                Advertências, suspensões, atendimentos e relatórios ficarão
+                salvos no prontuário digital do aluno.
               </p>
 
               <p>
