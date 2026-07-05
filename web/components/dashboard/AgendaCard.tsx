@@ -51,3 +51,4 @@ export default function AgendaCard() {
     </LuminaCard>
   );
 }
+

@@ -1,4 +1,4 @@
-import { AppLayout } from "@/components/layout/AppLayout";
+import AppLayout from "@/components/layout/AppLayout";
 import { StudentProfile } from "@/components/alunos/StudentProfile";
 
 export default function AlunoDetalhePage() {

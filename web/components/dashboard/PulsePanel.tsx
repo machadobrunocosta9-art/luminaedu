@@ -111,3 +111,4 @@ export default function PulsePanel({ tarefas }: PulsePanelProps) {
     </LuminaCard>
   );
 }
+

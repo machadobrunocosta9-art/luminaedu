@@ -312,3 +312,4 @@ export default async function NovoComunicadoPage() {
     </AppLayout>
   );
 }
+

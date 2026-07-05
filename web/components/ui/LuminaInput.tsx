@@ -13,3 +13,4 @@ export function AtlasInput({ label, className = "", ...props }: AtlasInputProps)
     </label>
   );
 }
+

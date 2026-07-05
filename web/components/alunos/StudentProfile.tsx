@@ -46,3 +46,4 @@ export function StudentProfile() {
     </div>
   );
 }
+

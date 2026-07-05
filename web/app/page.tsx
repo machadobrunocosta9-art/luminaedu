@@ -242,3 +242,4 @@ export default async function PulsePage() {
     </AppLayout>
   );
 }
+

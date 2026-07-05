@@ -545,3 +545,4 @@ export default async function RelatoriosPage() {
     </AppLayout>
   );
 }
+

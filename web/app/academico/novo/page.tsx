@@ -306,3 +306,4 @@ export default async function NovoAcademicoPage() {
     </AppLayout>
   );
 }
+
