@@ -171,6 +171,13 @@ model OcorrenciaAluno {
   emailResponsavel      String?
   dataEnvioEmail        DateTime?
 
+  tokenCiencia          String?  @unique
+  cienciaConfirmada     Boolean @default(false)
+  dataCiencia           DateTime?
+  nomeConfirmante       String?
+  parentescoConfirmante String?
+  observacaoCiencia     String?
+
   inicioSuspensao       DateTime?
   fimSuspensao          DateTime?
 

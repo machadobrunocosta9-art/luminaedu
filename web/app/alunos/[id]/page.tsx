@@ -1,6 +1,9 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { randomUUID } from "crypto";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -8,6 +11,7 @@ import {
   CheckCircle2,
   ClipboardList,
   CreditCard,
+  ExternalLink,
   FileText,
   GraduationCap,
   Mail,
@@ -16,8 +20,6 @@ import {
   UserRound,
   UsersRound,
 } from "lucide-react";
-import Link from "next/link";
-import { notFound } from "next/navigation";
 
 type AlunoDetalhePageProps = {
   params: Promise<{
@@ -96,7 +98,6 @@ export default async function AlunoDetalhePage({
       id,
     },
     include: {
-      escola: true,
       responsavel: true,
       turma: true,
       matriculas: {
@@ -140,6 +141,7 @@ export default async function AlunoDetalhePage({
         status: "ENVIADO",
         enviadoPorEmail: true,
         dataEnvioEmail: new Date(),
+        tokenCiencia: randomUUID(),
       },
     });
 
@@ -222,44 +224,32 @@ export default async function AlunoDetalhePage({
 
       <div className="mb-8 grid gap-4 md:grid-cols-4">
         <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-foreground">
-            <ClipboardList size={20} />
-          </div>
-
-          <p className="text-sm text-muted-foreground">Ocorrências</p>
+          <ClipboardList size={22} />
+          <p className="mt-4 text-sm text-muted-foreground">Ocorrências</p>
           <p className="mt-1 text-3xl font-semibold text-foreground">
             {alunoEncontrado.ocorrencias.length}
           </p>
         </div>
 
         <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-foreground">
-            <ShieldAlert size={20} />
-          </div>
-
-          <p className="text-sm text-muted-foreground">Advertências</p>
+          <ShieldAlert size={22} />
+          <p className="mt-4 text-sm text-muted-foreground">Advertências</p>
           <p className="mt-1 text-3xl font-semibold text-foreground">
             {advertencias.length}
           </p>
         </div>
 
         <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-foreground">
-            <AlertTriangle size={20} />
-          </div>
-
-          <p className="text-sm text-muted-foreground">Suspensões</p>
+          <AlertTriangle size={22} />
+          <p className="mt-4 text-sm text-muted-foreground">Suspensões</p>
           <p className="mt-1 text-3xl font-semibold text-foreground">
             {suspensoes.length}
           </p>
         </div>
 
         <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-foreground">
-            <CheckCircle2 size={20} />
-          </div>
-
-          <p className="text-sm text-muted-foreground">Pulse aberto</p>
+          <CheckCircle2 size={22} />
+          <p className="mt-4 text-sm text-muted-foreground">Pulse aberto</p>
           <p className="mt-1 text-3xl font-semibold text-foreground">
             {tarefasAbertas.length}
           </p>
@@ -267,19 +257,17 @@ export default async function AlunoDetalhePage({
       </div>
 
       <section className="mb-8 rounded-3xl border border-border bg-card p-6 shadow-sm">
-        <div className="mb-5">
-          <h2 className="font-semibold text-foreground">Ações rápidas</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Registre rapidamente os principais documentos do prontuário.
-          </p>
-        </div>
+        <h2 className="font-semibold text-foreground">Ações rápidas</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Registre rapidamente os principais documentos do prontuário.
+        </p>
 
-        <div className="grid gap-3 md:grid-cols-5">
+        <div className="mt-5 grid gap-3 md:grid-cols-5">
           <Link
             href={`/alunos/${alunoEncontrado.id}/ocorrencias/novo?tipo=ADVERTENCIA`}
             className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
           >
-            <ShieldAlert size={22} className="mb-3 text-foreground" />
+            <ShieldAlert size={22} className="mb-3" />
             <p className="font-semibold text-foreground">Nova advertência</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               Registro formal para o responsável.
@@ -290,7 +278,7 @@ export default async function AlunoDetalhePage({
             href={`/alunos/${alunoEncontrado.id}/ocorrencias/novo?tipo=SUSPENSAO`}
             className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
           >
-            <AlertTriangle size={22} className="mb-3 text-foreground" />
+            <AlertTriangle size={22} className="mb-3" />
             <p className="font-semibold text-foreground">Nova suspensão</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               Inclui período e motivo.
@@ -301,7 +289,7 @@ export default async function AlunoDetalhePage({
             href={`/alunos/${alunoEncontrado.id}/ocorrencias/novo?tipo=RELATORIO`}
             className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
           >
-            <NotebookText size={22} className="mb-3 text-foreground" />
+            <NotebookText size={22} className="mb-3" />
             <p className="font-semibold text-foreground">Novo relatório</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               Relatório pedagógico ou comportamental.
@@ -312,7 +300,7 @@ export default async function AlunoDetalhePage({
             href={`/alunos/${alunoEncontrado.id}/ocorrencias/novo?tipo=ATENDIMENTO`}
             className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
           >
-            <UsersRound size={22} className="mb-3 text-foreground" />
+            <UsersRound size={22} className="mb-3" />
             <p className="font-semibold text-foreground">Atendimento</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               Registro de conversa ou orientação.
@@ -323,7 +311,7 @@ export default async function AlunoDetalhePage({
             href={`/alunos/${alunoEncontrado.id}/ocorrencias/novo?tipo=OCORRENCIA`}
             className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
           >
-            <ClipboardList size={22} className="mb-3 text-foreground" />
+            <ClipboardList size={22} className="mb-3" />
             <p className="font-semibold text-foreground">Ocorrência</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               Registro geral no histórico.
@@ -336,9 +324,7 @@ export default async function AlunoDetalhePage({
         <div className="space-y-6">
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-                <UserRound size={19} />
-              </div>
+              <UserRound size={22} />
 
               <div>
                 <h2 className="font-semibold text-foreground">
@@ -388,33 +374,6 @@ export default async function AlunoDetalhePage({
                     : "Sem matrícula"}
                 </p>
               </div>
-
-              <div className="rounded-2xl bg-muted p-4">
-                <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  CPF
-                </p>
-                <p className="mt-1 font-medium text-foreground">
-                  {alunoEncontrado.cpf || "Não informado"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-muted p-4">
-                <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  Certidão
-                </p>
-                <p className="mt-1 font-medium text-foreground">
-                  {alunoEncontrado.certidaoNascimento || "Não informado"}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-2xl bg-muted p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                Alergias
-              </p>
-              <p className="mt-1 text-sm leading-6 text-foreground">
-                {alunoEncontrado.alergias || "Nenhuma alergia informada."}
-              </p>
             </div>
 
             <div className="mt-4 rounded-2xl bg-muted p-4">
@@ -429,40 +388,23 @@ export default async function AlunoDetalhePage({
           </section>
 
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-                  <ClipboardList size={19} />
-                </div>
+            <div className="mb-5 flex items-center gap-3">
+              <ClipboardList size={22} />
 
-                <div>
-                  <h2 className="font-semibold text-foreground">
-                    Ocorrências e relatórios
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Advertências, suspensões, atendimentos e relatórios do aluno
-                  </p>
-                </div>
+              <div>
+                <h2 className="font-semibold text-foreground">
+                  Ocorrências e relatórios
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Histórico completo do aluno
+                </p>
               </div>
-
-              <Link
-                href={`/alunos/${alunoEncontrado.id}/ocorrencias/novo`}
-                className="hidden rounded-2xl border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-muted md:inline-flex"
-              >
-                Novo registro
-              </Link>
             </div>
 
             {alunoEncontrado.ocorrencias.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border p-6 text-center">
-                <p className="font-medium text-foreground">
-                  Nenhuma ocorrência registrada
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Quando a escola registrar advertências, suspensões ou
-                  relatórios, eles aparecerão aqui.
-                </p>
-              </div>
+              <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                Nenhuma ocorrência registrada.
+              </p>
             ) : (
               <div className="space-y-3">
                 {alunoEncontrado.ocorrencias.map((ocorrencia) => (
@@ -470,37 +412,42 @@ export default async function AlunoDetalhePage({
                     key={ocorrencia.id}
                     className="rounded-2xl border border-border bg-background p-4"
                   >
-                    <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground">
-                            {getTipoLabel(ocorrencia.tipo)}
-                          </span>
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground">
+                        {getTipoLabel(ocorrencia.tipo)}
+                      </span>
 
-                          <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-                            {getStatusLabel(ocorrencia.status)}
-                          </span>
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                        {getStatusLabel(ocorrencia.status)}
+                      </span>
 
-                          {ocorrencia.enviarParaResponsavel && (
-                            <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-                              Envio ao responsável preparado
-                            </span>
-                          )}
-                        </div>
-
-                        <h3 className="mt-3 font-semibold text-foreground">
-                          {ocorrencia.titulo}
-                        </h3>
-                      </div>
-
-                      <p className="text-xs text-muted-foreground">
-                        {formatDateTime(ocorrencia.criadoEm)}
-                      </p>
+                      {ocorrencia.cienciaConfirmada && (
+                        <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                          Responsável ciente
+                        </span>
+                      )}
                     </div>
 
-                    <p className="text-sm leading-6 text-muted-foreground">
+                    <h3 className="font-semibold text-foreground">
+                      {ocorrencia.titulo}
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
                       {ocorrencia.descricao}
                     </p>
+
+                    {ocorrencia.dataCiencia && (
+                      <div className="mt-4 rounded-2xl bg-muted p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                          Ciência digital
+                        </p>
+                        <p className="mt-2 text-sm text-foreground">
+                          Confirmado por{" "}
+                          {ocorrencia.nomeConfirmante || "responsável"} em{" "}
+                          {formatDateTime(ocorrencia.dataCiencia)}.
+                        </p>
+                      </div>
+                    )}
 
                     {ocorrencia.textoFinal && (
                       <div className="mt-4 rounded-2xl bg-muted p-4">
@@ -517,54 +464,12 @@ export default async function AlunoDetalhePage({
               </div>
             )}
           </section>
-
-          <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-                <NotebookText size={19} />
-              </div>
-
-              <div>
-                <h2 className="font-semibold text-foreground">
-                  Boletim, presença e acadêmico
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Área preparada para notas, frequência e acompanhamento escolar
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl bg-muted p-4">
-                <p className="font-medium text-foreground">Presença</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Em breve, professores poderão lançar presença por turma.
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-muted p-4">
-                <p className="font-medium text-foreground">Boletim</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Em breve, professores poderão lançar notas e observações.
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-muted p-4">
-                <p className="font-medium text-foreground">Relatórios</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {relatorios.length} relatório(s) registrado(s) no prontuário.
-                </p>
-              </div>
-            </div>
-          </section>
         </div>
 
         <aside className="space-y-6">
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-                <UsersRound size={19} />
-              </div>
+              <UsersRound size={22} />
 
               <div>
                 <h2 className="font-semibold text-foreground">Responsável</h2>
@@ -601,28 +506,17 @@ export default async function AlunoDetalhePage({
                   {alunoEncontrado.responsavel.email || "Não informado"}
                 </p>
               </div>
-
-              <div className="rounded-2xl bg-muted p-4">
-                <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  Endereço
-                </p>
-                <p className="mt-1 text-sm leading-6 text-foreground">
-                  {alunoEncontrado.responsavel.endereco || "Não informado"}
-                </p>
-              </div>
             </div>
           </section>
 
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-                <GraduationCap size={19} />
-              </div>
+              <GraduationCap size={22} />
 
               <div>
                 <h2 className="font-semibold text-foreground">Matrículas</h2>
                 <p className="text-sm text-muted-foreground">
-                  Histórico de vínculo escolar
+                  Histórico escolar
                 </p>
               </div>
             </div>
@@ -634,22 +528,13 @@ export default async function AlunoDetalhePage({
             ) : (
               <div className="space-y-3">
                 {alunoEncontrado.matriculas.map((matricula) => (
-                  <div
-                    key={matricula.id}
-                    className="rounded-2xl bg-muted p-4"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="font-medium text-foreground">
-                        Ano letivo {matricula.anoLetivo}
-                      </p>
-
-                      <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold text-muted-foreground">
-                        {getStatusLabel(matricula.status)}
-                      </span>
-                    </div>
-
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Matrícula em {formatDate(matricula.dataMatricula)}
+                  <div key={matricula.id} className="rounded-2xl bg-muted p-4">
+                    <p className="font-medium text-foreground">
+                      Ano letivo {matricula.anoLetivo}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {getStatusLabel(matricula.status)} ·{" "}
+                      {formatDate(matricula.dataMatricula)}
                     </p>
                   </div>
                 ))}
@@ -659,14 +544,12 @@ export default async function AlunoDetalhePage({
 
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-                <CreditCard size={19} />
-              </div>
+              <CreditCard size={22} />
 
               <div>
                 <h2 className="font-semibold text-foreground">Financeiro</h2>
                 <p className="text-sm text-muted-foreground">
-                  Pendências financeiras vinculadas ao aluno
+                  Pendências financeiras
                 </p>
               </div>
             </div>
@@ -682,8 +565,7 @@ export default async function AlunoDetalhePage({
                     <p className="font-medium text-foreground">
                       {tarefa.titulo}
                     </p>
-
-                    <p className="mt-2 text-sm text-muted-foreground">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {getStatusLabel(tarefa.status)} ·{" "}
                       {getPrioridadeLabel(tarefa.prioridade)}
                     </p>
@@ -695,14 +577,12 @@ export default async function AlunoDetalhePage({
 
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-                <FileText size={19} />
-              </div>
+              <FileText size={22} />
 
               <div>
                 <h2 className="font-semibold text-foreground">Documentos</h2>
                 <p className="text-sm text-muted-foreground">
-                  Pendências documentais do aluno
+                  Pendências documentais
                 </p>
               </div>
             </div>
@@ -718,8 +598,7 @@ export default async function AlunoDetalhePage({
                     <p className="font-medium text-foreground">
                       {tarefa.titulo}
                     </p>
-
-                    <p className="mt-2 text-sm text-muted-foreground">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {getStatusLabel(tarefa.status)} ·{" "}
                       {getPrioridadeLabel(tarefa.prioridade)}
                     </p>
@@ -731,168 +610,111 @@ export default async function AlunoDetalhePage({
 
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-                <Mail size={19} />
-              </div>
+              <Mail size={22} />
 
               <div>
                 <h2 className="font-semibold text-foreground">
                   Comunicação com responsável
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Envios preparados, comunicados e histórico com a família
+                  Envios e ciência digital
                 </p>
               </div>
             </div>
 
             {enviosPreparados.length === 0 && enviosRealizados.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Nenhum envio preparado para o responsável.
+                Nenhum envio preparado.
               </p>
             ) : (
               <div className="space-y-4">
-                {enviosPreparados.length > 0 && (
-                  <div>
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                      Preparados para envio
+                {enviosPreparados.map((ocorrencia) => (
+                  <div
+                    key={ocorrencia.id}
+                    className="rounded-2xl border border-border bg-background p-4"
+                  >
+                    <p className="font-medium text-foreground">
+                      {ocorrencia.titulo}
                     </p>
 
-                    <div className="space-y-3">
-                      {enviosPreparados.map((ocorrencia) => (
-                        <div
-                          key={ocorrencia.id}
-                          className="rounded-2xl border border-border bg-background p-4"
-                        >
-                          <div className="mb-3 flex flex-wrap items-center gap-2">
-                            <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground">
-                              {getTipoLabel(ocorrencia.tipo)}
-                            </span>
-
-                            <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-                              Preparado
-                            </span>
-                          </div>
-
-                          <p className="font-medium text-foreground">
-                            {ocorrencia.titulo}
-                          </p>
-
-                          <p className="mt-2 text-sm text-muted-foreground">
-                            E-mail:{" "}
-                            {ocorrencia.emailResponsavel ||
-                              alunoEncontrado.responsavel.email ||
-                              "Não informado"}
-                          </p>
-
-                          {ocorrencia.textoFinal && (
-                            <details className="mt-3">
-                              <summary className="cursor-pointer text-sm font-semibold text-foreground">
-                                Ver texto
-                              </summary>
-
-                              <div className="mt-3 rounded-2xl bg-muted p-4">
-                                <p className="whitespace-pre-line text-sm leading-6 text-foreground">
-                                  {ocorrencia.textoFinal}
-                                </p>
-                              </div>
-                            </details>
-                          )}
-
-                          <form action={marcarComoEnviado} className="mt-4">
-                            <input
-                              type="hidden"
-                              name="ocorrenciaId"
-                              value={ocorrencia.id}
-                            />
-
-                            <button
-                              type="submit"
-                              className="w-full rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
-                            >
-                              Marcar como enviado
-                            </button>
-                          </form>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {enviosRealizados.length > 0 && (
-                  <div>
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                      Envios realizados
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {getTipoLabel(ocorrencia.tipo)} · Preparado
                     </p>
 
-                    <div className="space-y-3">
-                      {enviosRealizados.slice(0, 4).map((ocorrencia) => (
-                        <div
-                          key={ocorrencia.id}
-                          className="rounded-2xl bg-muted p-4"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="font-medium text-foreground">
-                                {ocorrencia.titulo}
-                              </p>
+                    <form action={marcarComoEnviado} className="mt-4">
+                      <input
+                        type="hidden"
+                        name="ocorrenciaId"
+                        value={ocorrencia.id}
+                      />
 
-                              <p className="mt-1 text-sm text-muted-foreground">
-                                {getTipoLabel(ocorrencia.tipo)} · Enviado
-                              </p>
-                            </div>
-
-                            <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold text-muted-foreground">
-                              OK
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                      <button
+                        type="submit"
+                        className="w-full rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                      >
+                        Marcar como enviado e gerar ciência
+                      </button>
+                    </form>
                   </div>
-                )}
+                ))}
+
+                {enviosRealizados.slice(0, 5).map((ocorrencia) => (
+                  <div key={ocorrencia.id} className="rounded-2xl bg-muted p-4">
+                    <p className="font-medium text-foreground">
+                      {ocorrencia.titulo}
+                    </p>
+
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {getTipoLabel(ocorrencia.tipo)} ·{" "}
+                      {ocorrencia.cienciaConfirmada
+                        ? "Responsável ciente"
+                        : "Aguardando ciência"}
+                    </p>
+
+                    {ocorrencia.tokenCiencia && (
+                      <Link
+                        href={`/ciencia/${ocorrencia.tokenCiencia}`}
+                        target="_blank"
+                        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-card"
+                      >
+                        Abrir link de ciência
+                        <ExternalLink size={16} />
+                      </Link>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </section>
 
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-                <CalendarDays size={19} />
-              </div>
+              <CalendarDays size={22} />
 
               <div>
                 <h2 className="font-semibold text-foreground">
                   Histórico Pulse
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Últimas tarefas relacionadas ao aluno
+                  Últimas tarefas do aluno
                 </p>
               </div>
             </div>
 
             {alunoEncontrado.tarefas.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Nenhuma tarefa no Pulse vinculada a este aluno.
+                Nenhuma tarefa vinculada.
               </p>
             ) : (
               <div className="space-y-3">
                 {alunoEncontrado.tarefas.slice(0, 6).map((tarefa) => (
                   <div key={tarefa.id} className="rounded-2xl bg-muted p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {tarefa.titulo}
-                        </p>
-
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {tarefa.setor} · {getStatusLabel(tarefa.status)}
-                        </p>
-                      </div>
-
-                      <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold text-muted-foreground">
-                        {getPrioridadeLabel(tarefa.prioridade)}
-                      </span>
-                    </div>
+                    <p className="font-medium text-foreground">
+                      {tarefa.titulo}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {tarefa.setor} · {getStatusLabel(tarefa.status)}
+                    </p>
                   </div>
                 ))}
               </div>
