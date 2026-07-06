@@ -1,5 +1,6 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -120,35 +121,67 @@ export default async function AlunoDetalhePage({
     notFound();
   }
 
-  const tarefasAbertas = aluno.tarefas.filter(
+  const alunoEncontrado = aluno;
+
+  async function marcarComoEnviado(formData: FormData) {
+    "use server";
+
+    const ocorrenciaId = String(formData.get("ocorrenciaId") || "");
+
+    if (!ocorrenciaId) {
+      throw new Error("Ocorrência não encontrada.");
+    }
+
+    await prisma.ocorrenciaAluno.update({
+      where: {
+        id: ocorrenciaId,
+      },
+      data: {
+        status: "ENVIADO",
+        enviadoPorEmail: true,
+        dataEnvioEmail: new Date(),
+      },
+    });
+
+    revalidatePath(`/alunos/${alunoEncontrado.id}`);
+    revalidatePath("/comunicacao");
+    revalidatePath("/relatorios");
+  }
+
+  const tarefasAbertas = alunoEncontrado.tarefas.filter(
     (tarefa) => tarefa.status !== "CONCLUIDA",
   );
 
-  const tarefasFinanceiro = aluno.tarefas.filter(
+  const tarefasFinanceiro = alunoEncontrado.tarefas.filter(
     (tarefa) => tarefa.setor === "Financeiro",
   );
 
-  const tarefasDocumentos = aluno.tarefas.filter(
+  const tarefasDocumentos = alunoEncontrado.tarefas.filter(
     (tarefa) => tarefa.setor === "Documentos",
   );
 
-  const tarefasComunicacao = aluno.tarefas.filter(
-    (tarefa) => tarefa.setor === "Comunicação",
-  );
-
-  const advertencias = aluno.ocorrencias.filter(
+  const advertencias = alunoEncontrado.ocorrencias.filter(
     (ocorrencia) => ocorrencia.tipo === "ADVERTENCIA",
   );
 
-  const suspensoes = aluno.ocorrencias.filter(
+  const suspensoes = alunoEncontrado.ocorrencias.filter(
     (ocorrencia) => ocorrencia.tipo === "SUSPENSAO",
   );
 
-  const relatorios = aluno.ocorrencias.filter(
+  const relatorios = alunoEncontrado.ocorrencias.filter(
     (ocorrencia) => ocorrencia.tipo === "RELATORIO",
   );
 
-  const ultimaMatricula = aluno.matriculas[0];
+  const enviosPreparados = alunoEncontrado.ocorrencias.filter(
+    (ocorrencia) =>
+      ocorrencia.enviarParaResponsavel && !ocorrencia.enviadoPorEmail,
+  );
+
+  const enviosRealizados = alunoEncontrado.ocorrencias.filter(
+    (ocorrencia) => ocorrencia.enviadoPorEmail,
+  );
+
+  const ultimaMatricula = alunoEncontrado.matriculas[0];
 
   return (
     <AppLayout>
@@ -169,7 +202,7 @@ export default async function AlunoDetalhePage({
 
             <div>
               <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-                {aluno.nome}
+                {alunoEncontrado.nome}
               </h1>
 
               <p className="mt-1 text-sm text-muted-foreground">
@@ -180,7 +213,7 @@ export default async function AlunoDetalhePage({
         </div>
 
         <Link
-          href={`/alunos/${aluno.id}/ocorrencias/novo`}
+          href={`/alunos/${alunoEncontrado.id}/ocorrencias/novo`}
           className="rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
         >
           Nova ocorrência
@@ -195,7 +228,7 @@ export default async function AlunoDetalhePage({
 
           <p className="text-sm text-muted-foreground">Ocorrências</p>
           <p className="mt-1 text-3xl font-semibold text-foreground">
-            {aluno.ocorrencias.length}
+            {alunoEncontrado.ocorrencias.length}
           </p>
         </div>
 
@@ -243,7 +276,7 @@ export default async function AlunoDetalhePage({
 
         <div className="grid gap-3 md:grid-cols-5">
           <Link
-            href={`/alunos/${aluno.id}/ocorrencias/novo?tipo=ADVERTENCIA`}
+            href={`/alunos/${alunoEncontrado.id}/ocorrencias/novo?tipo=ADVERTENCIA`}
             className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <ShieldAlert size={22} className="mb-3 text-foreground" />
@@ -254,7 +287,7 @@ export default async function AlunoDetalhePage({
           </Link>
 
           <Link
-            href={`/alunos/${aluno.id}/ocorrencias/novo?tipo=SUSPENSAO`}
+            href={`/alunos/${alunoEncontrado.id}/ocorrencias/novo?tipo=SUSPENSAO`}
             className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <AlertTriangle size={22} className="mb-3 text-foreground" />
@@ -265,7 +298,7 @@ export default async function AlunoDetalhePage({
           </Link>
 
           <Link
-            href={`/alunos/${aluno.id}/ocorrencias/novo?tipo=RELATORIO`}
+            href={`/alunos/${alunoEncontrado.id}/ocorrencias/novo?tipo=RELATORIO`}
             className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <NotebookText size={22} className="mb-3 text-foreground" />
@@ -276,7 +309,7 @@ export default async function AlunoDetalhePage({
           </Link>
 
           <Link
-            href={`/alunos/${aluno.id}/ocorrencias/novo?tipo=ATENDIMENTO`}
+            href={`/alunos/${alunoEncontrado.id}/ocorrencias/novo?tipo=ATENDIMENTO`}
             className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <UsersRound size={22} className="mb-3 text-foreground" />
@@ -287,7 +320,7 @@ export default async function AlunoDetalhePage({
           </Link>
 
           <Link
-            href={`/alunos/${aluno.id}/ocorrencias/novo?tipo=OCORRENCIA`}
+            href={`/alunos/${alunoEncontrado.id}/ocorrencias/novo?tipo=OCORRENCIA`}
             className="rounded-2xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <ClipboardList size={22} className="mb-3 text-foreground" />
@@ -323,7 +356,7 @@ export default async function AlunoDetalhePage({
                   Nome
                 </p>
                 <p className="mt-1 font-medium text-foreground">
-                  {aluno.nome}
+                  {alunoEncontrado.nome}
                 </p>
               </div>
 
@@ -332,7 +365,7 @@ export default async function AlunoDetalhePage({
                   Nascimento
                 </p>
                 <p className="mt-1 font-medium text-foreground">
-                  {formatDate(aluno.dataNascimento)}
+                  {formatDate(alunoEncontrado.dataNascimento)}
                 </p>
               </div>
 
@@ -341,7 +374,7 @@ export default async function AlunoDetalhePage({
                   Turma
                 </p>
                 <p className="mt-1 font-medium text-foreground">
-                  {aluno.turma?.nome ?? "Sem turma"}
+                  {alunoEncontrado.turma?.nome ?? "Sem turma"}
                 </p>
               </div>
 
@@ -361,7 +394,7 @@ export default async function AlunoDetalhePage({
                   CPF
                 </p>
                 <p className="mt-1 font-medium text-foreground">
-                  {aluno.cpf || "Não informado"}
+                  {alunoEncontrado.cpf || "Não informado"}
                 </p>
               </div>
 
@@ -370,7 +403,7 @@ export default async function AlunoDetalhePage({
                   Certidão
                 </p>
                 <p className="mt-1 font-medium text-foreground">
-                  {aluno.certidaoNascimento || "Não informado"}
+                  {alunoEncontrado.certidaoNascimento || "Não informado"}
                 </p>
               </div>
             </div>
@@ -380,7 +413,7 @@ export default async function AlunoDetalhePage({
                 Alergias
               </p>
               <p className="mt-1 text-sm leading-6 text-foreground">
-                {aluno.alergias || "Nenhuma alergia informada."}
+                {alunoEncontrado.alergias || "Nenhuma alergia informada."}
               </p>
             </div>
 
@@ -389,7 +422,8 @@ export default async function AlunoDetalhePage({
                 Observações
               </p>
               <p className="mt-1 text-sm leading-6 text-foreground">
-                {aluno.observacoes || "Nenhuma observação cadastrada."}
+                {alunoEncontrado.observacoes ||
+                  "Nenhuma observação cadastrada."}
               </p>
             </div>
           </section>
@@ -412,14 +446,14 @@ export default async function AlunoDetalhePage({
               </div>
 
               <Link
-                href={`/alunos/${aluno.id}/ocorrencias/novo`}
+                href={`/alunos/${alunoEncontrado.id}/ocorrencias/novo`}
                 className="hidden rounded-2xl border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-muted md:inline-flex"
               >
                 Novo registro
               </Link>
             </div>
 
-            {aluno.ocorrencias.length === 0 ? (
+            {alunoEncontrado.ocorrencias.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border p-6 text-center">
                 <p className="font-medium text-foreground">
                   Nenhuma ocorrência registrada
@@ -431,7 +465,7 @@ export default async function AlunoDetalhePage({
               </div>
             ) : (
               <div className="space-y-3">
-                {aluno.ocorrencias.map((ocorrencia) => (
+                {alunoEncontrado.ocorrencias.map((ocorrencia) => (
                   <div
                     key={ocorrencia.id}
                     className="rounded-2xl border border-border bg-background p-4"
@@ -546,7 +580,7 @@ export default async function AlunoDetalhePage({
                   Nome
                 </p>
                 <p className="mt-1 font-medium text-foreground">
-                  {aluno.responsavel.nome}
+                  {alunoEncontrado.responsavel.nome}
                 </p>
               </div>
 
@@ -555,7 +589,7 @@ export default async function AlunoDetalhePage({
                   Telefone
                 </p>
                 <p className="mt-1 font-medium text-foreground">
-                  {aluno.responsavel.telefone}
+                  {alunoEncontrado.responsavel.telefone}
                 </p>
               </div>
 
@@ -564,7 +598,7 @@ export default async function AlunoDetalhePage({
                   E-mail
                 </p>
                 <p className="mt-1 font-medium text-foreground">
-                  {aluno.responsavel.email || "Não informado"}
+                  {alunoEncontrado.responsavel.email || "Não informado"}
                 </p>
               </div>
 
@@ -573,7 +607,7 @@ export default async function AlunoDetalhePage({
                   Endereço
                 </p>
                 <p className="mt-1 text-sm leading-6 text-foreground">
-                  {aluno.responsavel.endereco || "Não informado"}
+                  {alunoEncontrado.responsavel.endereco || "Não informado"}
                 </p>
               </div>
             </div>
@@ -593,13 +627,13 @@ export default async function AlunoDetalhePage({
               </div>
             </div>
 
-            {aluno.matriculas.length === 0 ? (
+            {alunoEncontrado.matriculas.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 Nenhuma matrícula encontrada.
               </p>
             ) : (
               <div className="space-y-3">
-                {aluno.matriculas.map((matricula) => (
+                {alunoEncontrado.matriculas.map((matricula) => (
                   <div
                     key={matricula.id}
                     className="rounded-2xl bg-muted p-4"
@@ -702,30 +736,120 @@ export default async function AlunoDetalhePage({
               </div>
 
               <div>
-                <h2 className="font-semibold text-foreground">Comunicação</h2>
+                <h2 className="font-semibold text-foreground">
+                  Comunicação com responsável
+                </h2>
                 <p className="text-sm text-muted-foreground">
-                  Comunicados e contatos com a família
+                  Envios preparados, comunicados e histórico com a família
                 </p>
               </div>
             </div>
 
-            {tarefasComunicacao.length === 0 ? (
+            {enviosPreparados.length === 0 && enviosRealizados.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Nenhum comunicado vinculado ao aluno.
+                Nenhum envio preparado para o responsável.
               </p>
             ) : (
-              <div className="space-y-3">
-                {tarefasComunicacao.map((tarefa) => (
-                  <div key={tarefa.id} className="rounded-2xl bg-muted p-4">
-                    <p className="font-medium text-foreground">
-                      {tarefa.titulo}
+              <div className="space-y-4">
+                {enviosPreparados.length > 0 && (
+                  <div>
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                      Preparados para envio
                     </p>
 
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      {getStatusLabel(tarefa.status)}
-                    </p>
+                    <div className="space-y-3">
+                      {enviosPreparados.map((ocorrencia) => (
+                        <div
+                          key={ocorrencia.id}
+                          className="rounded-2xl border border-border bg-background p-4"
+                        >
+                          <div className="mb-3 flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground">
+                              {getTipoLabel(ocorrencia.tipo)}
+                            </span>
+
+                            <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                              Preparado
+                            </span>
+                          </div>
+
+                          <p className="font-medium text-foreground">
+                            {ocorrencia.titulo}
+                          </p>
+
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            E-mail:{" "}
+                            {ocorrencia.emailResponsavel ||
+                              alunoEncontrado.responsavel.email ||
+                              "Não informado"}
+                          </p>
+
+                          {ocorrencia.textoFinal && (
+                            <details className="mt-3">
+                              <summary className="cursor-pointer text-sm font-semibold text-foreground">
+                                Ver texto
+                              </summary>
+
+                              <div className="mt-3 rounded-2xl bg-muted p-4">
+                                <p className="whitespace-pre-line text-sm leading-6 text-foreground">
+                                  {ocorrencia.textoFinal}
+                                </p>
+                              </div>
+                            </details>
+                          )}
+
+                          <form action={marcarComoEnviado} className="mt-4">
+                            <input
+                              type="hidden"
+                              name="ocorrenciaId"
+                              value={ocorrencia.id}
+                            />
+
+                            <button
+                              type="submit"
+                              className="w-full rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                            >
+                              Marcar como enviado
+                            </button>
+                          </form>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                )}
+
+                {enviosRealizados.length > 0 && (
+                  <div>
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                      Envios realizados
+                    </p>
+
+                    <div className="space-y-3">
+                      {enviosRealizados.slice(0, 4).map((ocorrencia) => (
+                        <div
+                          key={ocorrencia.id}
+                          className="rounded-2xl bg-muted p-4"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {ocorrencia.titulo}
+                              </p>
+
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {getTipoLabel(ocorrencia.tipo)} · Enviado
+                              </p>
+                            </div>
+
+                            <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold text-muted-foreground">
+                              OK
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </section>
@@ -746,13 +870,13 @@ export default async function AlunoDetalhePage({
               </div>
             </div>
 
-            {aluno.tarefas.length === 0 ? (
+            {alunoEncontrado.tarefas.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 Nenhuma tarefa no Pulse vinculada a este aluno.
               </p>
             ) : (
               <div className="space-y-3">
-                {aluno.tarefas.slice(0, 6).map((tarefa) => (
+                {alunoEncontrado.tarefas.slice(0, 6).map((tarefa) => (
                   <div key={tarefa.id} className="rounded-2xl bg-muted p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
