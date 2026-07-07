@@ -1,371 +1,514 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
+  Mail,
+  Megaphone,
+  Plus,
+  Send,
+} from "lucide-react";
 
-export const dynamic = "force-dynamic";
+function formatDateTime(date?: Date | null) {
+  if (!date) return "Não informado";
 
-function getString(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
 }
 
-async function atualizarStatusComunicado(formData: FormData) {
-  "use server";
+function formatDate(date?: Date | null) {
+  if (!date) return "Não informado";
 
-  const tarefaId = getString(formData, "tarefaId");
-  const status = getString(formData, "status");
-
-  const statusPermitidos = [
-    "A_FAZER",
-    "EM_ANDAMENTO",
-    "AGUARDANDO",
-    "CONCLUIDA",
-  ];
-
-  if (!tarefaId || !statusPermitidos.includes(status)) {
-    throw new Error("Dados inválidos para atualizar o comunicado.");
-  }
-
-  await prisma.tarefa.update({
-    where: {
-      id: tarefaId,
-    },
-    data: {
-      status: status as
-        | "A_FAZER"
-        | "EM_ANDAMENTO"
-        | "AGUARDANDO"
-        | "CONCLUIDA",
-    },
-  });
-
-  revalidatePath("/comunicacao");
-  revalidatePath("/pulse");
-  revalidatePath("/dashboard");
-
-  redirect("/comunicacao");
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "UTC",
+  }).format(date);
 }
 
-function formatStatus(status: string) {
+function formatMoney(valorCentavos?: number | null) {
+  if (!valorCentavos) return null;
+
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(valorCentavos / 100);
+}
+
+function getTipoLabel(tipo: string) {
   const labels: Record<string, string> = {
-    A_FAZER: "Rascunho",
-    EM_ANDAMENTO: "Preparado",
-    AGUARDANDO: "Aguardando aprovação",
-    CONCLUIDA: "Enviado",
+    SIMPLES: "Comunicado simples",
+    CIENCIA: "Comunicado com ciência",
+    EVENTO: "Evento com participação",
+    AUTORIZACAO: "Autorização digital",
+    PAGAMENTO: "Comunicado com pagamento",
+  };
+
+  return labels[tipo] ?? tipo;
+}
+
+function getStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    RASCUNHO: "Rascunho",
+    PREPARADO: "Preparado",
+    ENVIADO: "Enviado",
+    CANCELADO: "Cancelado",
+    ARQUIVADO: "Arquivado",
+    PENDENTE: "Pendente",
+    VISUALIZADO: "Visualizado",
+    RESPONDIDO: "Respondido",
   };
 
   return labels[status] ?? status;
 }
 
-function getStatusClass(status: string) {
-  const classes: Record<string, string> = {
-    A_FAZER: "bg-slate-50 text-slate-700 ring-slate-200",
-    EM_ANDAMENTO: "bg-blue-50 text-blue-700 ring-blue-200",
-    AGUARDANDO: "bg-yellow-50 text-yellow-700 ring-yellow-200",
-    CONCLUIDA: "bg-green-50 text-green-700 ring-green-200",
-  };
+export default async function ComunicacaoPage() {
+  const escola = await prisma.escola.findFirst({
+    orderBy: {
+      criadoEm: "asc",
+    },
+  });
 
-  return classes[status] ?? "bg-muted text-muted-foreground ring-border";
-}
+  if (!escola) {
+    throw new Error("Nenhuma escola encontrada.");
+  }
 
-async function getComunicacaoData() {
-  const comunicados = await prisma.tarefa.findMany({
+  const escolaEncontrada = escola;
+
+  const comunicados = await prisma.comunicado.findMany({
     where: {
-      setor: "Comunicação",
+      escolaId: escolaEncontrada.id,
     },
     orderBy: {
       criadoEm: "desc",
     },
     include: {
+      turma: true,
       aluno: true,
-      matricula: true,
+      destinatarios: {
+        orderBy: {
+          criadoEm: "asc",
+        },
+        include: {
+          aluno: true,
+          responsavel: true,
+          respostas: true,
+        },
+      },
+      respostas: true,
     },
   });
 
-  const rascunhos = comunicados.filter(
-    (comunicado) => comunicado.status === "A_FAZER"
+  async function marcarComoEnviado(formData: FormData) {
+    "use server";
+
+    const comunicadoId = String(formData.get("comunicadoId") || "");
+
+    if (!comunicadoId) {
+      throw new Error("Comunicado não encontrado.");
+    }
+
+    await prisma.comunicado.update({
+      where: {
+        id: comunicadoId,
+      },
+      data: {
+        status: "ENVIADO",
+        enviadoEm: new Date(),
+        destinatarios: {
+          updateMany: {
+            where: {
+              status: "PENDENTE",
+            },
+            data: {
+              status: "ENVIADO",
+              enviadoEm: new Date(),
+            },
+          },
+        },
+      },
+    });
+
+    revalidatePath("/comunicacao");
+    revalidatePath("/dashboard");
+    revalidatePath("/pulse");
+    revalidatePath("/relatorios");
+  }
+
+  const totalComunicados = comunicados.length;
+
+  const comunicadosPreparados = comunicados.filter(
+    (comunicado) => comunicado.status === "PREPARADO",
+  ).length;
+
+  const comunicadosEnviados = comunicados.filter(
+    (comunicado) => comunicado.status === "ENVIADO",
+  ).length;
+
+  const totalDestinatarios = comunicados.reduce(
+    (total, comunicado) => total + comunicado.destinatarios.length,
+    0,
   );
 
-  const preparados = comunicados.filter(
-    (comunicado) => comunicado.status === "EM_ANDAMENTO"
+  const totalRespostas = comunicados.reduce(
+    (total, comunicado) => total + comunicado.respostas.length,
+    0,
   );
-
-  const aguardando = comunicados.filter(
-    (comunicado) => comunicado.status === "AGUARDANDO"
-  );
-
-  const enviados = comunicados.filter(
-    (comunicado) => comunicado.status === "CONCLUIDA"
-  );
-
-  return {
-    comunicados,
-    rascunhos,
-    preparados,
-    aguardando,
-    enviados,
-  };
-}
-
-export default async function ComunicacaoPage() {
-  const data = await getComunicacaoData();
 
   return (
     <AppLayout>
-      <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="mb-8 flex items-start justify-between gap-6">
         <div>
           <p className="text-sm font-medium text-muted-foreground">
-            Comunicação Escolar
+            Comunicação Inteligente
           </p>
 
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-foreground">
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
             Comunicação
           </h1>
 
-          <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
-            Crie, acompanhe e organize comunicados para responsáveis, alunos e
-            setores da escola.
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Crie comunicados, eventos, autorizações digitais e acompanhe as
+            respostas dos responsáveis em um só lugar.
           </p>
         </div>
 
         <Link
           href="/comunicacao/novo"
-          className="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+          className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
         >
+          <Plus size={18} />
           Novo comunicado
         </Link>
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-4">
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Comunicados
-          </p>
-
-          <div className="mt-4 text-4xl font-semibold text-foreground">
-            {data.comunicados.length}
+      <div className="mb-8 grid gap-4 md:grid-cols-4">
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-foreground">
+            <Megaphone size={20} />
           </div>
 
-          <p className="mt-2 text-sm text-muted-foreground">
-            cadastrados no módulo
+          <p className="text-sm text-muted-foreground">Comunicados</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">
+            {totalComunicados}
           </p>
         </div>
 
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Rascunhos
-          </p>
-
-          <div className="mt-4 text-4xl font-semibold text-foreground">
-            {data.rascunhos.length}
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-foreground">
+            <Clock size={20} />
           </div>
 
-          <p className="mt-2 text-sm text-muted-foreground">
-            ainda não enviados
+          <p className="text-sm text-muted-foreground">Preparados</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">
+            {comunicadosPreparados}
           </p>
         </div>
 
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Aguardando
-          </p>
-
-          <div className="mt-4 text-4xl font-semibold text-foreground">
-            {data.aguardando.length}
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-foreground">
+            <Send size={20} />
           </div>
 
-          <p className="mt-2 text-sm text-muted-foreground">
-            pendentes de aprovação
+          <p className="text-sm text-muted-foreground">Enviados</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">
+            {comunicadosEnviados}
           </p>
         </div>
 
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Enviados
-          </p>
-
-          <div className="mt-4 text-4xl font-semibold text-foreground">
-            {data.enviados.length}
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-foreground">
+            <CheckCircle2 size={20} />
           </div>
 
-          <p className="mt-2 text-sm text-muted-foreground">
-            comunicados finalizados
+          <p className="text-sm text-muted-foreground">Respostas</p>
+          <p className="mt-1 text-3xl font-semibold text-foreground">
+            {totalRespostas}/{totalDestinatarios}
           </p>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-foreground">
-            Comunicados da escola
-          </h2>
+      <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <div>
+            <h2 className="font-semibold text-foreground">
+              Comunicados criados
+            </h2>
 
-          <p className="mt-1 text-sm text-muted-foreground">
-            {data.comunicados.length} comunicado
-            {data.comunicados.length === 1 ? "" : "s"} encontrado
-            {data.comunicados.length === 1 ? "" : "s"}.
-          </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Acompanhe comunicados, eventos, autorizações e respostas dos
+              responsáveis.
+            </p>
+          </div>
         </div>
 
-        {data.comunicados.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-8 text-center">
-            <h3 className="font-semibold text-foreground">
-              Nenhum comunicado criado ainda.
-            </h3>
+        {comunicados.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-foreground">
+              <Mail size={22} />
+            </div>
+
+            <p className="font-medium text-foreground">
+              Nenhum comunicado criado ainda
+            </p>
 
             <p className="mt-2 text-sm text-muted-foreground">
-              Crie o primeiro comunicado para responsáveis ou setores da escola.
+              Crie o primeiro comunicado inteligente para enviar às famílias.
             </p>
+
+            <Link
+              href="/comunicacao/novo"
+              className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+            >
+              <Plus size={18} />
+              Criar comunicado
+            </Link>
           </div>
         ) : (
           <div className="space-y-4">
-            {data.comunicados.map((comunicado) => (
-              <div
-                key={comunicado.id}
-                className={[
-                  "rounded-3xl border border-border bg-background p-5 transition hover:border-primary/30",
-                  comunicado.status === "CONCLUIDA"
-                    ? "opacity-80"
-                    : "hover:bg-primary/5",
-                ].join(" ")}
-              >
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-3">
+            {comunicados.map((comunicado) => {
+              const destinatarios = comunicado.destinatarios.length;
+
+              const respondidos = comunicado.destinatarios.filter(
+                (destinatario) =>
+                  destinatario.status === "RESPONDIDO" ||
+                  destinatario.respostas.length > 0,
+              ).length;
+
+              const pendentes = destinatarios - respondidos;
+              const valorFormatado = formatMoney(comunicado.valorCentavos);
+
+              return (
+                <div
+                  key={comunicado.id}
+                  className="rounded-2xl border border-border bg-background p-5"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-5">
+                    <div className="min-w-0">
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground">
+                          {getTipoLabel(comunicado.tipo)}
+                        </span>
+
+                        <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                          {getStatusLabel(comunicado.status)}
+                        </span>
+
+                        {comunicado.requerParticipacao && (
+                          <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                            Participação
+                          </span>
+                        )}
+
+                        {comunicado.requerAutorizacao && (
+                          <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                            Autorização
+                          </span>
+                        )}
+
+                        {comunicado.requerCiencia && (
+                          <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                            Ciência digital
+                          </span>
+                        )}
+                      </div>
+
                       <h3 className="text-lg font-semibold text-foreground">
                         {comunicado.titulo}
                       </h3>
 
-                      <span
-                        className={[
-                          "rounded-full px-3 py-1 text-xs font-semibold ring-1",
-                          getStatusClass(comunicado.status),
-                        ].join(" ")}
-                      >
-                        {formatStatus(comunicado.status)}
-                      </span>
+                      <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
+                        {comunicado.conteudo}
+                      </p>
                     </div>
 
-                    {comunicado.descricao && (
-                      <p className="mt-3 max-w-3xl whitespace-pre-line text-sm leading-6 text-muted-foreground">
-                        {comunicado.descricao}
+                    <div className="shrink-0 rounded-2xl bg-muted px-4 py-3 text-right">
+                      <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                        Criado em
                       </p>
-                    )}
 
-                    <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                      <span>
-                        Criado em{" "}
-                        <strong className="font-medium text-foreground">
-                          {comunicado.criadoEm.toLocaleDateString("pt-BR")}
-                        </strong>
-                      </span>
-
-                      <span>
-                        Atualizado em{" "}
-                        <strong className="font-medium text-foreground">
-                          {comunicado.atualizadoEm.toLocaleDateString("pt-BR")}
-                        </strong>
-                      </span>
+                      <p className="mt-1 text-sm font-medium text-foreground">
+                        {formatDateTime(comunicado.criadoEm)}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="flex shrink-0 flex-col gap-2 lg:min-w-[190px]">
-                    {comunicado.status === "CONCLUIDA" ? (
-                      <form action={atualizarStatusComunicado}>
-                        <input
-                          type="hidden"
-                          name="tarefaId"
-                          value={comunicado.id}
-                        />
+                  {(comunicado.dataEvento ||
+                    comunicado.horaEvento ||
+                    comunicado.localEvento ||
+                    valorFormatado) && (
+                    <div className="mt-4 grid gap-3 md:grid-cols-4">
+                      <div className="rounded-2xl bg-muted p-3">
+                        <p className="text-xs text-muted-foreground">Data</p>
+                        <p className="mt-1 text-sm font-semibold text-foreground">
+                          {formatDate(comunicado.dataEvento)}
+                        </p>
+                      </div>
 
+                      <div className="rounded-2xl bg-muted p-3">
+                        <p className="text-xs text-muted-foreground">Hora</p>
+                        <p className="mt-1 text-sm font-semibold text-foreground">
+                          {comunicado.horaEvento || "Não informado"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl bg-muted p-3">
+                        <p className="text-xs text-muted-foreground">Local</p>
+                        <p className="mt-1 text-sm font-semibold text-foreground">
+                          {comunicado.localEvento || "Não informado"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl bg-muted p-3">
+                        <p className="text-xs text-muted-foreground">Valor</p>
+                        <p className="mt-1 text-sm font-semibold text-foreground">
+                          {valorFormatado || "Sem valor"}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-4 grid gap-3 md:grid-cols-4">
+                    <div className="rounded-2xl bg-muted p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Público-alvo
+                      </p>
+
+                      <p className="mt-1 text-sm font-semibold text-foreground">
+                        {comunicado.publicoAlvo === "TURMA"
+                          ? comunicado.turma?.nome || "Turma"
+                          : comunicado.publicoAlvo === "ALUNO"
+                            ? comunicado.aluno?.nome || "Aluno"
+                            : "Toda a escola"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-muted p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Destinatários
+                      </p>
+
+                      <p className="mt-1 text-sm font-semibold text-foreground">
+                        {destinatarios}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-muted p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Respondidos
+                      </p>
+
+                      <p className="mt-1 text-sm font-semibold text-foreground">
+                        {respondidos}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-muted p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Pendentes
+                      </p>
+
+                      <p className="mt-1 text-sm font-semibold text-foreground">
+                        {pendentes}
+                      </p>
+                    </div>
+                  </div>
+
+                  {comunicado.destinatarios.length > 0 && (
+                    <details className="mt-4">
+                      <summary className="cursor-pointer text-sm font-semibold text-foreground">
+                        Ver destinatários e links de resposta
+                      </summary>
+
+                      <div className="mt-3 space-y-2">
+                        {comunicado.destinatarios.slice(0, 12).map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-muted p-3"
+                          >
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {item.aluno?.nome ?? "Aluno não informado"}
+                              </p>
+
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                Responsável:{" "}
+                                {item.nomeResponsavel || "Não informado"}
+                              </p>
+
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                Status: {getStatusLabel(item.status)}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2">
+                              {item.tokenResposta && (
+                                <Link
+                                  href={`/responder/${item.tokenResposta}`}
+                                  target="_blank"
+                                  className="inline-flex items-center gap-2 rounded-2xl bg-background px-4 py-2 text-xs font-semibold text-foreground transition hover:bg-card"
+                                >
+                                  <ExternalLink size={15} />
+                                  Abrir resposta
+                                </Link>
+                              )}
+
+                              <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold text-muted-foreground">
+                                {item.respostas.length > 0
+                                  ? "Respondido"
+                                  : "Aguardando"}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+
+                        {comunicado.destinatarios.length > 12 && (
+                          <p className="px-3 pt-2 text-xs text-muted-foreground">
+                            + {comunicado.destinatarios.length - 12}{" "}
+                            destinatário(s)
+                          </p>
+                        )}
+                      </div>
+                    </details>
+                  )}
+
+                  <div className="mt-5 flex flex-wrap justify-end gap-3">
+                    {comunicado.status === "PREPARADO" && (
+                      <form action={marcarComoEnviado}>
                         <input
                           type="hidden"
-                          name="status"
-                          value="EM_ANDAMENTO"
+                          name="comunicadoId"
+                          value={comunicado.id}
                         />
 
                         <button
                           type="submit"
-                          className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
+                          className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
                         >
-                          Reabrir comunicado
+                          <Send size={18} />
+                          Marcar como enviado
                         </button>
                       </form>
-                    ) : (
-                      <>
-                        <form action={atualizarStatusComunicado}>
-                          <input
-                            type="hidden"
-                            name="tarefaId"
-                            value={comunicado.id}
-                          />
-
-                          <input
-                            type="hidden"
-                            name="status"
-                            value="EM_ANDAMENTO"
-                          />
-
-                          <button
-                            type="submit"
-                            disabled={comunicado.status === "EM_ANDAMENTO"}
-                            className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-45"
-                          >
-                            Preparar
-                          </button>
-                        </form>
-
-                        <form action={atualizarStatusComunicado}>
-                          <input
-                            type="hidden"
-                            name="tarefaId"
-                            value={comunicado.id}
-                          />
-
-                          <input type="hidden" name="status" value="AGUARDANDO" />
-
-                          <button
-                            type="submit"
-                            disabled={comunicado.status === "AGUARDANDO"}
-                            className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-45"
-                          >
-                            Aguardar aprovação
-                          </button>
-                        </form>
-
-                        <form action={atualizarStatusComunicado}>
-                          <input
-                            type="hidden"
-                            name="tarefaId"
-                            value={comunicado.id}
-                          />
-
-                          <input type="hidden" name="status" value="CONCLUIDA" />
-
-                          <button
-                            type="submit"
-                            className="w-full rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
-                          >
-                            Marcar como enviado
-                          </button>
-                        </form>
-                      </>
                     )}
+
+                    <Link
+                      href="/comunicacao/novo"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-border px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
+                    >
+                      Novo comunicado
+                      <ArrowRight size={18} />
+                    </Link>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
-      </div>
+      </section>
     </AppLayout>
   );
 }
-
