@@ -230,16 +230,24 @@ export default async function ResponderComunicadoPage({
 
   const comunicado = destinatario.comunicado;
   const respostaExistente = destinatario.respostas[0];
+
   const jaRespondido =
     destinatario.status === "RESPONDIDO" || Boolean(respostaExistente);
 
   const valorFormatado = formatMoney(comunicado.valorCentavos);
 
   const mostrarBotaoCiencia =
-    comunicado.requerCiencia ||
-    (!comunicado.requerParticipacao &&
-      !comunicado.requerAutorizacao &&
-      !comunicado.permiteRespostaTexto);
+    !comunicado.requerParticipacao &&
+    !comunicado.requerAutorizacao &&
+    (comunicado.requerCiencia ||
+      (!comunicado.permiteRespostaTexto &&
+        !comunicado.requerParticipacao &&
+        !comunicado.requerAutorizacao));
+
+  const mostrarBotaoRespostaTexto =
+    comunicado.permiteRespostaTexto &&
+    !comunicado.requerParticipacao &&
+    !comunicado.requerAutorizacao;
 
   return (
     <main className="min-h-screen bg-muted px-4 py-8 text-foreground">
@@ -466,18 +474,21 @@ export default async function ResponderComunicadoPage({
                   />
                 </label>
 
-                <label className="block">
-                  <span className="text-sm font-medium text-foreground">
-                    Motivo da negativa
-                  </span>
+                {(comunicado.requerParticipacao ||
+                  comunicado.requerAutorizacao) && (
+                  <label className="block">
+                    <span className="text-sm font-medium text-foreground">
+                      Motivo da negativa
+                    </span>
 
-                  <textarea
-                    name="motivoNegativa"
-                    rows={3}
-                    className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary"
-                    placeholder="Preencha este campo se escolher não participar ou não autorizar."
-                  />
-                </label>
+                    <textarea
+                      name="motivoNegativa"
+                      rows={3}
+                      className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary"
+                      placeholder="Preencha este campo se escolher não participar ou não autorizar."
+                    />
+                  </label>
+                )}
 
                 <div className="flex flex-wrap gap-3 pt-2">
                   {mostrarBotaoCiencia && (
@@ -540,7 +551,7 @@ export default async function ResponderComunicadoPage({
                     </>
                   )}
 
-                  {comunicado.permiteRespostaTexto && (
+                  {mostrarBotaoRespostaTexto && (
                     <button
                       type="submit"
                       name="tipoResposta"
