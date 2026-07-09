@@ -95,7 +95,7 @@ const menuItems = [
   },
   {
     label: "Lumi IA",
-    href: "/relatorios",
+    href: "/lumi",
     icon: Sparkles,
   },
   {
@@ -106,6 +106,12 @@ const menuItems = [
 ];
 
 const lumiActions = [
+  {
+    title: "Abrir Central da Lumi",
+    description: "Ver resumo completo, prioridades e sugestões da escola.",
+    href: "/lumi",
+    icon: Sparkles,
+  },
   {
     title: "Ver tarefas abertas",
     description: "Acompanhar pendências e responsáveis no Pulse.",
@@ -129,12 +135,6 @@ const lumiActions = [
     description: "Ver cobranças, pendências e situação financeira.",
     href: "/financeiro",
     icon: CreditCard,
-  },
-  {
-    title: "Alunos",
-    description: "Abrir prontuários e acompanhar histórico escolar.",
-    href: "/alunos",
-    icon: GraduationCap,
   },
 ];
 
