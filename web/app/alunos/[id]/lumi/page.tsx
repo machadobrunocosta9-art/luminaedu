@@ -224,13 +224,16 @@ export default async function LumiAlunoPage({ params }: PageProps) {
     <AppLayout>
       <div className="mb-8 flex flex-wrap items-start justify-between gap-6">
         <div>
-          <Link
+          <a
             href={`/alunos/${aluno.id}`}
-            className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-primary"
+            className="group mb-4 inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:opacity-80"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft
+              size={16}
+              className="transition-transform duration-200 group-hover:-translate-x-1"
+            />
             Voltar para o prontuário
-          </Link>
+          </a>
 
           <p className="text-sm font-medium text-muted-foreground">
             Lumi do Aluno
@@ -246,7 +249,7 @@ export default async function LumiAlunoPage({ params }: PageProps) {
           </p>
         </div>
 
-        <div className="rounded-3xl border border-border bg-card px-5 py-4 shadow-sm">
+        <div className="rounded-3xl border border-border bg-card px-5 py-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
             Situação
           </p>
@@ -258,75 +261,100 @@ export default async function LumiAlunoPage({ params }: PageProps) {
         </div>
       </div>
 
-      <section className="mb-8 rounded-[2rem] border border-border bg-card p-6 shadow-sm">
-        <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-          <div>
-            <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-primary text-primary-foreground">
-                <Sparkles size={24} />
+      <section className="mb-8 overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm">
+        <div className="relative p-6">
+          <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute bottom-0 left-20 h-32 w-32 rounded-full bg-primary/10 blur-3xl" />
+
+          <div className="relative grid gap-6 xl:grid-cols-[1fr_360px]">
+            <div>
+              <div className="mb-5 flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-primary text-primary-foreground shadow-sm shadow-primary/20">
+                  <Sparkles size={24} />
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground">
+                    Resumo Lumi
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Leitura automática do prontuário do aluno.
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <h2 className="text-xl font-semibold text-foreground">
-                  Resumo Lumi
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Leitura automática do prontuário do aluno.
+              <div className="rounded-3xl bg-primary/10 p-5">
+                <p className="text-sm leading-7 text-foreground">
+                  O aluno <strong>{aluno.nome}</strong>{" "}
+                  {aluno.turma ? (
+                    <>
+                      está vinculado à turma{" "}
+                      <strong>{aluno.turma.nome}</strong>
+                    </>
+                  ) : (
+                    <>ainda não possui turma vinculada</>
+                  )}
+                  . Foram encontradas{" "}
+                  <strong>{tarefasAbertas.length}</strong> tarefa(s) aberta(s),{" "}
+                  <strong>{comunicadosPendentes.length}</strong> comunicado(s)
+                  pendente(s),{" "}
+                  <strong>{comunicadosRespondidos.length}</strong>{" "}
+                  comunicado(s) respondido(s) e{" "}
+                  <strong>{ocorrenciasDisciplinares.length}</strong>{" "}
+                  advertência(s) ou suspensão(ões) no histórico recente.
+                </p>
+
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  Responsável principal:{" "}
+                  <strong className="text-foreground">
+                    {aluno.responsavel?.nome || "Não informado"}
+                  </strong>
+                  .
                 </p>
               </div>
             </div>
 
-            <div className="rounded-3xl bg-primary/10 p-5">
-              <p className="text-sm leading-7 text-foreground">
-                O aluno <strong>{aluno.nome}</strong>{" "}
-                {aluno.turma ? (
-                  <>
-                    está vinculado à turma <strong>{aluno.turma.nome}</strong>
-                  </>
-                ) : (
-                  <>ainda não possui turma vinculada</>
-                )}
-                . Foram encontradas <strong>{tarefasAbertas.length}</strong>{" "}
-                tarefa(s) aberta(s),{" "}
-                <strong>{comunicadosPendentes.length}</strong> comunicado(s)
-                pendente(s),{" "}
-                <strong>{comunicadosRespondidos.length}</strong> comunicado(s)
-                respondido(s) e{" "}
-                <strong>{ocorrenciasDisciplinares.length}</strong>{" "}
-                advertência(s) ou suspensão(ões) no histórico recente.
-              </p>
+            <div className="rounded-3xl border border-border bg-background/80 p-5 shadow-sm backdrop-blur">
+              <h3 className="font-semibold text-foreground">
+                Sugestões da Lumi
+              </h3>
 
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                Responsável principal:{" "}
-                <strong>{aluno.responsavel?.nome || "Não informado"}</strong>.
-              </p>
-            </div>
-          </div>
+              <div className="mt-4 space-y-3">
+                {sugestoes.map((item) => (
+                  <div
+                    key={item}
+                    className="group flex items-start gap-3 rounded-2xl p-2 transition hover:bg-primary/5"
+                  >
+                    <CheckCircle2
+                      size={18}
+                      className="mt-0.5 shrink-0 text-primary transition-transform duration-200 group-hover:scale-110"
+                    />
+                    <p className="text-sm leading-6 text-muted-foreground">
+                      {item}
+                    </p>
+                  </div>
+                ))}
+              </div>
 
-          <div className="rounded-3xl border border-border bg-background p-5">
-            <h3 className="font-semibold text-foreground">
-              Sugestões da Lumi
-            </h3>
-
-            <div className="mt-4 space-y-3">
-              {sugestoes.map((item) => (
-                <div key={item} className="flex items-start gap-3">
-                  <CheckCircle2
-                    size={18}
-                    className="mt-0.5 shrink-0 text-primary"
+              <div className="mt-5">
+                <a
+                  href={`/alunos/${aluno.id}`}
+                  className="group inline-flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:scale-[0.98]"
+                >
+                  Abrir prontuário
+                  <ArrowRight
+                    size={16}
+                    className="transition-transform duration-200 group-hover:translate-x-1"
                   />
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    {item}
-                  </p>
-                </div>
-              ))}
+                </a>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <UserRound size={22} className="text-primary" />
           <p className="mt-4 text-sm text-muted-foreground">Responsável</p>
           <p className="mt-1 truncate text-lg font-semibold text-foreground">
@@ -337,7 +365,7 @@ export default async function LumiAlunoPage({ params }: PageProps) {
           </p>
         </div>
 
-        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <GraduationCap size={22} className="text-primary" />
           <p className="mt-4 text-sm text-muted-foreground">Turma</p>
           <p className="mt-1 text-lg font-semibold text-foreground">
@@ -348,7 +376,7 @@ export default async function LumiAlunoPage({ params }: PageProps) {
           </p>
         </div>
 
-        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <ClipboardList size={22} className="text-primary" />
           <p className="mt-4 text-sm text-muted-foreground">Pulse</p>
           <p className="mt-1 text-3xl font-semibold text-foreground">
@@ -359,7 +387,7 @@ export default async function LumiAlunoPage({ params }: PageProps) {
           </p>
         </div>
 
-        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <MessageCircle size={22} className="text-primary" />
           <p className="mt-4 text-sm text-muted-foreground">Comunicação</p>
           <p className="mt-1 text-3xl font-semibold text-foreground">
@@ -395,7 +423,7 @@ export default async function LumiAlunoPage({ params }: PageProps) {
               {timeline.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-2xl border border-border bg-background p-4"
+                  className="rounded-2xl border border-border bg-background p-4 transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-sm"
                 >
                   <div className="mb-2 flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
@@ -431,10 +459,13 @@ export default async function LumiAlunoPage({ params }: PageProps) {
 
             <Link
               href="/pulse"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-primary"
+              className="group inline-flex items-center gap-2 text-sm font-semibold text-primary"
             >
               Ver Pulse
-              <ArrowRight size={16} />
+              <ArrowRight
+                size={16}
+                className="transition-transform duration-200 group-hover:translate-x-1"
+              />
             </Link>
           </div>
 
@@ -445,7 +476,10 @@ export default async function LumiAlunoPage({ params }: PageProps) {
           ) : (
             <div className="space-y-3">
               {tarefasAbertas.map((tarefa) => (
-                <div key={tarefa.id} className="rounded-2xl bg-muted p-4">
+                <div
+                  key={tarefa.id}
+                  className="rounded-2xl bg-muted p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm"
+                >
                   <div className="mb-2 flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold text-foreground">
                       {tarefa.setor}
@@ -490,7 +524,10 @@ export default async function LumiAlunoPage({ params }: PageProps) {
           ) : (
             <div className="space-y-3">
               {aluno.ocorrencias.map((ocorrencia) => (
-                <div key={ocorrencia.id} className="rounded-2xl bg-muted p-4">
+                <div
+                  key={ocorrencia.id}
+                  className="rounded-2xl bg-muted p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm"
+                >
                   <div className="mb-2 flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold text-foreground">
                       {getTipoOcorrenciaLabel(ocorrencia.tipo)}
@@ -538,7 +575,10 @@ export default async function LumiAlunoPage({ params }: PageProps) {
                 const ultimaResposta = item.respostas[0] ?? null;
 
                 return (
-                  <div key={item.id} className="rounded-2xl bg-muted p-4">
+                  <div
+                    key={item.id}
+                    className="rounded-2xl bg-muted p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm"
+                  >
                     <div className="mb-2 flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold text-foreground">
                         {getStatusLabel(item.status)}
