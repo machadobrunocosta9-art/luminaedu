@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode, useState } from "react";
 import {
+  ArrowRight,
   BarChart3,
   Bell,
   BookOpen,
   CalendarDays,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
@@ -21,6 +23,7 @@ import {
   Settings,
   Sparkles,
   UsersRound,
+  X,
 } from "lucide-react";
 
 type AppLayoutProps = {
@@ -90,9 +93,43 @@ const menuItems = [
   },
 ];
 
+const lumiActions = [
+  {
+    title: "Ver tarefas abertas",
+    description: "Acompanhar pendências e responsáveis no Pulse.",
+    href: "/pulse",
+    icon: CalendarDays,
+  },
+  {
+    title: "Acompanhar matrículas",
+    description: "Ver processos em andamento e próximos passos.",
+    href: "/matriculas",
+    icon: ClipboardList,
+  },
+  {
+    title: "Comunicação",
+    description: "Ver comunicados, respostas e pendências da família.",
+    href: "/comunicacao",
+    icon: MessageCircle,
+  },
+  {
+    title: "Financeiro",
+    description: "Ver cobranças, pendências e situação financeira.",
+    href: "/financeiro",
+    icon: CreditCard,
+  },
+  {
+    title: "Alunos",
+    description: "Abrir prontuários e acompanhar histórico escolar.",
+    href: "/alunos",
+    icon: GraduationCap,
+  },
+];
+
 export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [lumiOpen, setLumiOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-muted/30 text-foreground">
@@ -221,9 +258,141 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </main>
       </div>
 
+      {lumiOpen && (
+        <button
+          type="button"
+          aria-label="Fechar painel da Lumi"
+          onClick={() => setLumiOpen(false)}
+          className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm"
+        />
+      )}
+
+      <aside
+        className={`fixed right-0 top-0 z-[60] h-screen w-full max-w-md border-l border-border bg-card shadow-2xl transition-transform duration-300 ${
+          lumiOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex h-full flex-col">
+          <div className="border-b border-border p-6">
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-primary text-primary-foreground shadow-sm">
+                  <Sparkles size={22} />
+                </div>
+
+                <div>
+                  <p className="text-lg font-semibold text-foreground">Lumi</p>
+                  <p className="text-sm text-muted-foreground">
+                    Assistente da gestão escolar
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setLumiOpen(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                aria-label="Fechar Lumi"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="rounded-3xl bg-primary/10 p-5">
+              <p className="mb-2 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                Resolver meu dia
+              </p>
+
+              <h2 className="text-xl font-semibold text-foreground">
+                Posso te ajudar a organizar as prioridades da escola.
+              </h2>
+
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                Nesta primeira versão, eu te levo direto para os pontos mais
+                importantes: Pulse, matrículas, comunicação, financeiro e
+                prontuários dos alunos.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex-1 space-y-4 overflow-y-auto p-6">
+            <section className="rounded-3xl border border-border bg-background p-5">
+              <div className="mb-4 flex items-center gap-3">
+                <CheckCircle2 size={20} className="text-primary" />
+
+                <div>
+                  <h3 className="font-semibold text-foreground">
+                    Leitura rápida
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    O que merece atenção agora
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-sm leading-6 text-muted-foreground">
+                <p>• Verifique tarefas abertas no Pulse.</p>
+                <p>• Acompanhe matrículas em andamento.</p>
+                <p>• Confira comunicados aguardando resposta da família.</p>
+                <p>• Veja pendências financeiras recentes.</p>
+              </div>
+            </section>
+
+            <section>
+              <h3 className="mb-3 font-semibold text-foreground">
+                Ações recomendadas
+              </h3>
+
+              <div className="space-y-3">
+                {lumiActions.map((action) => {
+                  const Icon = action.icon;
+
+                  return (
+                    <Link
+                      key={action.title}
+                      href={action.href}
+                      onClick={() => setLumiOpen(false)}
+                      className="group flex items-center justify-between gap-4 rounded-3xl border border-border bg-background p-4 transition hover:-translate-y-0.5 hover:bg-muted hover:shadow-sm"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                          <Icon size={20} />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="font-semibold text-foreground">
+                            {action.title}
+                          </p>
+                          <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                            {action.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      <ArrowRight
+                        size={18}
+                        className="shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary"
+                      />
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
+
+          <div className="border-t border-border p-6">
+            <p className="text-xs leading-5 text-muted-foreground">
+              Em breve, a Lumi vai ler os dados reais da escola e sugerir ações
+              automaticamente.
+            </p>
+          </div>
+        </div>
+      </aside>
+
       <button
         type="button"
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-full bg-primary px-5 py-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:opacity-95"
+        onClick={() => setLumiOpen(true)}
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-3 rounded-full bg-primary px-5 py-4 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:opacity-95"
         aria-label="Abrir Lumi"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/15">
