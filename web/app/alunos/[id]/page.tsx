@@ -19,6 +19,7 @@ import {
   MessageCircle,
   NotebookText,
   ShieldAlert,
+  Sparkles,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -225,6 +226,10 @@ export default async function AlunoDetalhePage({
     (ocorrencia) => ocorrencia.tipo === "ADVERTENCIA",
   );
 
+  const suspensoes = alunoEncontrado.ocorrencias.filter(
+    (ocorrencia) => ocorrencia.tipo === "SUSPENSAO",
+  );
+
   const enviosPreparados = alunoEncontrado.ocorrencias.filter(
     (ocorrencia) =>
       ocorrencia.enviarParaResponsavel && !ocorrencia.enviadoPorEmail,
@@ -380,6 +385,57 @@ export default async function AlunoDetalhePage({
   ].sort((a, b) => b.data.getTime() - a.data.getTime());
 
   const ultimaMatricula = alunoEncontrado.matriculas[0];
+  const ultimoEvento = linhaDoTempo[0];
+
+  const alertasLumi: string[] = [];
+
+  if (tarefasAbertas.length > 0) {
+    alertasLumi.push(
+      `${tarefasAbertas.length} tarefa(s) Pulse aberta(s) vinculada(s) ao aluno.`,
+    );
+  }
+
+  if (comunicacoesPendentes.length > 0) {
+    alertasLumi.push(
+      `${comunicacoesPendentes.length} comunicado(s) ainda aguardando resposta da família.`,
+    );
+  }
+
+  if (advertencias.length >= 3) {
+    alertasLumi.push(
+      `O aluno possui ${advertencias.length} advertência(s) registradas. Avalie acompanhamento com a coordenação.`,
+    );
+  }
+
+  if (suspensoes.length > 0) {
+    alertasLumi.push(
+      `Há ${suspensoes.length} suspensão(ões) registrada(s) no prontuário.`,
+    );
+  }
+
+  if (alertasLumi.length === 0) {
+    alertasLumi.push(
+      "Nenhum alerta crítico identificado neste momento. O prontuário está sem pendências relevantes.",
+    );
+  }
+
+  const sugestoesLumi: string[] = [];
+
+  if (comunicacoesPendentes.length > 0) {
+    sugestoesLumi.push("Reforçar o contato com a família sobre os comunicados pendentes.");
+  }
+
+  if (tarefasAbertas.length > 0) {
+    sugestoesLumi.push("Verificar as tarefas abertas no Pulse e definir próximos responsáveis.");
+  }
+
+  if (advertencias.length >= 3 || suspensoes.length > 0) {
+    sugestoesLumi.push("Considerar reunião de acompanhamento com família e coordenação.");
+  }
+
+  if (sugestoesLumi.length === 0) {
+    sugestoesLumi.push("Manter acompanhamento regular e registrar novos eventos importantes.");
+  }
 
   return (
     <AppLayout>
@@ -580,6 +636,89 @@ export default async function AlunoDetalhePage({
                 {alunoEncontrado.observacoes ||
                   "Nenhuma observação cadastrada."}
               </p>
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-5 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+                <Sparkles size={22} />
+              </div>
+
+              <div>
+                <h2 className="font-semibold text-foreground">
+                  Resumo Lumi do Aluno
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Leitura automática do prontuário com base nos registros atuais
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-3xl bg-muted p-5">
+              <p className="text-sm leading-7 text-foreground">
+                {alunoEncontrado.nome} possui{" "}
+                <strong>{alunoEncontrado.ocorrencias.length}</strong>{" "}
+                ocorrência(s) registrada(s),{" "}
+                <strong>{comunicacoesAluno.length}</strong> comunicação(ões)
+                vinculada(s),{" "}
+                <strong>{comunicacoesPendentes.length}</strong> resposta(s)
+                pendente(s) da família e{" "}
+                <strong>{tarefasAbertas.length}</strong> tarefa(s) aberta(s) no
+                Pulse.
+              </p>
+
+              {ultimoEvento && (
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  Última movimentação:{" "}
+                  <strong className="text-foreground">
+                    {ultimoEvento.titulo}
+                  </strong>{" "}
+                  em {formatDateTime(ultimoEvento.data)}.
+                </p>
+              )}
+            </div>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-border bg-background p-4">
+                <p className="mb-3 text-sm font-semibold text-foreground">
+                  Pontos de atenção
+                </p>
+
+                <div className="space-y-3">
+                  {alertasLumi.map((alerta) => (
+                    <div key={alerta} className="flex items-start gap-3">
+                      <AlertTriangle
+                        size={17}
+                        className="mt-0.5 shrink-0 text-muted-foreground"
+                      />
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        {alerta}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-background p-4">
+                <p className="mb-3 text-sm font-semibold text-foreground">
+                  Sugestões da Lumi
+                </p>
+
+                <div className="space-y-3">
+                  {sugestoesLumi.map((sugestao) => (
+                    <div key={sugestao} className="flex items-start gap-3">
+                      <CheckCircle2
+                        size={17}
+                        className="mt-0.5 shrink-0 text-muted-foreground"
+                      />
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        {sugestao}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </section>
 
