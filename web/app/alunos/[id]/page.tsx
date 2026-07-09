@@ -15,6 +15,7 @@ import {
   FileText,
   GraduationCap,
   Mail,
+  MessageCircle,
   NotebookText,
   ShieldAlert,
   UserRound,
@@ -58,7 +59,11 @@ function getStatusLabel(status: string) {
     AGUARDANDO: "Aguardando",
     REGISTRADO: "Registrado",
     RASCUNHO: "Rascunho",
+    PREPARADO: "Preparado",
     ENVIADO: "Enviado",
+    VISUALIZADO: "Visualizado",
+    RESPONDIDO: "Respondido",
+    ARQUIVADO: "Arquivado",
   };
 
   return labels[status] ?? status;
@@ -72,6 +77,31 @@ function getTipoLabel(tipo: string) {
     RELATORIO: "Relatório",
     RESUMO: "Resumo",
     ATENDIMENTO: "Atendimento",
+  };
+
+  return labels[tipo] ?? tipo;
+}
+
+function getTipoComunicadoLabel(tipo: string) {
+  const labels: Record<string, string> = {
+    SIMPLES: "Comunicado simples",
+    CIENCIA: "Comunicado com ciência",
+    EVENTO: "Evento",
+    AUTORIZACAO: "Autorização",
+    PAGAMENTO: "Pagamento",
+  };
+
+  return labels[tipo] ?? tipo;
+}
+
+function getTipoRespostaLabel(tipo: string) {
+  const labels: Record<string, string> = {
+    CIENTE: "Responsável ciente",
+    PARTICIPA: "Vai participar",
+    NAO_PARTICIPA: "Não vai participar",
+    AUTORIZADO: "Autorizado",
+    NAO_AUTORIZADO: "Não autorizado",
+    RESPOSTA_TEXTO: "Resposta enviada",
   };
 
   return labels[tipo] ?? tipo;
@@ -113,6 +143,24 @@ export default async function AlunoDetalhePage({
       ocorrencias: {
         orderBy: {
           criadoEm: "desc",
+        },
+      },
+      destinatariosComunicados: {
+        orderBy: {
+          criadoEm: "desc",
+        },
+        include: {
+          responsavel: true,
+          respostas: {
+            orderBy: {
+              dataResposta: "desc",
+            },
+          },
+          comunicado: {
+            include: {
+              turma: true,
+            },
+          },
         },
       },
     },
@@ -170,10 +218,6 @@ export default async function AlunoDetalhePage({
     (ocorrencia) => ocorrencia.tipo === "SUSPENSAO",
   );
 
-  const relatorios = alunoEncontrado.ocorrencias.filter(
-    (ocorrencia) => ocorrencia.tipo === "RELATORIO",
-  );
-
   const enviosPreparados = alunoEncontrado.ocorrencias.filter(
     (ocorrencia) =>
       ocorrencia.enviarParaResponsavel && !ocorrencia.enviadoPorEmail,
@@ -181,6 +225,18 @@ export default async function AlunoDetalhePage({
 
   const enviosRealizados = alunoEncontrado.ocorrencias.filter(
     (ocorrencia) => ocorrencia.enviadoPorEmail,
+  );
+
+  const comunicacoesAluno = alunoEncontrado.destinatariosComunicados;
+
+  const comunicacoesRespondidas = comunicacoesAluno.filter(
+    (comunicacao) =>
+      comunicacao.status === "RESPONDIDO" || comunicacao.respostas.length > 0,
+  );
+
+  const comunicacoesPendentes = comunicacoesAluno.filter(
+    (comunicacao) =>
+      comunicacao.status !== "RESPONDIDO" && comunicacao.respostas.length === 0,
   );
 
   const ultimaMatricula = alunoEncontrado.matriculas[0];
@@ -240,10 +296,10 @@ export default async function AlunoDetalhePage({
         </div>
 
         <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-          <AlertTriangle size={22} />
-          <p className="mt-4 text-sm text-muted-foreground">Suspensões</p>
+          <MessageCircle size={22} />
+          <p className="mt-4 text-sm text-muted-foreground">Comunicações</p>
           <p className="mt-1 text-3xl font-semibold text-foreground">
-            {suspensoes.length}
+            {comunicacoesAluno.length}
           </p>
         </div>
 
@@ -385,6 +441,163 @@ export default async function AlunoDetalhePage({
                   "Nenhuma observação cadastrada."}
               </p>
             </div>
+          </section>
+
+          <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-5 flex items-center gap-3">
+              <MessageCircle size={22} />
+
+              <div>
+                <h2 className="font-semibold text-foreground">
+                  Comunicação do aluno
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Comunicados, eventos, autorizações e respostas da família
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-5 grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl bg-muted p-4">
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                  Total
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">
+                  {comunicacoesAluno.length}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-muted p-4">
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                  Respondidas
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">
+                  {comunicacoesRespondidas.length}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-muted p-4">
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                  Pendentes
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">
+                  {comunicacoesPendentes.length}
+                </p>
+              </div>
+            </div>
+
+            {comunicacoesAluno.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                Nenhum comunicado vinculado a este aluno ainda.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {comunicacoesAluno.slice(0, 8).map((comunicacao) => {
+                  const resposta = comunicacao.respostas[0];
+
+                  return (
+                    <div
+                      key={comunicacao.id}
+                      className="rounded-2xl border border-border bg-background p-4"
+                    >
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground">
+                          {getTipoComunicadoLabel(comunicacao.comunicado.tipo)}
+                        </span>
+
+                        <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                          {getStatusLabel(comunicacao.status)}
+                        </span>
+
+                        {resposta && (
+                          <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                            {getTipoRespostaLabel(resposta.tipo)}
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="font-semibold text-foreground">
+                        {comunicacao.comunicado.titulo}
+                      </h3>
+
+                      <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
+                        {comunicacao.comunicado.conteudo}
+                      </p>
+
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        <div className="rounded-2xl bg-muted p-3">
+                          <p className="text-xs text-muted-foreground">
+                            Responsável
+                          </p>
+                          <p className="mt-1 text-sm font-semibold text-foreground">
+                            {comunicacao.nomeResponsavel ||
+                              comunicacao.responsavel?.nome ||
+                              alunoEncontrado.responsavel.nome}
+                          </p>
+                        </div>
+
+                        <div className="rounded-2xl bg-muted p-3">
+                          <p className="text-xs text-muted-foreground">
+                            Criado em
+                          </p>
+                          <p className="mt-1 text-sm font-semibold text-foreground">
+                            {formatDateTime(comunicacao.comunicado.criadoEm)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {resposta && (
+                        <div className="mt-4 rounded-2xl bg-muted p-4">
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                            Resposta da família
+                          </p>
+
+                          <p className="mt-2 text-sm font-semibold text-foreground">
+                            {getTipoRespostaLabel(resposta.tipo)}
+                          </p>
+
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            Respondido por{" "}
+                            {resposta.nomeRespondente || "responsável"} em{" "}
+                            {formatDateTime(resposta.dataResposta)}.
+                          </p>
+
+                          {resposta.motivoNegativa && (
+                            <p className="mt-3 text-sm text-muted-foreground">
+                              Motivo: {resposta.motivoNegativa}
+                            </p>
+                          )}
+
+                          {resposta.observacao && (
+                            <p className="mt-3 text-sm text-muted-foreground">
+                              Observação: {resposta.observacao}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {!resposta && comunicacao.tokenResposta && (
+                        <Link
+                          href={`/responder/${comunicacao.tokenResposta}`}
+                          target="_blank"
+                          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-muted px-4 py-3 text-sm font-semibold text-foreground transition hover:bg-card"
+                        >
+                          Abrir link de resposta
+                          <ExternalLink size={16} />
+                        </Link>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {comunicacoesAluno.length > 8 && (
+                  <p className="rounded-2xl bg-muted p-4 text-sm text-muted-foreground">
+                    + {comunicacoesAluno.length - 8} comunicação(ões) neste
+                    prontuário.
+                  </p>
+                )}
+              </div>
+            )}
           </section>
 
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
