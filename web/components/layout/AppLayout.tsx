@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import {
   ArrowRight,
   BarChart3,
@@ -28,6 +28,18 @@ import {
 
 type AppLayoutProps = {
   children: ReactNode;
+};
+
+type LumiResumo = {
+  tarefasAbertas: number;
+  tarefasPrioritarias: number;
+  matriculasPendentes: number;
+  comunicadosPendentes: number;
+  comunicadosVisualizados: number;
+  pendenciasFinanceiras: number;
+  pendenciasDocumentais: number;
+  ocorrenciasRecentes: number;
+  totalAlunos: number;
 };
 
 const menuItems = [
@@ -128,8 +140,53 @@ const lumiActions = [
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [lumiOpen, setLumiOpen] = useState(false);
+  const [lumiResumo, setLumiResumo] = useState<LumiResumo | null>(null);
+  const [lumiLoading, setLumiLoading] = useState(false);
+  const [lumiErro, setLumiErro] = useState(false);
+
+  useEffect(() => {
+    if (!lumiOpen || lumiResumo) return;
+
+    let ativo = true;
+
+    async function carregarResumo() {
+      try {
+        setLumiLoading(true);
+        setLumiErro(false);
+
+        const response = await fetch("/api/lumi/resumo", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Erro ao carregar resumo da Lumi.");
+        }
+
+        const data = (await response.json()) as LumiResumo;
+
+        if (ativo) {
+          setLumiResumo(data);
+        }
+      } catch {
+        if (ativo) {
+          setLumiErro(true);
+        }
+      } finally {
+        if (ativo) {
+          setLumiLoading(false);
+        }
+      }
+    }
+
+    carregarResumo();
+
+    return () => {
+      ativo = false;
+    };
+  }, [lumiOpen, lumiResumo]);
 
   return (
     <div className="min-h-screen bg-muted/30 text-foreground">
@@ -308,9 +365,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
               </h2>
 
               <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                Nesta primeira versão, eu te levo direto para os pontos mais
-                importantes: Pulse, matrículas, comunicação, financeiro e
-                prontuários dos alunos.
+                Agora eu já leio alguns dados reais da Lumina para destacar
+                tarefas, comunicados, matrículas e pendências.
               </p>
             </div>
           </div>
@@ -330,12 +386,94 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 </div>
               </div>
 
-              <div className="space-y-3 text-sm leading-6 text-muted-foreground">
-                <p>• Verifique tarefas abertas no Pulse.</p>
-                <p>• Acompanhe matrículas em andamento.</p>
-                <p>• Confira comunicados aguardando resposta da família.</p>
-                <p>• Veja pendências financeiras recentes.</p>
-              </div>
+              {lumiLoading ? (
+                <p className="text-sm text-muted-foreground">
+                  Carregando dados da escola...
+                </p>
+              ) : lumiErro ? (
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Não consegui carregar os dados agora. Tente abrir a Lumi
+                  novamente em instantes.
+                </p>
+              ) : lumiResumo ? (
+                <>
+                  <div className="mb-5 grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl bg-muted p-4">
+                      <p className="text-xs text-muted-foreground">
+                        Tarefas abertas
+                      </p>
+                      <p className="mt-1 text-2xl font-semibold text-foreground">
+                        {lumiResumo.tarefasAbertas}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-muted p-4">
+                      <p className="text-xs text-muted-foreground">
+                        Comunicados pendentes
+                      </p>
+                      <p className="mt-1 text-2xl font-semibold text-foreground">
+                        {lumiResumo.comunicadosPendentes}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-muted p-4">
+                      <p className="text-xs text-muted-foreground">
+                        Matrículas pendentes
+                      </p>
+                      <p className="mt-1 text-2xl font-semibold text-foreground">
+                        {lumiResumo.matriculasPendentes}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-muted p-4">
+                      <p className="text-xs text-muted-foreground">
+                        Financeiro
+                      </p>
+                      <p className="mt-1 text-2xl font-semibold text-foreground">
+                        {lumiResumo.pendenciasFinanceiras}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 text-sm leading-6 text-muted-foreground">
+                    <p>
+                      • Existem{" "}
+                      <strong className="text-foreground">
+                        {lumiResumo.tarefasAbertas}
+                      </strong>{" "}
+                      tarefa(s) abertas no Pulse.
+                    </p>
+
+                    <p>
+                      •{" "}
+                      <strong className="text-foreground">
+                        {lumiResumo.comunicadosPendentes}
+                      </strong>{" "}
+                      comunicado(s) ainda aguardam resposta da família.
+                    </p>
+
+                    <p>
+                      •{" "}
+                      <strong className="text-foreground">
+                        {lumiResumo.matriculasPendentes}
+                      </strong>{" "}
+                      matrícula(s) precisam de acompanhamento.
+                    </p>
+
+                    <p>
+                      • Foram identificadas{" "}
+                      <strong className="text-foreground">
+                        {lumiResumo.ocorrenciasRecentes}
+                      </strong>{" "}
+                      advertência(s) ou suspensão(ões) nos últimos 90 dias.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Abra a Lumi para carregar o resumo da escola.
+                </p>
+              )}
             </section>
 
             <section>
@@ -382,8 +520,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
           <div className="border-t border-border p-6">
             <p className="text-xs leading-5 text-muted-foreground">
-              Em breve, a Lumi vai ler os dados reais da escola e sugerir ações
-              automaticamente.
+              Esta é a primeira versão da Lumi com dados reais. Depois, ela vai
+              sugerir ações automaticamente com base no comportamento da escola.
             </p>
           </div>
         </div>
