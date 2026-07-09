@@ -14,6 +14,7 @@ import {
   ExternalLink,
   FileText,
   GraduationCap,
+  History,
   Mail,
   MessageCircle,
   NotebookText,
@@ -26,6 +27,16 @@ type AlunoDetalhePageProps = {
   params: Promise<{
     id: string;
   }>;
+};
+
+type LinhaTempoItem = {
+  id: string;
+  data: Date;
+  categoria: string;
+  titulo: string;
+  descricao: string;
+  status?: string;
+  href?: string;
 };
 
 function formatDate(date?: Date | null) {
@@ -214,10 +225,6 @@ export default async function AlunoDetalhePage({
     (ocorrencia) => ocorrencia.tipo === "ADVERTENCIA",
   );
 
-  const suspensoes = alunoEncontrado.ocorrencias.filter(
-    (ocorrencia) => ocorrencia.tipo === "SUSPENSAO",
-  );
-
   const enviosPreparados = alunoEncontrado.ocorrencias.filter(
     (ocorrencia) =>
       ocorrencia.enviarParaResponsavel && !ocorrencia.enviadoPorEmail,
@@ -238,6 +245,139 @@ export default async function AlunoDetalhePage({
     (comunicacao) =>
       comunicacao.status !== "RESPONDIDO" && comunicacao.respostas.length === 0,
   );
+
+  const eventosMatricula: LinhaTempoItem[] = alunoEncontrado.matriculas.map(
+    (matricula) => ({
+      id: `matricula-${matricula.id}`,
+      data: matricula.criadoEm,
+      categoria: "Matrícula",
+      titulo: `Matrícula ${getStatusLabel(matricula.status)}`,
+      descricao: `Ano letivo ${matricula.anoLetivo}. Data da matrícula: ${formatDate(
+        matricula.dataMatricula,
+      )}.`,
+      status: getStatusLabel(matricula.status),
+    }),
+  );
+
+  const eventosOcorrencias: LinhaTempoItem[] =
+    alunoEncontrado.ocorrencias.flatMap((ocorrencia) => {
+      const eventos: LinhaTempoItem[] = [
+        {
+          id: `ocorrencia-${ocorrencia.id}`,
+          data: ocorrencia.criadoEm,
+          categoria: getTipoLabel(ocorrencia.tipo),
+          titulo: ocorrencia.titulo,
+          descricao: ocorrencia.descricao,
+          status: getStatusLabel(ocorrencia.status),
+        },
+      ];
+
+      if (ocorrencia.dataEnvioEmail) {
+        eventos.push({
+          id: `ocorrencia-envio-${ocorrencia.id}`,
+          data: ocorrencia.dataEnvioEmail,
+          categoria: "Comunicação",
+          titulo: `${getTipoLabel(ocorrencia.tipo)} enviada ao responsável`,
+          descricao: `Registro "${ocorrencia.titulo}" enviado para ciência da família.`,
+          status: "Enviado",
+          href: ocorrencia.tokenCiencia
+            ? `/ciencia/${ocorrencia.tokenCiencia}`
+            : undefined,
+        });
+      }
+
+      if (ocorrencia.dataCiencia) {
+        eventos.push({
+          id: `ocorrencia-ciencia-${ocorrencia.id}`,
+          data: ocorrencia.dataCiencia,
+          categoria: "Ciência digital",
+          titulo: "Responsável confirmou ciência",
+          descricao: `${ocorrencia.nomeConfirmante || "Responsável"} confirmou ciência do registro "${ocorrencia.titulo}".`,
+          status: "Confirmado",
+        });
+      }
+
+      return eventos;
+    });
+
+  const eventosComunicacao: LinhaTempoItem[] = comunicacoesAluno.flatMap(
+    (comunicacao) => {
+      const resposta = comunicacao.respostas[0];
+
+      const eventos: LinhaTempoItem[] = [
+        {
+          id: `comunicacao-${comunicacao.id}`,
+          data:
+            comunicacao.comunicado.enviadoEm ||
+            comunicacao.enviadoEm ||
+            comunicacao.comunicado.criadoEm,
+          categoria: "Comunicação",
+          titulo: comunicacao.comunicado.titulo,
+          descricao: `${getTipoComunicadoLabel(
+            comunicacao.comunicado.tipo,
+          )} vinculado ao aluno. Status: ${getStatusLabel(comunicacao.status)}.`,
+          status: getStatusLabel(comunicacao.status),
+          href:
+            !resposta && comunicacao.tokenResposta
+              ? `/responder/${comunicacao.tokenResposta}`
+              : undefined,
+        },
+      ];
+
+      if (comunicacao.visualizadoEm && !resposta) {
+        eventos.push({
+          id: `comunicacao-visualizada-${comunicacao.id}`,
+          data: comunicacao.visualizadoEm,
+          categoria: "Comunicação",
+          titulo: "Responsável visualizou o comunicado",
+          descricao: `O comunicado "${comunicacao.comunicado.titulo}" foi visualizado pela família.`,
+          status: "Visualizado",
+          href: comunicacao.tokenResposta
+            ? `/responder/${comunicacao.tokenResposta}`
+            : undefined,
+        });
+      }
+
+      if (resposta) {
+        eventos.push({
+          id: `comunicacao-resposta-${resposta.id}`,
+          data: resposta.dataResposta,
+          categoria: "Resposta da família",
+          titulo: getTipoRespostaLabel(resposta.tipo),
+          descricao: `${resposta.nomeRespondente || "Responsável"} respondeu ao comunicado "${
+            comunicacao.comunicado.titulo
+          }".${
+            resposta.motivoNegativa
+              ? ` Motivo informado: ${resposta.motivoNegativa}.`
+              : ""
+          }${resposta.observacao ? ` Observação: ${resposta.observacao}.` : ""}`,
+          status: "Respondido",
+        });
+      }
+
+      return eventos;
+    },
+  );
+
+  const eventosPulse: LinhaTempoItem[] = alunoEncontrado.tarefas.map(
+    (tarefa) => ({
+      id: `tarefa-${tarefa.id}`,
+      data: tarefa.criadoEm,
+      categoria: "Pulse",
+      titulo: tarefa.titulo,
+      descricao: `${tarefa.setor} · ${getStatusLabel(
+        tarefa.status,
+      )} · Prioridade ${getPrioridadeLabel(tarefa.prioridade)}.`,
+      status: getStatusLabel(tarefa.status),
+    }),
+  );
+
+  const linhaDoTempo = [
+    ...eventosMatricula,
+    ...eventosOcorrencias,
+    ...eventosComunicacao,
+    ...eventosPulse,
+  ].sort((a, b) => b.data.getTime() - a.data.getTime());
 
   const ultimaMatricula = alunoEncontrado.matriculas[0];
 
@@ -304,10 +444,10 @@ export default async function AlunoDetalhePage({
         </div>
 
         <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-          <CheckCircle2 size={22} />
-          <p className="mt-4 text-sm text-muted-foreground">Pulse aberto</p>
+          <History size={22} />
+          <p className="mt-4 text-sm text-muted-foreground">Linha do tempo</p>
           <p className="mt-1 text-3xl font-semibold text-foreground">
-            {tarefasAbertas.length}
+            {linhaDoTempo.length}
           </p>
         </div>
       </div>
@@ -441,6 +581,86 @@ export default async function AlunoDetalhePage({
                   "Nenhuma observação cadastrada."}
               </p>
             </div>
+          </section>
+
+          <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+            <div className="mb-5 flex items-center gap-3">
+              <History size={22} />
+
+              <div>
+                <h2 className="font-semibold text-foreground">
+                  Linha do Tempo do Aluno
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Matrículas, ocorrências, comunicados, respostas e tarefas em
+                  ordem cronológica
+                </p>
+              </div>
+            </div>
+
+            {linhaDoTempo.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                Nenhum evento encontrado na linha do tempo.
+              </p>
+            ) : (
+              <div className="relative space-y-4">
+                {linhaDoTempo.slice(0, 12).map((evento, index) => (
+                  <div key={evento.id} className="relative pl-8">
+                    {index !== linhaDoTempo.slice(0, 12).length - 1 && (
+                      <div className="absolute left-[11px] top-7 h-full w-px bg-border" />
+                    )}
+
+                    <div className="absolute left-0 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <span className="h-2 w-2 rounded-full bg-current" />
+                    </div>
+
+                    <div className="rounded-2xl border border-border bg-background p-4">
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground">
+                          {evento.categoria}
+                        </span>
+
+                        {evento.status && (
+                          <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                            {evento.status}
+                          </span>
+                        )}
+
+                        <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                          {formatDateTime(evento.data)}
+                        </span>
+                      </div>
+
+                      <h3 className="font-semibold text-foreground">
+                        {evento.titulo}
+                      </h3>
+
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                        {evento.descricao}
+                      </p>
+
+                      {evento.href && (
+                        <Link
+                          href={evento.href}
+                          target="_blank"
+                          className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-border bg-muted px-4 py-2 text-xs font-semibold text-foreground transition hover:bg-card"
+                        >
+                          Abrir link
+                          <ExternalLink size={15} />
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {linhaDoTempo.length > 12 && (
+                  <p className="rounded-2xl bg-muted p-4 text-sm text-muted-foreground">
+                    + {linhaDoTempo.length - 12} evento(s) antigo(s) na linha do
+                    tempo.
+                  </p>
+                )}
+              </div>
+            )}
           </section>
 
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
