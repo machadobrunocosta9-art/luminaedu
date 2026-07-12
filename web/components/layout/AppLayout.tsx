@@ -147,6 +147,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [lumiLoading, setLumiLoading] = useState(false);
   const [lumiErro, setLumiErro] = useState(false);
 
+  const esconderBuscaTopo = pathname === "/alunos";
+
   useEffect(() => {
     if (!lumiOpen || lumiResumo) return;
 
@@ -277,13 +279,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 <Menu size={20} />
               </button>
 
-              <div className="hidden h-11 min-w-[320px] items-center gap-3 rounded-2xl border border-border bg-card px-4 shadow-sm md:flex">
-                <Search size={18} className="text-muted-foreground" />
-                <input
-                  placeholder="Buscar aluno, responsável, turma..."
-                  className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                />
-              </div>
+              {!esconderBuscaTopo && (
+                <div className="hidden h-11 min-w-[320px] items-center gap-3 rounded-2xl border border-border bg-card px-4 shadow-sm md:flex">
+                  <Search size={18} className="text-muted-foreground" />
+                  <input
+                    placeholder="Buscar aluno, responsável, turma..."
+                    className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3">
