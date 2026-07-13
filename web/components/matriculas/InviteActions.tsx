@@ -5,7 +5,7 @@ import {
   Copy,
   MessageCircle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 type InviteActionsProps = {
   token: string;
@@ -32,15 +32,13 @@ export default function InviteActions({
 }: InviteActionsProps) {
   const [copiado, setCopiado] = useState(false);
 
-  const linkPublico = useMemo(() => {
-    if (typeof window === "undefined") {
-      return `/matricula/convite/${token}`;
-    }
+  const caminhoPublico = `/matricula/convite/${token}`;
 
-    return `${window.location.origin}/matricula/convite/${token}`;
-  }, [token]);
+  function obterLinkCompleto() {
+    return `${window.location.origin}${caminhoPublico}`;
+  }
 
-  const mensagemWhatsApp = useMemo(() => {
+  function criarMensagemWhatsApp(linkPublico: string) {
     return [
       `Olá, ${nomeResponsavel}!`,
       "",
@@ -51,26 +49,13 @@ export default function InviteActions({
       "",
       "Este convite é pessoal e possui prazo de validade.",
     ].join("\n");
-  }, [linkPublico, nomeAluno, nomeResponsavel]);
-
-  const whatsappUrl = useMemo(() => {
-    const telefone =
-      normalizarTelefoneWhatsApp(
-        telefoneResponsavel,
-      );
-
-    return `https://wa.me/${telefone}?text=${encodeURIComponent(
-      mensagemWhatsApp,
-    )}`;
-  }, [mensagemWhatsApp, telefoneResponsavel]);
+  }
 
   async function copiarLink() {
     try {
-      const linkCompleto = `${window.location.origin}/matricula/convite/${token}`;
+      const linkCompleto = obterLinkCompleto();
 
-      await navigator.clipboard.writeText(
-        linkCompleto,
-      );
+      await navigator.clipboard.writeText(linkCompleto);
 
       setCopiado(true);
 
@@ -82,6 +67,28 @@ export default function InviteActions({
     }
   }
 
+  function enviarPeloWhatsApp() {
+    const linkCompleto = obterLinkCompleto();
+
+    const mensagem = criarMensagemWhatsApp(
+      linkCompleto,
+    );
+
+    const telefone = normalizarTelefoneWhatsApp(
+      telefoneResponsavel,
+    );
+
+    const whatsappUrl = `https://wa.me/${telefone}?text=${encodeURIComponent(
+      mensagem,
+    )}`;
+
+    window.open(
+      whatsappUrl,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-background p-4">
@@ -90,7 +97,7 @@ export default function InviteActions({
         </p>
 
         <p className="mt-2 break-all text-sm font-medium text-foreground">
-          /matricula/convite/{token}
+          {caminhoPublico}
         </p>
       </div>
 
@@ -101,26 +108,31 @@ export default function InviteActions({
           className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-border bg-background px-5 py-3 text-sm font-semibold text-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/20 hover:bg-muted hover:shadow-sm active:scale-[0.98]"
         >
           {copiado ? (
-            <Check size={17} className="text-primary" />
+            <Check
+              size={17}
+              className="text-primary"
+            />
           ) : (
             <Copy size={17} />
           )}
 
-          {copiado ? "Link copiado" : "Copiar link"}
+          {copiado
+            ? "Link copiado"
+            : "Copiar link"}
         </button>
 
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noreferrer"
+        <button
+          type="button"
+          onClick={enviarPeloWhatsApp}
           className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
         >
           <MessageCircle
             size={17}
             className="transition-transform duration-200 group-hover:scale-110"
           />
+
           Enviar pelo WhatsApp
-        </a>
+        </button>
       </div>
     </div>
   );
