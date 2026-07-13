@@ -1,6 +1,11 @@
 import AppLayout from "@/components/layout/AppLayout";
+import EmptyState from "@/components/lumina/EmptyState";
 import MetricCard from "@/components/lumina/MetricCard";
 import PageHeader from "@/components/lumina/PageHeader";
+import SectionCard from "@/components/lumina/SectionCard";
+import StatusBadge, {
+  type StatusBadgeTone,
+} from "@/components/lumina/StatusBadge";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import {
@@ -18,7 +23,7 @@ export const dynamic = "force-dynamic";
 
 type OccupancyStatus = {
   label: string;
-  badgeClassName: string;
+  tone: StatusBadgeTone;
   progressClassName: string;
 };
 
@@ -29,19 +34,19 @@ function getOccupancyStatus(
   if (capacity <= 0) {
     return {
       label: "Sem capacidade",
-      badgeClassName:
-        "border-border bg-muted text-muted-foreground",
+      tone: "neutral",
       progressClassName: "bg-muted-foreground",
     };
   }
 
-  const percentage = Math.round((occupancy / capacity) * 100);
+  const percentage = Math.round(
+    (occupancy / capacity) * 100,
+  );
 
   if (percentage >= 100) {
     return {
       label: "Lotada",
-      badgeClassName:
-        "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-300",
+      tone: "danger",
       progressClassName: "bg-red-500",
     };
   }
@@ -49,16 +54,14 @@ function getOccupancyStatus(
   if (percentage >= 80) {
     return {
       label: "Quase cheia",
-      badgeClassName:
-        "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+      tone: "warning",
       progressClassName: "bg-amber-500",
     };
   }
 
   return {
     label: "Com vagas",
-    badgeClassName:
-      "border-primary/20 bg-primary/10 text-primary",
+    tone: "primary",
     progressClassName: "bg-primary",
   };
 }
@@ -98,7 +101,9 @@ export default async function TurmasPage() {
 
   const ocupacaoMedia =
     capacidadeTotal > 0
-      ? Math.round((alunosAlocados / capacidadeTotal) * 100)
+      ? Math.round(
+          (alunosAlocados / capacidadeTotal) * 100,
+        )
       : 0;
 
   const turmasEmAtencao = turmas.filter((turma) => {
@@ -162,50 +167,36 @@ export default async function TurmasPage() {
             turmasEmAtencao === 1 ? "" : "s"
           } em atenção`}
           icon={AlertTriangle}
-          tone={turmasEmAtencao > 0 ? "warning" : "primary"}
+          tone={
+            turmasEmAtencao > 0
+              ? "warning"
+              : "primary"
+          }
         />
       </section>
 
-      <section className="mb-24 rounded-[2rem] border border-border bg-card p-5 shadow-sm">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="font-semibold text-foreground">
-              Turmas cadastradas
-            </h2>
-
-            <p className="text-sm text-muted-foreground">
-              Visualize ocupação, alunos e ações rápidas.
-            </p>
-          </div>
-
+      <SectionCard
+        title="Turmas cadastradas"
+        description="Visualize ocupação, alunos e ações rápidas."
+        className="mb-24"
+        action={
           <p className="rounded-full bg-muted px-4 py-2 text-sm font-medium text-muted-foreground">
             Gerenciando {turmas.length} turma
             {turmas.length === 1 ? "" : "s"}
           </p>
-        </div>
-
+        }
+      >
         {turmas.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border p-10 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-primary/10 text-primary">
-              <GraduationCap size={27} />
-            </div>
-
-            <h3 className="mt-4 font-semibold text-foreground">
-              Nenhuma turma cadastrada
-            </h3>
-
-            <p className="mt-2 text-sm text-muted-foreground">
-              Crie a primeira turma para começar a organizar os alunos.
-            </p>
-
-            <Link
-              href="/turmas/novo"
-              className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
-            >
-              <Plus size={16} />
-              Criar primeira turma
-            </Link>
-          </div>
+          <EmptyState
+            icon={GraduationCap}
+            title="Nenhuma turma cadastrada"
+            description="Crie a primeira turma para começar a organizar os alunos."
+            action={{
+              label: "Criar primeira turma",
+              href: "/turmas/novo",
+              icon: Plus,
+            }}
+          />
         ) : (
           <div className="grid gap-4 xl:grid-cols-2">
             {turmas.map((turma) => {
@@ -219,7 +210,8 @@ export default async function TurmasPage() {
               const occupancyPercentage =
                 turma.capacidade > 0
                   ? Math.round(
-                      (occupancy / turma.capacidade) * 100,
+                      (occupancy / turma.capacidade) *
+                        100,
                     )
                   : 0;
 
@@ -233,11 +225,13 @@ export default async function TurmasPage() {
                 turma.capacidade,
               );
 
-              const visibleStudents = turma.alunos.slice(0, 4);
+              const visibleStudents =
+                turma.alunos.slice(0, 4);
 
               const remainingStudents = Math.max(
                 0,
-                turma.alunos.length - visibleStudents.length,
+                turma.alunos.length -
+                  visibleStudents.length,
               );
 
               return (
@@ -266,11 +260,9 @@ export default async function TurmasPage() {
                       </div>
                     </div>
 
-                    <span
-                      className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${status.badgeClassName}`}
-                    >
+                    <StatusBadge tone={status.tone}>
                       {status.label}
-                    </span>
+                    </StatusBadge>
                   </div>
 
                   <div className="mb-5 rounded-3xl border border-border bg-background p-4">
@@ -281,7 +273,8 @@ export default async function TurmasPage() {
                         </p>
 
                         <p className="mt-1 text-lg font-semibold text-foreground">
-                          {occupancy} de {turma.capacidade} alunos
+                          {occupancy} de{" "}
+                          {turma.capacidade} alunos
                         </p>
                       </div>
 
@@ -352,11 +345,13 @@ export default async function TurmasPage() {
                     </div>
 
                     {turma.alunos.length === 0 ? (
-                      <div className="mt-3 rounded-2xl border border-dashed border-border p-4">
-                        <p className="text-sm text-muted-foreground">
-                          Nenhum aluno vinculado a esta turma.
-                        </p>
-                      </div>
+                      <EmptyState
+                        compact
+                        icon={UsersRound}
+                        title="Nenhum aluno vinculado"
+                        description="Cadastre ou vincule um aluno para começar a formar esta turma."
+                        className="mt-3"
+                      />
                     ) : (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {visibleStudents.map((student) => (
@@ -381,7 +376,7 @@ export default async function TurmasPage() {
                   <div className="mt-auto flex flex-wrap gap-3 border-t border-border pt-4">
                     <Link
                       href={`/alunos?turma=${turma.id}`}
-                      className="group/action inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-sm active:scale-[0.98]"
+                      className="group/action inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-sm active:scale-[0.98]"
                     >
                       <UsersRound size={16} />
                       Ver alunos
@@ -394,12 +389,13 @@ export default async function TurmasPage() {
 
                     <Link
                       href="/alunos/novo"
-                      className="group/action inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
+                      className="group/action inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
                     >
                       <UserPlus
                         size={16}
                         className="transition-transform duration-200 group-hover/action:scale-110"
                       />
+
                       Novo aluno
                     </Link>
                   </div>
@@ -408,7 +404,7 @@ export default async function TurmasPage() {
             })}
           </div>
         )}
-      </section>
+      </SectionCard>
     </AppLayout>
   );
 }
