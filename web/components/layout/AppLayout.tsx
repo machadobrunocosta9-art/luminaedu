@@ -147,7 +147,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [lumiLoading, setLumiLoading] = useState(false);
   const [lumiErro, setLumiErro] = useState(false);
 
-  const esconderBuscaTopo = pathname === "/alunos";
+  const esconderBuscaTopo =
+  pathname === "/alunos" || pathname === "/matriculas";
 
   useEffect(() => {
     if (!lumiOpen || lumiResumo) return;

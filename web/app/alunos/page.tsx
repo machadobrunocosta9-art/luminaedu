@@ -1,5 +1,15 @@
 import AppLayout from "@/components/layout/AppLayout";
+import EmptyState from "@/components/lumina/EmptyState";
+import MetricCard from "@/components/lumina/MetricCard";
+import PageHeader from "@/components/lumina/PageHeader";
+import PrimaryAction from "@/components/lumina/PrimaryAction";
+import SecondaryAction from "@/components/lumina/SecondaryAction";
+import SectionCard from "@/components/lumina/SectionCard";
+import StatusBadge, {
+  type StatusBadgeTone,
+} from "@/components/lumina/StatusBadge";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
@@ -24,50 +34,63 @@ type PageProps = {
   }>;
 };
 
-function getStatusLabel(status?: string | null) {
-  if (!status) return "Sem matrícula";
+type EnrollmentStatus = {
+  label: string;
+  tone: StatusBadgeTone;
+};
 
-  const labels: Record<string, string> = {
-    PENDENTE: "Pendente",
-    EM_ANALISE: "Em análise",
-    AGUARDANDO_DOCUMENTOS: "Aguardando documentos",
-    AGUARDANDO_PAGAMENTO: "Aguardando pagamento",
-    ATIVA: "Ativa",
-    CANCELADA: "Cancelada",
-    CONCLUIDA: "Concluída",
+function getEnrollmentStatus(
+  status?: string | null,
+): EnrollmentStatus {
+  if (!status) {
+    return {
+      label: "Sem matrícula",
+      tone: "neutral",
+    };
+  }
+
+  const statusMap: Record<string, EnrollmentStatus> = {
+    PENDENTE: {
+      label: "Pendente",
+      tone: "warning",
+    },
+    EM_ANALISE: {
+      label: "Em análise",
+      tone: "warning",
+    },
+    AGUARDANDO_DOCUMENTOS: {
+      label: "Aguardando documentos",
+      tone: "warning",
+    },
+    AGUARDANDO_PAGAMENTO: {
+      label: "Aguardando pagamento",
+      tone: "warning",
+    },
+    ATIVA: {
+      label: "Ativa",
+      tone: "primary",
+    },
+    CANCELADA: {
+      label: "Cancelada",
+      tone: "danger",
+    },
+    CONCLUIDA: {
+      label: "Concluída",
+      tone: "success",
+    },
   };
 
-  return labels[status] ?? status;
+  return (
+    statusMap[status] ?? {
+      label: status,
+      tone: "neutral",
+    }
+  );
 }
 
-function getStatusClass(status?: string | null) {
-  if (!status) {
-    return "border-border bg-muted text-muted-foreground";
-  }
-
-  if (status === "ATIVA") {
-    return "border-primary/20 bg-primary/10 text-primary";
-  }
-
-  if (
-    [
-      "PENDENTE",
-      "EM_ANALISE",
-      "AGUARDANDO_DOCUMENTOS",
-      "AGUARDANDO_PAGAMENTO",
-    ].includes(status)
-  ) {
-    return "border-amber-200 bg-amber-50 text-amber-700";
-  }
-
-  if (status === "CANCELADA") {
-    return "border-red-200 bg-red-50 text-red-700";
-  }
-
-  return "border-border bg-muted text-muted-foreground";
-}
-
-export default async function AlunosPage({ searchParams }: PageProps) {
+export default async function AlunosPage({
+  searchParams,
+}: PageProps) {
   const params = await searchParams;
 
   const busca = params?.busca?.trim() ?? "";
@@ -174,7 +197,8 @@ export default async function AlunosPage({ searchParams }: PageProps) {
   const alunos = statusFiltro
     ? alunosEncontrados.filter((aluno) => {
         const matriculaAtual = aluno.matriculas[0] ?? null;
-        const statusAtual = matriculaAtual?.status ?? "SEM_MATRICULA";
+        const statusAtual =
+          matriculaAtual?.status ?? "SEM_MATRICULA";
 
         return statusAtual === statusFiltro;
       })
@@ -200,42 +224,31 @@ export default async function AlunosPage({ searchParams }: PageProps) {
 
   const alunosComAtencao = alunos.filter((aluno) => {
     const temTarefa = aluno.tarefas.length > 0;
-    const temComunicado = aluno.destinatariosComunicados.length > 0;
+    const temComunicado =
+      aluno.destinatariosComunicados.length > 0;
     const temOcorrencia = aluno.ocorrencias.length > 0;
     const semMatricula = aluno.matriculas.length === 0;
 
-    return temTarefa || temComunicado || temOcorrencia || semMatricula;
+    return (
+      temTarefa ||
+      temComunicado ||
+      temOcorrencia ||
+      semMatricula
+    );
   }).length;
 
   return (
     <AppLayout>
-      <div className="mb-7 flex flex-wrap items-start justify-between gap-6">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">
-            Vida Escolar
-          </p>
-
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-            Alunos
-          </h1>
-
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-            Consulte alunos, responsáveis, turmas, situação de matrícula e
-            alertas rápidos antes de abrir o prontuário.
-          </p>
-        </div>
-
-        <a
-          href="/alunos/novo"
-          className="group inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 active:translate-y-0 active:scale-[0.98]"
-        >
-          <Plus
-            size={17}
-            className="transition-transform duration-200 group-hover:rotate-90"
-          />
-          Novo aluno
-        </a>
-      </div>
+      <PageHeader
+        eyebrow="Vida Escolar"
+        title="Alunos"
+        description="Consulte alunos, responsáveis, turmas, situação de matrícula e alertas rápidos antes de abrir o prontuário."
+        action={{
+          label: "Novo aluno",
+          href: "/alunos/novo",
+          icon: Plus,
+        }}
+      />
 
       <section className="mb-7 overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm">
         <div className="relative p-5">
@@ -247,7 +260,10 @@ export default async function AlunosPage({ searchParams }: PageProps) {
             className="relative grid gap-3 xl:grid-cols-[1fr_210px_210px_auto]"
           >
             <div className="flex h-12 items-center gap-3 rounded-2xl border border-border bg-background px-4 shadow-sm">
-              <Search size={18} className="text-muted-foreground" />
+              <Search
+                size={18}
+                className="text-muted-foreground"
+              />
 
               <input
                 name="busca"
@@ -263,8 +279,12 @@ export default async function AlunosPage({ searchParams }: PageProps) {
               className="h-12 rounded-2xl border border-border bg-background px-4 text-sm text-foreground shadow-sm outline-none"
             >
               <option value="">Todas as turmas</option>
+
               {turmas.map((turma) => (
-                <option key={turma.id} value={turma.id}>
+                <option
+                  key={turma.id}
+                  value={turma.id}
+                >
                   {turma.nome}
                 </option>
               ))}
@@ -278,14 +298,18 @@ export default async function AlunosPage({ searchParams }: PageProps) {
               <option value="">Todos os status</option>
               <option value="ATIVA">Matrícula ativa</option>
               <option value="PENDENTE">Pendente</option>
-              <option value="EM_ANALISE">Em análise</option>
+              <option value="EM_ANALISE">
+                Em análise
+              </option>
               <option value="AGUARDANDO_DOCUMENTOS">
                 Aguardando documentos
               </option>
               <option value="AGUARDANDO_PAGAMENTO">
                 Aguardando pagamento
               </option>
-              <option value="SEM_MATRICULA">Sem matrícula</option>
+              <option value="SEM_MATRICULA">
+                Sem matrícula
+              </option>
             </select>
 
             <button
@@ -293,6 +317,7 @@ export default async function AlunosPage({ searchParams }: PageProps) {
               className="group inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 active:translate-y-0 active:scale-[0.98]"
             >
               Buscar
+
               <ArrowRight
                 size={16}
                 className="transition-transform duration-200 group-hover:translate-x-1"
@@ -302,104 +327,90 @@ export default async function AlunosPage({ searchParams }: PageProps) {
 
           {(busca || turmaFiltro || statusFiltro) && (
             <div className="relative mt-4">
-              <a
+              <SecondaryAction
+                label="Limpar filtros"
                 href="/alunos"
-                className="inline-flex rounded-2xl border border-border bg-background px-4 py-2 text-sm font-semibold text-primary transition hover:bg-muted"
-              >
-                Limpar filtros
-              </a>
+              />
             </div>
           )}
         </div>
       </section>
 
-      <div className="mb-7 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-          <GraduationCap size={22} className="text-primary" />
-          <p className="mt-4 text-sm text-muted-foreground">Alunos</p>
-          <p className="mt-1 text-4xl font-semibold tracking-tight text-foreground">
-            {totalAlunos}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Resultado atual
-          </p>
-        </div>
+      <section className="mb-7 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <MetricCard
+          label="Alunos"
+          value={totalAlunos}
+          description="Resultado atual"
+          icon={GraduationCap}
+        />
 
-        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-          <AlertTriangle size={22} className="text-primary" />
-          <p className="mt-4 text-sm text-muted-foreground">Atenção</p>
-          <p className="mt-1 text-4xl font-semibold tracking-tight text-foreground">
-            {alunosComAtencao}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {alunosComOcorrencia} com ocorrência
-          </p>
-        </div>
+        <MetricCard
+          label="Atenção"
+          value={alunosComAtencao}
+          description={`${alunosComOcorrencia} com ocorrência`}
+          icon={AlertTriangle}
+          tone={
+            alunosComAtencao > 0
+              ? "warning"
+              : "primary"
+          }
+        />
 
-        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-          <ClipboardList size={22} className="text-primary" />
-          <p className="mt-4 text-sm text-muted-foreground">Pulse</p>
-          <p className="mt-1 text-4xl font-semibold tracking-tight text-foreground">
-            {alunosComTarefaAberta}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Com tarefa aberta
-          </p>
-        </div>
+        <MetricCard
+          label="Pulse"
+          value={alunosComTarefaAberta}
+          description="Com tarefa aberta"
+          icon={ClipboardList}
+        />
 
-        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-          <MessageCircle size={22} className="text-primary" />
-          <p className="mt-4 text-sm text-muted-foreground">Comunicação</p>
-          <p className="mt-1 text-4xl font-semibold tracking-tight text-foreground">
-            {alunosComComunicacaoPendente}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Família pendente
-          </p>
-        </div>
+        <MetricCard
+          label="Comunicação"
+          value={alunosComComunicacaoPendente}
+          description="Família pendente"
+          icon={MessageCircle}
+        />
 
-        <div className="rounded-3xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-          <UsersRound size={22} className="text-primary" />
-          <p className="mt-4 text-sm text-muted-foreground">Sem matrícula</p>
-          <p className="mt-1 text-4xl font-semibold tracking-tight text-foreground">
-            {alunosSemMatricula}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Precisam revisar
-          </p>
-        </div>
-      </div>
+        <MetricCard
+          label="Sem matrícula"
+          value={alunosSemMatricula}
+          description="Precisam revisar"
+          icon={UsersRound}
+          tone={
+            alunosSemMatricula > 0
+              ? "danger"
+              : "primary"
+          }
+        />
+      </section>
 
-      <section className="mb-7 rounded-[2rem] border border-border bg-card p-5 shadow-sm">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="font-semibold text-foreground">
-              Turmas cadastradas
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Acesse rapidamente os alunos de cada turma.
-            </p>
-          </div>
-
-          <a
+      <SectionCard
+        title="Turmas cadastradas"
+        description="Acesse rapidamente os alunos de cada turma."
+        className="mb-7"
+        action={
+          <Link
             href="/turmas"
             className="group inline-flex items-center gap-2 text-sm font-semibold text-primary"
           >
             Ver turmas
+
             <ArrowRight
               size={16}
               className="transition-transform duration-200 group-hover:translate-x-1"
             />
-          </a>
-        </div>
-
+          </Link>
+        }
+      >
         {turmas.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            Nenhuma turma cadastrada.
-          </p>
+          <EmptyState
+            compact
+            icon={UsersRound}
+            title="Nenhuma turma cadastrada"
+            description="Cadastre uma turma para começar a organizar os alunos."
+          />
         ) : (
           <div className="flex gap-3 overflow-x-auto pb-2">
-            <a
+            <Link
               href="/alunos"
               className={`shrink-0 rounded-2xl border px-4 py-3 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm ${
                 !turmaFiltro
@@ -408,10 +419,10 @@ export default async function AlunosPage({ searchParams }: PageProps) {
               }`}
             >
               Todas
-            </a>
+            </Link>
 
             {turmas.map((turma) => (
-              <a
+              <Link
                 key={turma.id}
                 href={`/alunos?turma=${turma.id}`}
                 className={`shrink-0 rounded-2xl border px-4 py-3 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm ${
@@ -421,61 +432,59 @@ export default async function AlunosPage({ searchParams }: PageProps) {
                 }`}
               >
                 {turma.nome}
+
                 <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                   {turma._count.alunos}
                 </span>
-              </a>
+              </Link>
             ))}
           </div>
         )}
-      </section>
+      </SectionCard>
 
-      <section className="mb-24 rounded-[2rem] border border-border bg-card p-5 shadow-sm">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="font-semibold text-foreground">
-              Lista inteligente de alunos
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Visualize status, alertas e ações rápidas.
-            </p>
-          </div>
-
+      <SectionCard
+        title="Lista inteligente de alunos"
+        description="Visualize status, alertas e ações rápidas."
+        className="mb-24"
+        action={
           <p className="rounded-full bg-muted px-4 py-2 text-sm font-medium text-muted-foreground">
-            {totalAlunos} aluno(s)
+            {totalAlunos} aluno
+            {totalAlunos === 1 ? "" : "s"}
           </p>
-        </div>
-
+        }
+      >
         {alunos.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border p-10 text-center">
-            <GraduationCap className="mx-auto text-primary" size={32} />
-
-            <h3 className="mt-4 font-semibold text-foreground">
-              Nenhum aluno encontrado
-            </h3>
-
-            <p className="mt-2 text-sm text-muted-foreground">
-              Tente limpar os filtros ou cadastrar um novo aluno.
-            </p>
-
-            <a
-              href="/alunos/novo"
-              className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
-            >
-              <Plus size={16} />
-              Cadastrar aluno
-            </a>
-          </div>
+          <EmptyState
+            icon={GraduationCap}
+            title="Nenhum aluno encontrado"
+            description="Tente limpar os filtros ou cadastrar um novo aluno."
+            action={{
+              label: "Cadastrar aluno",
+              href: "/alunos/novo",
+              icon: Plus,
+            }}
+          />
         ) : (
           <div className="grid gap-4 xl:grid-cols-2">
             {alunos.map((aluno) => {
-              const matriculaAtual = aluno.matriculas[0] ?? null;
-              const statusMatricula = matriculaAtual?.status ?? null;
+              const matriculaAtual =
+                aluno.matriculas[0] ?? null;
 
-              const tarefasAbertas = aluno.tarefas.length;
+              const statusMatricula =
+                matriculaAtual?.status ?? null;
+
+              const enrollmentStatus =
+                getEnrollmentStatus(statusMatricula);
+
+              const tarefasAbertas =
+                aluno.tarefas.length;
+
               const comunicadosPendentes =
                 aluno.destinatariosComunicados.length;
-              const ocorrencias = aluno.ocorrencias.length;
+
+              const ocorrencias =
+                aluno.ocorrencias.length;
+
               const semMatricula = !matriculaAtual;
 
               const temAlerta =
@@ -501,32 +510,38 @@ export default async function AlunosPage({ searchParams }: PageProps) {
                         </h3>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                          {aluno.turma?.nome || "Sem turma"} ·{" "}
-                          {aluno.turma?.segmento || "Segmento não informado"}
+                          {aluno.turma?.nome ||
+                            "Sem turma"}{" "}
+                          ·{" "}
+                          {aluno.turma?.segmento ||
+                            "Segmento não informado"}
                         </p>
                       </div>
                     </div>
 
-                    <span
-                      className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${getStatusClass(
-                        statusMatricula,
-                      )}`}
+                    <StatusBadge
+                      tone={enrollmentStatus.tone}
                     >
-                      {getStatusLabel(statusMatricula)}
-                    </span>
+                      {enrollmentStatus.label}
+                    </StatusBadge>
                   </div>
 
                   <div className="mb-4 grid gap-3 md:grid-cols-2">
                     <div className="rounded-2xl border border-border bg-background p-3">
                       <div className="mb-2 flex items-center gap-2">
-                        <UserRound size={16} className="text-primary" />
+                        <UserRound
+                          size={16}
+                          className="text-primary"
+                        />
+
                         <p className="text-xs font-medium text-muted-foreground">
                           Responsável
                         </p>
                       </div>
 
                       <p className="truncate text-sm font-semibold text-foreground">
-                        {aluno.responsavel?.nome || "Não informado"}
+                        {aluno.responsavel?.nome ||
+                          "Não informado"}
                       </p>
 
                       <p className="mt-1 truncate text-xs text-muted-foreground">
@@ -537,7 +552,11 @@ export default async function AlunosPage({ searchParams }: PageProps) {
 
                     <div className="rounded-2xl border border-border bg-background p-3">
                       <div className="mb-2 flex items-center gap-2">
-                        <ClipboardList size={16} className="text-primary" />
+                        <ClipboardList
+                          size={16}
+                          className="text-primary"
+                        />
+
                         <p className="text-xs font-medium text-muted-foreground">
                           Matrícula
                         </p>
@@ -550,77 +569,87 @@ export default async function AlunosPage({ searchParams }: PageProps) {
                       </p>
 
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {getStatusLabel(statusMatricula)}
+                        {enrollmentStatus.label}
                       </p>
                     </div>
                   </div>
 
                   <div className="mb-4 flex flex-wrap gap-2">
                     {tarefasAbertas > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                        <ClipboardList size={13} />
-                        {tarefasAbertas} tarefa(s)
-                      </span>
+                      <StatusBadge tone="primary">
+                        <span className="inline-flex items-center gap-1">
+                          <ClipboardList size={13} />
+                          {tarefasAbertas} tarefa
+                          {tarefasAbertas === 1
+                            ? ""
+                            : "s"}
+                        </span>
+                      </StatusBadge>
                     )}
 
                     {comunicadosPendentes > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                        <MessageCircle size={13} />
-                        {comunicadosPendentes} comunicado(s)
-                      </span>
+                      <StatusBadge tone="primary">
+                        <span className="inline-flex items-center gap-1">
+                          <MessageCircle size={13} />
+                          {comunicadosPendentes} comunicado
+                          {comunicadosPendentes === 1
+                            ? ""
+                            : "s"}
+                        </span>
+                      </StatusBadge>
                     )}
 
                     {ocorrencias > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                        <AlertTriangle size={13} />
-                        {ocorrencias} ocorrência(s)
-                      </span>
+                      <StatusBadge tone="warning">
+                        <span className="inline-flex items-center gap-1">
+                          <AlertTriangle size={13} />
+                          {ocorrencias} ocorrência
+                          {ocorrencias === 1
+                            ? ""
+                            : "s"}
+                        </span>
+                      </StatusBadge>
                     )}
 
                     {semMatricula && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
-                        <AlertTriangle size={13} />
-                        Sem matrícula
-                      </span>
+                      <StatusBadge tone="danger">
+                        <span className="inline-flex items-center gap-1">
+                          <AlertTriangle size={13} />
+                          Sem matrícula
+                        </span>
+                      </StatusBadge>
                     )}
 
                     {!temAlerta && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-                        <CheckCircle2 size={13} />
-                        Sem alertas
-                      </span>
+                      <StatusBadge tone="neutral">
+                        <span className="inline-flex items-center gap-1">
+                          <CheckCircle2 size={13} />
+                          Sem alertas
+                        </span>
+                      </StatusBadge>
                     )}
                   </div>
 
                   <div className="mt-auto flex flex-wrap gap-3 border-t border-border pt-4">
-                    <a
+                    <SecondaryAction
+                      label="Abrir prontuário"
                       href={`/alunos/${aluno.id}`}
-                      className="group/button inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-sm active:scale-[0.98]"
-                    >
-                      Abrir prontuário
-                      <ArrowRight
-                        size={16}
-                        className="transition-transform duration-200 group-hover/button:translate-x-1"
-                      />
-                    </a>
+                      trailingIcon={ArrowRight}
+                    />
 
-                    <a
+                    <PrimaryAction
+                      label="Lumi"
                       href={`/alunos/${aluno.id}/lumi`}
-                      className="group/button inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
-                    >
-                      <Sparkles
-                        size={16}
-                        className="transition-transform duration-200 group-hover/button:rotate-12 group-hover/button:scale-110"
-                      />
-                      Lumi
-                    </a>
+                      icon={Sparkles}
+                      iconAnimation="scale"
+                    />
                   </div>
                 </article>
               );
             })}
           </div>
         )}
-      </section>
+      </SectionCard>
     </AppLayout>
   );
 }
