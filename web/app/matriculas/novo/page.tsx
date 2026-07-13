@@ -4,19 +4,23 @@ import ProgressBar from "@/components/lumina/ProgressBar";
 import SectionCard from "@/components/lumina/SectionCard";
 import StatusBadge from "@/components/lumina/StatusBadge";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import { randomBytes } from "crypto";
 import {
   ArrowLeft,
+  CalendarDays,
   CheckCircle2,
   ClipboardList,
-  FileCheck2,
   GraduationCap,
+  Link2,
+  Mail,
   Save,
+  Send,
+  Smartphone,
   UserRound,
   UsersRound,
-  WalletCards,
 } from "lucide-react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -30,46 +34,27 @@ function getString(formData: FormData, key: string) {
   return value.trim();
 }
 
-async function criarMatricula(formData: FormData) {
+function gerarTokenSeguro() {
+  return randomBytes(32).toString("hex");
+}
+
+async function criarConviteMatricula(formData: FormData) {
   "use server";
 
   const nomeAluno = getString(formData, "nomeAluno");
-  const dataNascimento = getString(formData, "dataNascimento");
-  const sexo = getString(formData, "sexo");
-  const turmaId = getString(formData, "turmaId");
-  const alergias = getString(formData, "alergias");
-  const observacoes = getString(formData, "observacoes");
-
   const nomeResponsavel = getString(
     formData,
     "nomeResponsavel",
   );
-
   const telefoneResponsavel = getString(
     formData,
     "telefoneResponsavel",
   );
-
   const emailResponsavel = getString(
     formData,
     "emailResponsavel",
   );
-
-  const cpfResponsavel = getString(
-    formData,
-    "cpfResponsavel",
-  );
-
-  const profissaoResponsavel = getString(
-    formData,
-    "profissaoResponsavel",
-  );
-
-  const enderecoResponsavel = getString(
-    formData,
-    "enderecoResponsavel",
-  );
-
+  const turmaId = getString(formData, "turmaId");
   const anoLetivoTexto = getString(
     formData,
     "anoLetivo",
@@ -79,7 +64,6 @@ async function criarMatricula(formData: FormData) {
 
   if (
     !nomeAluno ||
-    !dataNascimento ||
     !nomeResponsavel ||
     !telefoneResponsavel ||
     !turmaId ||
@@ -121,87 +105,75 @@ async function criarMatricula(formData: FormData) {
     );
   }
 
-  const totalAlunosNaTurma = await prisma.aluno.count({
-    where: {
-      turmaId: turma.id,
-    },
-  });
+  const [alunosNaTurma, convitesEmAndamento] =
+    await Promise.all([
+      prisma.aluno.count({
+        where: {
+          turmaId: turma.id,
+        },
+      }),
 
-  if (totalAlunosNaTurma >= turma.capacidade) {
+      prisma.conviteMatricula.count({
+        where: {
+          turmaId: turma.id,
+          status: {
+            in: [
+              "AGUARDANDO_ENVIO",
+              "AGUARDANDO_RESPONSAVEL",
+              "EM_PREENCHIMENTO",
+              "PREENCHIDO",
+            ],
+          },
+          expiraEm: {
+            gt: new Date(),
+          },
+        },
+      }),
+    ]);
+
+  const ocupacaoProjetada =
+    alunosNaTurma + convitesEmAndamento;
+
+  if (ocupacaoProjetada >= turma.capacidade) {
     throw new Error(
-      "A turma selecionada já atingiu sua capacidade máxima.",
+      "A turma selecionada não possui vagas disponíveis.",
     );
   }
 
-  const responsavel = await prisma.responsavel.create({
-    data: {
-      nome: nomeResponsavel,
-      telefone: telefoneResponsavel,
-      email: emailResponsavel || null,
-      cpf: cpfResponsavel || null,
-      profissao: profissaoResponsavel || null,
-      endereco: enderecoResponsavel || null,
-      escolaId: escola.id,
-    },
-  });
+  let token = gerarTokenSeguro();
 
-  const aluno = await prisma.aluno.create({
+  while (
+    await prisma.conviteMatricula.findUnique({
+      where: {
+        token,
+      },
+      select: {
+        id: true,
+      },
+    })
+  ) {
+    token = gerarTokenSeguro();
+  }
+
+  const expiraEm = new Date();
+  expiraEm.setDate(expiraEm.getDate() + 7);
+
+  const convite = await prisma.conviteMatricula.create({
     data: {
-      nome: nomeAluno,
-      dataNascimento: new Date(
-        `${dataNascimento}T12:00:00`,
-      ),
-      sexo: sexo || null,
-      alergias: alergias || null,
-      observacoes: observacoes || null,
+      token,
+      status: "AGUARDANDO_ENVIO",
+      nomeAluno,
+      nomeResponsavel,
+      telefoneResponsavel,
+      emailResponsavel: emailResponsavel || null,
+      anoLetivo,
+      expiraEm,
       escolaId: escola.id,
-      responsavelId: responsavel.id,
       turmaId: turma.id,
     },
   });
 
-  const matricula = await prisma.matricula.create({
-    data: {
-      anoLetivo,
-      status: "PENDENTE",
-      escolaId: escola.id,
-      alunoId: aluno.id,
-    },
-  });
-
-  await prisma.tarefa.createMany({
-    data: [
-      {
-        titulo: "Analisar dados da matrícula",
-        descricao: `Conferir os dados cadastrados na matrícula de ${aluno.nome}.`,
-        setor: "Secretaria",
-        prioridade: "ALTA",
-        escolaId: escola.id,
-        alunoId: aluno.id,
-        matriculaId: matricula.id,
-      },
-      {
-        titulo: "Conferir documentos da matrícula",
-        descricao: `Conferir os documentos obrigatórios de ${aluno.nome}.`,
-        setor: "Secretaria",
-        prioridade: "ALTA",
-        escolaId: escola.id,
-        alunoId: aluno.id,
-        matriculaId: matricula.id,
-      },
-      {
-        titulo: "Confirmar pagamento da matrícula",
-        descricao: `Verificar o pagamento inicial da matrícula de ${aluno.nome}.`,
-        setor: "Financeiro",
-        prioridade: "MEDIA",
-        escolaId: escola.id,
-        alunoId: aluno.id,
-        matriculaId: matricula.id,
-      },
-    ],
-  });
-
-  redirect("/matriculas");
+  redirect(`/matriculas/convites/${convite.id}`);
 }
 
 export default async function NovaMatriculaPage() {
@@ -232,6 +204,21 @@ export default async function NovaMatriculaPage() {
       _count: {
         select: {
           alunos: true,
+          convitesMatricula: {
+            where: {
+              status: {
+                in: [
+                  "AGUARDANDO_ENVIO",
+                  "AGUARDANDO_RESPONSAVEL",
+                  "EM_PREENCHIMENTO",
+                  "PREENCHIDO",
+                ],
+              },
+              expiraEm: {
+                gt: new Date(),
+              },
+            },
+          },
         },
       },
     },
@@ -239,12 +226,20 @@ export default async function NovaMatriculaPage() {
 
   const anoAtual = new Date().getFullYear();
 
+  const possuiTurmaComVaga = turmas.some((turma) => {
+    const ocupacaoProjetada =
+      turma._count.alunos +
+      turma._count.convitesMatricula;
+
+    return ocupacaoProjetada < turma.capacidade;
+  });
+
   return (
     <AppLayout>
       <PageHeader
         eyebrow="Centro de Matrículas"
-        title="Nova matrícula"
-        description="Cadastre o aluno, vincule o responsável e inicie automaticamente o acompanhamento do processo no Pulse."
+        title="Iniciar matrícula"
+        description="Informe apenas os dados básicos. A Lumina gerará um link seguro para o responsável completar o processo."
         secondaryContent={
           <Link
             href="/matriculas"
@@ -268,17 +263,17 @@ export default async function NovaMatriculaPage() {
 
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                Processo guiado
+                Início pela secretaria
               </p>
 
               <h2 className="mt-1 text-lg font-semibold text-foreground">
-                Primeira etapa da matrícula digital
+                A escola inicia. A família completa.
               </h2>
 
               <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                Ao concluir, a matrícula será criada como pendente e o
-                Pulse receberá tarefas automáticas para análise,
-                documentos e pagamento.
+                Depois de gerar o convite, envie o link ao responsável.
+                Nenhum cadastro definitivo será criado antes da conclusão
+                do formulário público.
               </p>
             </div>
           </div>
@@ -286,32 +281,32 @@ export default async function NovaMatriculaPage() {
           <div className="min-w-[220px]">
             <div className="mb-2 flex items-center justify-between gap-3">
               <span className="text-xs font-medium text-muted-foreground">
-                Cadastro inicial
+                Início do processo
               </span>
 
               <span className="text-xs font-semibold text-primary">
-                Etapa 1 de 4
+                Etapa 1 de 5
               </span>
             </div>
 
-            <ProgressBar value={25} />
+            <ProgressBar value={20} />
           </div>
         </div>
       </section>
 
       <form
-        action={criarMatricula}
-        className="mb-24 grid gap-6 xl:grid-cols-[1.35fr_0.9fr]"
+        action={criarConviteMatricula}
+        className="mb-24 grid gap-6 xl:grid-cols-[1.25fr_0.75fr]"
       >
         <div className="space-y-6">
           <SectionCard
-            title="Dados do aluno"
-            description="Informações pessoais e escolares do novo aluno."
+            title="Informações básicas"
+            description="Dados necessários para identificar e enviar o convite."
             action={
               <StatusBadge tone="primary">
                 <span className="inline-flex items-center gap-1">
                   <GraduationCap size={13} />
-                  Etapa obrigatória
+                  Secretaria
                 </span>
               </StatusBadge>
             }
@@ -322,189 +317,25 @@ export default async function NovaMatriculaPage() {
                   htmlFor="nomeAluno"
                   className="text-sm font-medium text-foreground"
                 >
-                  Nome completo do aluno *
+                  Nome do aluno *
                 </label>
 
                 <input
                   id="nomeAluno"
                   name="nomeAluno"
                   required
-                  autoComplete="name"
+                  autoComplete="off"
                   placeholder="Ex.: João Pedro Silva"
                   className="mt-2 h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
                 />
               </div>
 
-              <div>
-                <label
-                  htmlFor="dataNascimento"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Data de nascimento *
-                </label>
-
-                <input
-                  id="dataNascimento"
-                  name="dataNascimento"
-                  required
-                  type="date"
-                  className="mt-2 h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="sexo"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Sexo
-                </label>
-
-                <select
-                  id="sexo"
-                  name="sexo"
-                  className="mt-2 h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
-                >
-                  <option value="">Não informado</option>
-                  <option value="Feminino">Feminino</option>
-                  <option value="Masculino">Masculino</option>
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="anoLetivo"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Ano letivo *
-                </label>
-
-                <select
-                  id="anoLetivo"
-                  name="anoLetivo"
-                  required
-                  defaultValue={anoAtual}
-                  className="mt-2 h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
-                >
-                  <option value={anoAtual}>
-                    {anoAtual}
-                  </option>
-                  <option value={anoAtual + 1}>
-                    {anoAtual + 1}
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="turmaId"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Turma *
-                </label>
-
-                <select
-                  id="turmaId"
-                  name="turmaId"
-                  required
-                  defaultValue=""
-                  className="mt-2 h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
-                >
-                  <option value="" disabled>
-                    Selecione uma turma
-                  </option>
-
-                  {turmas.map((turma) => {
-                    const vagasDisponiveis = Math.max(
-                      0,
-                      turma.capacidade -
-                        turma._count.alunos,
-                    );
-
-                    const lotada =
-                      vagasDisponiveis <= 0;
-
-                    return (
-                      <option
-                        key={turma.id}
-                        value={turma.id}
-                        disabled={lotada}
-                      >
-                        {turma.nome} — {turma.turno} —{" "}
-                        {lotada
-                          ? "Lotada"
-                          : `${vagasDisponiveis} vaga${
-                              vagasDisponiveis === 1
-                                ? ""
-                                : "s"
-                            }`}
-                      </option>
-                    );
-                  })}
-                </select>
-
-                {turmas.length === 0 && (
-                  <p className="mt-2 text-xs leading-5 text-red-600">
-                    Nenhuma turma está cadastrada. Crie uma turma antes
-                    de iniciar a matrícula.
-                  </p>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
-                <label
-                  htmlFor="alergias"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Alergias ou restrições
-                </label>
-
-                <input
-                  id="alergias"
-                  name="alergias"
-                  placeholder="Ex.: Lactose, dipirona, amendoim..."
-                  className="mt-2 h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label
-                  htmlFor="observacoes"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Observações
-                </label>
-
-                <textarea
-                  id="observacoes"
-                  name="observacoes"
-                  rows={4}
-                  placeholder="Registre informações importantes sobre o aluno..."
-                  className="mt-2 w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
-                />
-              </div>
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            title="Responsável"
-            description="Dados de contato da pessoa responsável pelo aluno."
-            action={
-              <StatusBadge tone="primary">
-                <span className="inline-flex items-center gap-1">
-                  <UserRound size={13} />
-                  Contato principal
-                </span>
-              </StatusBadge>
-            }
-          >
-            <div className="grid gap-5 md:grid-cols-2">
               <div className="md:col-span-2">
                 <label
                   htmlFor="nomeResponsavel"
                   className="text-sm font-medium text-foreground"
                 >
-                  Nome completo do responsável *
+                  Nome do responsável *
                 </label>
 
                 <input
@@ -522,7 +353,7 @@ export default async function NovaMatriculaPage() {
                   htmlFor="telefoneResponsavel"
                   className="text-sm font-medium text-foreground"
                 >
-                  Telefone *
+                  WhatsApp do responsável *
                 </label>
 
                 <input
@@ -556,75 +387,128 @@ export default async function NovaMatriculaPage() {
 
               <div>
                 <label
-                  htmlFor="cpfResponsavel"
+                  htmlFor="anoLetivo"
                   className="text-sm font-medium text-foreground"
                 >
-                  CPF
+                  Ano letivo *
                 </label>
 
-                <input
-                  id="cpfResponsavel"
-                  name="cpfResponsavel"
-                  inputMode="numeric"
-                  placeholder="Ex.: 000.000.000-00"
-                  className="mt-2 h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
-                />
+                <select
+                  id="anoLetivo"
+                  name="anoLetivo"
+                  required
+                  defaultValue={anoAtual}
+                  className="mt-2 h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
+                >
+                  <option value={anoAtual}>
+                    {anoAtual}
+                  </option>
+
+                  <option value={anoAtual + 1}>
+                    {anoAtual + 1}
+                  </option>
+                </select>
               </div>
 
               <div>
                 <label
-                  htmlFor="profissaoResponsavel"
+                  htmlFor="turmaId"
                   className="text-sm font-medium text-foreground"
                 >
-                  Profissão
+                  Turma pretendida *
                 </label>
 
-                <input
-                  id="profissaoResponsavel"
-                  name="profissaoResponsavel"
-                  placeholder="Ex.: Professora"
-                  className="mt-2 h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label
-                  htmlFor="enderecoResponsavel"
-                  className="text-sm font-medium text-foreground"
+                <select
+                  id="turmaId"
+                  name="turmaId"
+                  required
+                  defaultValue=""
+                  className="mt-2 h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
                 >
-                  Endereço
-                </label>
+                  <option value="" disabled>
+                    Selecione uma turma
+                  </option>
 
-                <input
-                  id="enderecoResponsavel"
-                  name="enderecoResponsavel"
-                  autoComplete="street-address"
-                  placeholder="Rua, número, complemento e bairro"
-                  className="mt-2 h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
-                />
+                  {turmas.map((turma) => {
+                    const ocupacaoProjetada =
+                      turma._count.alunos +
+                      turma._count.convitesMatricula;
+
+                    const vagasDisponiveis = Math.max(
+                      0,
+                      turma.capacidade - ocupacaoProjetada,
+                    );
+
+                    const lotada = vagasDisponiveis <= 0;
+
+                    return (
+                      <option
+                        key={turma.id}
+                        value={turma.id}
+                        disabled={lotada}
+                      >
+                        {turma.nome} — {turma.turno} —{" "}
+                        {lotada
+                          ? "Lotada"
+                          : `${vagasDisponiveis} vaga${
+                              vagasDisponiveis === 1 ? "" : "s"
+                            }`}
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
             </div>
-          </SectionCard>
-        </div>
 
-        <div className="space-y-6">
+            {!possuiTurmaComVaga && (
+              <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/10 p-4">
+                <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                  Nenhuma turma possui vaga disponível.
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-red-700/80 dark:text-red-300/80">
+                  Crie uma nova turma ou ajuste a capacidade antes de
+                  iniciar outro convite.
+                </p>
+              </div>
+            )}
+          </SectionCard>
+
           <SectionCard
-            title="Resumo do processo"
-            description="O que será criado ao concluir o cadastro."
+            title="Como funcionará"
+            description="Após a criação, o processo seguirá estas etapas."
           >
-            <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-2">
               <div className="flex items-start gap-3 rounded-2xl border border-border bg-background p-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <GraduationCap size={18} />
+                  <Link2 size={18} />
                 </div>
 
                 <div>
                   <p className="text-sm font-semibold text-foreground">
-                    Aluno e responsável
+                    Link seguro
                   </p>
 
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    Os dois cadastros serão vinculados automaticamente.
+                    A Lumina gera um convite exclusivo com validade de
+                    sete dias.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-2xl border border-border bg-background p-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <UserRound size={18} />
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Família preenche
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    O responsável completará os dados pessoais e
+                    escolares.
                   </p>
                 </div>
               </div>
@@ -636,44 +520,89 @@ export default async function NovaMatriculaPage() {
 
                 <div>
                   <p className="text-sm font-semibold text-foreground">
-                    Vínculo com a turma
+                    Cadastro definitivo
                   </p>
 
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    O aluno será inserido na turma escolhida.
+                    Aluno e responsável só serão criados após a
+                    conclusão.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3 rounded-2xl border border-border bg-background p-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <FileCheck2 size={18} />
+                  <CheckCircle2 size={18} />
                 </div>
 
                 <div>
                   <p className="text-sm font-semibold text-foreground">
-                    Conferência documental
+                    Análise da escola
                   </p>
 
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    O Pulse criará uma tarefa para a Secretaria.
+                    A Secretaria receberá o processo para conferência.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </SectionCard>
+        </div>
+
+        <div className="space-y-6">
+          <SectionCard
+            title="Resumo do convite"
+            description="O que será gerado ao concluir esta etapa."
+          >
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 rounded-2xl border border-border bg-background p-4">
+                <Smartphone
+                  size={18}
+                  className="mt-0.5 shrink-0 text-primary"
+                />
+
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Envio por WhatsApp
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    O link poderá ser enviado diretamente ao número
+                    informado.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3 rounded-2xl border border-border bg-background p-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <WalletCards size={18} />
-                </div>
+                <Mail
+                  size={18}
+                  className="mt-0.5 shrink-0 text-primary"
+                />
 
                 <div>
                   <p className="text-sm font-semibold text-foreground">
-                    Confirmação financeira
+                    Envio por e-mail
                   </p>
 
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    O Financeiro receberá uma tarefa para confirmar o
-                    pagamento.
+                    O e-mail será opcional nesta primeira versão.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-2xl border border-border bg-background p-4">
+                <CalendarDays
+                  size={18}
+                  className="mt-0.5 shrink-0 text-primary"
+                />
+
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Validade de sete dias
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    Convites vencidos não poderão ser utilizados.
                   </p>
                 </div>
               </div>
@@ -682,28 +611,28 @@ export default async function NovaMatriculaPage() {
 
           <SectionCard
             title="Situação inicial"
-            description="A matrícula começará aguardando análise."
+            description="O convite começará aguardando envio."
           >
             <div className="rounded-3xl border border-border bg-background p-4">
               <div className="flex items-center justify-between gap-4">
                 <StatusBadge tone="warning">
-                  Pendente
+                  Aguardando envio
                 </StatusBadge>
 
                 <span className="text-sm font-semibold text-foreground">
-                  15%
+                  20%
                 </span>
               </div>
 
               <ProgressBar
-                value={15}
+                value={20}
                 tone="warning"
                 className="mt-4"
               />
 
               <p className="mt-3 text-xs leading-5 text-muted-foreground">
-                Depois do cadastro, a Secretaria poderá analisar os dados
-                e atualizar a etapa do processo.
+                Depois de gerar o link, envie-o ao responsável para
+                continuar o processo.
               </p>
             </div>
           </SectionCard>
@@ -711,16 +640,16 @@ export default async function NovaMatriculaPage() {
           <div className="sticky bottom-5 rounded-[2rem] border border-border bg-card/95 p-5 shadow-xl backdrop-blur">
             <div className="mb-4 flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <CheckCircle2 size={18} />
+                <Send size={18} />
               </div>
 
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  Pronto para iniciar
+                  Gerar convite
                 </p>
 
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Revise os campos obrigatórios antes de concluir.
+                  Confira o telefone antes de continuar.
                 </p>
               </div>
             </div>
@@ -728,14 +657,14 @@ export default async function NovaMatriculaPage() {
             <div className="flex flex-col gap-3">
               <button
                 type="submit"
-                disabled={turmas.length === 0}
+                disabled={!possuiTurmaComVaga}
                 className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
               >
                 <Save
                   size={17}
                   className="transition-transform duration-200 group-hover:scale-110"
                 />
-                Criar matrícula
+                Gerar link da matrícula
               </button>
 
               <Link

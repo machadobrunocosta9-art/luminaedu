@@ -17,6 +17,16 @@ enum StatusMatricula {
   CONCLUIDA
 }
 
+enum StatusConviteMatricula {
+  AGUARDANDO_ENVIO
+  AGUARDANDO_RESPONSAVEL
+  EM_PREENCHIMENTO
+  PREENCHIDO
+  CONCLUIDO
+  EXPIRADO
+  CANCELADO
+}
+
 enum StatusTarefa {
   A_FAZER
   EM_ANDAMENTO
@@ -93,6 +103,8 @@ model Escola {
   tarefas      Tarefa[]
   ocorrencias  OcorrenciaAluno[]
 
+  convitesMatricula ConviteMatricula[]
+
   comunicados              Comunicado[]
   destinatariosComunicados DestinatarioComunicado[]
   respostasComunicados     RespostaComunicado[]
@@ -109,10 +121,10 @@ model Responsavel {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  escolaId     String
-  escola       Escola @relation(fields: [escolaId], references: [id])
+  escolaId String
+  escola   Escola @relation(fields: [escolaId], references: [id])
 
-  alunos       Aluno[]
+  alunos Aluno[]
 
   destinatariosComunicados DestinatarioComunicado[]
   respostasComunicados     RespostaComunicado[]
@@ -127,36 +139,37 @@ model Turma {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  escolaId     String
-  escola       Escola @relation(fields: [escolaId], references: [id])
+  escolaId String
+  escola   Escola @relation(fields: [escolaId], references: [id])
 
-  alunos       Aluno[]
-  comunicados  Comunicado[]
+  alunos            Aluno[]
+  comunicados       Comunicado[]
+  convitesMatricula ConviteMatricula[]
 }
 
 model Aluno {
-  id                  String   @id @default(cuid())
-  nome                String
-  dataNascimento      DateTime
-  sexo                String?
-  cpf                 String?
-  certidaoNascimento  String?
-  alergias            String?
-  observacoes         String?
-  criadoEm            DateTime @default(now())
-  atualizadoEm        DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  nome               String
+  dataNascimento     DateTime
+  sexo               String?
+  cpf                String?
+  certidaoNascimento String?
+  alergias           String?
+  observacoes        String?
+  criadoEm           DateTime @default(now())
+  atualizadoEm       DateTime @updatedAt
 
-  escolaId            String
-  responsavelId       String
-  turmaId             String?
+  escolaId      String
+  responsavelId String
+  turmaId       String?
 
-  escola              Escola @relation(fields: [escolaId], references: [id])
-  responsavel         Responsavel @relation(fields: [responsavelId], references: [id])
-  turma               Turma? @relation(fields: [turmaId], references: [id])
+  escola      Escola      @relation(fields: [escolaId], references: [id])
+  responsavel Responsavel @relation(fields: [responsavelId], references: [id])
+  turma       Turma?      @relation(fields: [turmaId], references: [id])
 
-  matriculas          Matricula[]
-  tarefas             Tarefa[]
-  ocorrencias         OcorrenciaAluno[]
+  matriculas  Matricula[]
+  tarefas     Tarefa[]
+  ocorrencias OcorrenciaAluno[]
 
   comunicados              Comunicado[]
   destinatariosComunicados DestinatarioComunicado[]
@@ -164,176 +177,218 @@ model Aluno {
 }
 
 model Matricula {
-  id             String   @id @default(cuid())
-  anoLetivo      Int
-  dataMatricula  DateTime @default(now())
-  status         StatusMatricula @default(PENDENTE)
-  criadoEm       DateTime @default(now())
-  atualizadoEm   DateTime @updatedAt
+  id            String          @id @default(cuid())
+  anoLetivo     Int
+  dataMatricula DateTime        @default(now())
+  status        StatusMatricula @default(PENDENTE)
+  criadoEm      DateTime        @default(now())
+  atualizadoEm  DateTime        @updatedAt
 
-  escolaId       String
-  alunoId        String
+  escolaId String
+  alunoId  String
 
-  escola         Escola @relation(fields: [escolaId], references: [id])
-  aluno          Aluno @relation(fields: [alunoId], references: [id])
+  escola Escola @relation(fields: [escolaId], references: [id])
+  aluno  Aluno  @relation(fields: [alunoId], references: [id])
 
-  tarefas        Tarefa[]
+  tarefas Tarefa[]
+
+  conviteMatricula ConviteMatricula?
+}
+
+model ConviteMatricula {
+  id    String @id @default(cuid())
+  token String @unique
+
+  status StatusConviteMatricula @default(AGUARDANDO_ENVIO)
+
+  nomeAluno           String
+  nomeResponsavel     String
+  telefoneResponsavel String
+  emailResponsavel    String?
+
+  anoLetivo Int
+
+  expiraEm DateTime
+
+  enviadoEm     DateTime?
+  visualizadoEm DateTime?
+  preenchidoEm  DateTime?
+  concluidoEm   DateTime?
+  canceladoEm   DateTime?
+
+  rascunhoDados Json?
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  escolaId    String
+  turmaId     String?
+  matriculaId String? @unique
+
+  escola    Escola     @relation(fields: [escolaId], references: [id])
+  turma     Turma?     @relation(fields: [turmaId], references: [id])
+  matricula Matricula? @relation(fields: [matriculaId], references: [id])
+
+  @@index([escolaId])
+  @@index([turmaId])
+  @@index([status])
+  @@index([expiraEm])
 }
 
 model Tarefa {
-  id             String @id @default(cuid())
-  titulo         String
-  descricao      String?
-  setor          String
-  responsavel    String?
-  status         StatusTarefa @default(A_FAZER)
-  prioridade     PrioridadeTarefa @default(MEDIA)
-  prazo          DateTime?
-  criadoEm       DateTime @default(now())
-  atualizadoEm   DateTime @updatedAt
+  id           String           @id @default(cuid())
+  titulo       String
+  descricao    String?
+  setor        String
+  responsavel  String?
+  status       StatusTarefa     @default(A_FAZER)
+  prioridade   PrioridadeTarefa @default(MEDIA)
+  prazo        DateTime?
+  criadoEm     DateTime         @default(now())
+  atualizadoEm DateTime         @updatedAt
 
-  escolaId       String
-  alunoId        String?
-  matriculaId    String?
+  escolaId    String
+  alunoId     String?
+  matriculaId String?
 
-  escola         Escola @relation(fields: [escolaId], references: [id])
-  aluno          Aluno? @relation(fields: [alunoId], references: [id])
-  matricula      Matricula? @relation(fields: [matriculaId], references: [id])
+  escola    Escola     @relation(fields: [escolaId], references: [id])
+  aluno     Aluno?     @relation(fields: [alunoId], references: [id])
+  matricula Matricula? @relation(fields: [matriculaId], references: [id])
 }
 
 model OcorrenciaAluno {
-  id                    String @id @default(cuid())
+  id String @id @default(cuid())
 
-  tipo                  TipoOcorrenciaAluno
-  titulo                String
-  descricao             String
-  textoFinal            String?
+  tipo       TipoOcorrenciaAluno
+  titulo     String
+  descricao  String
+  textoFinal String?
 
-  status                StatusOcorrenciaAluno @default(REGISTRADO)
+  status StatusOcorrenciaAluno @default(REGISTRADO)
 
-  enviarParaResponsavel Boolean @default(false)
-  enviadoPorEmail       Boolean @default(false)
+  enviarParaResponsavel Boolean   @default(false)
+  enviadoPorEmail       Boolean   @default(false)
   emailResponsavel      String?
   dataEnvioEmail        DateTime?
 
-  tokenCiencia          String?  @unique
-  cienciaConfirmada     Boolean @default(false)
+  tokenCiencia          String?   @unique
+  cienciaConfirmada     Boolean   @default(false)
   dataCiencia           DateTime?
   nomeConfirmante       String?
   parentescoConfirmante String?
   observacaoCiencia     String?
 
-  inicioSuspensao       DateTime?
-  fimSuspensao          DateTime?
+  inicioSuspensao DateTime?
+  fimSuspensao    DateTime?
 
-  criadoEm              DateTime @default(now())
-  atualizadoEm          DateTime @updatedAt
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
 
-  escolaId              String
-  alunoId               String
+  escolaId String
+  alunoId  String
 
-  escola                Escola @relation(fields: [escolaId], references: [id])
-  aluno                 Aluno @relation(fields: [alunoId], references: [id])
+  escola Escola @relation(fields: [escolaId], references: [id])
+  aluno  Aluno  @relation(fields: [alunoId], references: [id])
 }
 
 model Comunicado {
-  id           String @id @default(cuid())
+  id String @id @default(cuid())
 
-  tipo         TipoComunicado
-  status       StatusComunicado @default(RASCUNHO)
+  tipo   TipoComunicado
+  status StatusComunicado @default(RASCUNHO)
 
-  titulo       String
-  conteudo     String
+  titulo   String
+  conteudo String
 
-  publicoAlvo  String?
-  observacoes  String?
+  publicoAlvo String?
+  observacoes String?
 
-  dataEvento   DateTime?
-  horaEvento   String?
-  localEvento  String?
+  dataEvento    DateTime?
+  horaEvento    String?
+  localEvento   String?
   valorCentavos Int?
 
-  requerCiencia       Boolean @default(false)
-  requerParticipacao  Boolean @default(false)
-  requerAutorizacao   Boolean @default(false)
-  requerPagamento     Boolean @default(false)
+  requerCiencia        Boolean @default(false)
+  requerParticipacao   Boolean @default(false)
+  requerAutorizacao    Boolean @default(false)
+  requerPagamento      Boolean @default(false)
   permiteRespostaTexto Boolean @default(false)
 
-  enviadoEm     DateTime?
-  criadoEm      DateTime @default(now())
-  atualizadoEm  DateTime @updatedAt
+  enviadoEm    DateTime?
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
 
-  escolaId      String
-  alunoId       String?
-  turmaId       String?
+  escolaId String
+  alunoId  String?
+  turmaId  String?
 
-  escola        Escola @relation(fields: [escolaId], references: [id])
-  aluno         Aluno?  @relation(fields: [alunoId], references: [id])
-  turma         Turma?  @relation(fields: [turmaId], references: [id])
+  escola Escola @relation(fields: [escolaId], references: [id])
+  aluno  Aluno? @relation(fields: [alunoId], references: [id])
+  turma  Turma? @relation(fields: [turmaId], references: [id])
 
   destinatarios DestinatarioComunicado[]
   respostas     RespostaComunicado[]
 }
 
 model DestinatarioComunicado {
-  id             String @id @default(cuid())
+  id String @id @default(cuid())
 
-  status         StatusDestinatarioComunicado @default(PENDENTE)
+  status StatusDestinatarioComunicado @default(PENDENTE)
 
   nomeResponsavel String?
   email           String?
   telefone        String?
 
-  tokenResposta   String? @unique
+  tokenResposta String? @unique
 
-  enviadoEm       DateTime?
-  visualizadoEm   DateTime?
-  respondidoEm    DateTime?
+  enviadoEm     DateTime?
+  visualizadoEm DateTime?
+  respondidoEm  DateTime?
 
-  criadoEm        DateTime @default(now())
-  atualizadoEm    DateTime @updatedAt
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
 
-  escolaId        String
-  comunicadoId    String
-  alunoId         String?
-  responsavelId   String?
+  escolaId      String
+  comunicadoId  String
+  alunoId       String?
+  responsavelId String?
 
-  escola          Escola @relation(fields: [escolaId], references: [id])
-  comunicado      Comunicado @relation(fields: [comunicadoId], references: [id])
-  aluno           Aluno? @relation(fields: [alunoId], references: [id])
-  responsavel     Responsavel? @relation(fields: [responsavelId], references: [id])
+  escola      Escola       @relation(fields: [escolaId], references: [id])
+  comunicado  Comunicado   @relation(fields: [comunicadoId], references: [id])
+  aluno       Aluno?       @relation(fields: [alunoId], references: [id])
+  responsavel Responsavel? @relation(fields: [responsavelId], references: [id])
 
-  respostas       RespostaComunicado[]
+  respostas RespostaComunicado[]
 }
 
 model RespostaComunicado {
-  id                    String @id @default(cuid())
+  id String @id @default(cuid())
 
-  tipo                  TipoRespostaComunicado
+  tipo TipoRespostaComunicado
 
-  cienciaConfirmada     Boolean @default(false)
-  participa             Boolean?
-  autorizado            Boolean?
+  cienciaConfirmada Boolean  @default(false)
+  participa         Boolean?
+  autorizado        Boolean?
 
-  motivoNegativa        String?
-  observacao            String?
+  motivoNegativa String?
+  observacao     String?
 
   nomeRespondente       String?
   parentescoRespondente String?
 
-  dataResposta          DateTime @default(now())
-  criadoEm              DateTime @default(now())
-  atualizadoEm          DateTime @updatedAt
+  dataResposta DateTime @default(now())
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
 
-  escolaId              String
-  comunicadoId          String
-  destinatarioId        String
-  alunoId               String?
-  responsavelId         String?
+  escolaId       String
+  comunicadoId   String
+  destinatarioId String
+  alunoId        String?
+  responsavelId  String?
 
-  escola                Escola @relation(fields: [escolaId], references: [id])
-  comunicado            Comunicado @relation(fields: [comunicadoId], references: [id])
-  destinatario          DestinatarioComunicado @relation(fields: [destinatarioId], references: [id])
-  aluno                 Aluno? @relation(fields: [alunoId], references: [id])
-  responsavel           Responsavel? @relation(fields: [responsavelId], references: [id])
+  escola       Escola                 @relation(fields: [escolaId], references: [id])
+  comunicado   Comunicado             @relation(fields: [comunicadoId], references: [id])
+  destinatario DestinatarioComunicado @relation(fields: [destinatarioId], references: [id])
+  aluno        Aluno?                 @relation(fields: [alunoId], references: [id])
+  responsavel  Responsavel?           @relation(fields: [responsavelId], references: [id])
 }
