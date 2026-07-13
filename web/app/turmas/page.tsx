@@ -2,6 +2,9 @@ import AppLayout from "@/components/layout/AppLayout";
 import EmptyState from "@/components/lumina/EmptyState";
 import MetricCard from "@/components/lumina/MetricCard";
 import PageHeader from "@/components/lumina/PageHeader";
+import PrimaryAction from "@/components/lumina/PrimaryAction";
+import ProgressBar from "@/components/lumina/ProgressBar";
+import SecondaryAction from "@/components/lumina/SecondaryAction";
 import SectionCard from "@/components/lumina/SectionCard";
 import StatusBadge, {
   type StatusBadgeTone,
@@ -24,7 +27,12 @@ export const dynamic = "force-dynamic";
 type OccupancyStatus = {
   label: string;
   tone: StatusBadgeTone;
-  progressClassName: string;
+  progressTone:
+    | "primary"
+    | "success"
+    | "warning"
+    | "danger"
+    | "neutral";
 };
 
 function getOccupancyStatus(
@@ -35,19 +43,17 @@ function getOccupancyStatus(
     return {
       label: "Sem capacidade",
       tone: "neutral",
-      progressClassName: "bg-muted-foreground",
+      progressTone: "neutral",
     };
   }
 
-  const percentage = Math.round(
-    (occupancy / capacity) * 100,
-  );
+  const percentage = Math.round((occupancy / capacity) * 100);
 
   if (percentage >= 100) {
     return {
       label: "Lotada",
       tone: "danger",
-      progressClassName: "bg-red-500",
+      progressTone: "danger",
     };
   }
 
@@ -55,14 +61,14 @@ function getOccupancyStatus(
     return {
       label: "Quase cheia",
       tone: "warning",
-      progressClassName: "bg-amber-500",
+      progressTone: "warning",
     };
   }
 
   return {
     label: "Com vagas",
     tone: "primary",
-    progressClassName: "bg-primary",
+    progressTone: "primary",
   };
 }
 
@@ -101,9 +107,7 @@ export default async function TurmasPage() {
 
   const ocupacaoMedia =
     capacidadeTotal > 0
-      ? Math.round(
-          (alunosAlocados / capacidadeTotal) * 100,
-        )
+      ? Math.round((alunosAlocados / capacidadeTotal) * 100)
       : 0;
 
   const turmasEmAtencao = turmas.filter((turma) => {
@@ -167,11 +171,7 @@ export default async function TurmasPage() {
             turmasEmAtencao === 1 ? "" : "s"
           } em atenção`}
           icon={AlertTriangle}
-          tone={
-            turmasEmAtencao > 0
-              ? "warning"
-              : "primary"
-          }
+          tone={turmasEmAtencao > 0 ? "warning" : "primary"}
         />
       </section>
 
@@ -210,28 +210,20 @@ export default async function TurmasPage() {
               const occupancyPercentage =
                 turma.capacidade > 0
                   ? Math.round(
-                      (occupancy / turma.capacidade) *
-                        100,
+                      (occupancy / turma.capacidade) * 100,
                     )
                   : 0;
-
-              const progressPercentage = Math.min(
-                100,
-                Math.max(0, occupancyPercentage),
-              );
 
               const status = getOccupancyStatus(
                 occupancy,
                 turma.capacidade,
               );
 
-              const visibleStudents =
-                turma.alunos.slice(0, 4);
+              const visibleStudents = turma.alunos.slice(0, 4);
 
               const remainingStudents = Math.max(
                 0,
-                turma.alunos.length -
-                  visibleStudents.length,
+                turma.alunos.length - visibleStudents.length,
               );
 
               return (
@@ -273,8 +265,7 @@ export default async function TurmasPage() {
                         </p>
 
                         <p className="mt-1 text-lg font-semibold text-foreground">
-                          {occupancy} de{" "}
-                          {turma.capacidade} alunos
+                          {occupancy} de {turma.capacidade} alunos
                         </p>
                       </div>
 
@@ -283,14 +274,11 @@ export default async function TurmasPage() {
                       </p>
                     </div>
 
-                    <div className="h-2 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${status.progressClassName}`}
-                        style={{
-                          width: `${progressPercentage}%`,
-                        }}
-                      />
-                    </div>
+                    <ProgressBar
+                      value={occupancyPercentage}
+                      tone={status.progressTone}
+                      label={`Ocupação da turma ${turma.nome}`}
+                    />
                   </div>
 
                   <div className="mb-5 grid grid-cols-3 gap-3">
@@ -374,30 +362,19 @@ export default async function TurmasPage() {
                   </div>
 
                   <div className="mt-auto flex flex-wrap gap-3 border-t border-border pt-4">
-                    <Link
+                    <SecondaryAction
+                      label="Ver alunos"
                       href={`/alunos?turma=${turma.id}`}
-                      className="group/action inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-sm active:scale-[0.98]"
-                    >
-                      <UsersRound size={16} />
-                      Ver alunos
+                      icon={UsersRound}
+                      trailingIcon={ArrowRight}
+                    />
 
-                      <ArrowRight
-                        size={16}
-                        className="transition-transform duration-200 group-hover/action:translate-x-1"
-                      />
-                    </Link>
-
-                    <Link
+                    <PrimaryAction
+                      label="Novo aluno"
                       href="/alunos/novo"
-                      className="group/action inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]"
-                    >
-                      <UserPlus
-                        size={16}
-                        className="transition-transform duration-200 group-hover/action:scale-110"
-                      />
-
-                      Novo aluno
-                    </Link>
+                      icon={UserPlus}
+                      iconAnimation="scale"
+                    />
                   </div>
                 </article>
               );

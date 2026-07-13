@@ -1,4 +1,4 @@
-import Link from "next/link";
+import PrimaryAction from "@/components/lumina/PrimaryAction";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -23,8 +23,6 @@ export default function PageHeader({
   action,
   secondaryContent,
 }: PageHeaderProps) {
-  const ActionIcon = action?.icon;
-
   return (
     <header className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div className="min-w-0">
@@ -50,19 +48,12 @@ export default function PageHeader({
           {secondaryContent}
 
           {action && (
-            <Link
+            <PrimaryAction
+              label={action.label}
               href={action.href}
-              className="group inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/25 active:translate-y-0 active:scale-[0.98]"
-            >
-              {ActionIcon && (
-                <ActionIcon
-                  size={17}
-                  className="transition-transform duration-200 group-hover:rotate-90"
-                />
-              )}
-
-              {action.label}
-            </Link>
+              icon={action.icon}
+              iconAnimation="rotate"
+            />
           )}
         </div>
       )}
