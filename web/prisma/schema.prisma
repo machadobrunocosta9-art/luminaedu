@@ -27,6 +27,31 @@ enum StatusConviteMatricula {
   CANCELADO
 }
 
+enum TipoDocumentoMatricula {
+  CERTIDAO_NASCIMENTO
+  RG_ALUNO
+  CPF_ALUNO
+  RG_RESPONSAVEL
+  CPF_RESPONSAVEL
+  COMPROVANTE_RESIDENCIA
+  CARTEIRA_VACINACAO
+  FOTO_ALUNO
+  LAUDO_MEDICO
+  CONTRATO_ASSINADO
+  COMPROVANTE_PAGAMENTO
+  OUTRO
+}
+
+enum StatusDocumentoMatricula {
+  PENDENTE
+  ENVIADO
+  EM_ANALISE
+  APROVADO
+  REJEITADO
+  REENVIO_SOLICITADO
+  CANCELADO
+}
+
 enum StatusTarefa {
   A_FAZER
   EM_ANDAMENTO
@@ -103,7 +128,8 @@ model Escola {
   tarefas      Tarefa[]
   ocorrencias  OcorrenciaAluno[]
 
-  convitesMatricula ConviteMatricula[]
+  convitesMatricula   ConviteMatricula[]
+  documentosMatricula DocumentoMatricula[]
 
   comunicados              Comunicado[]
   destinatariosComunicados DestinatarioComunicado[]
@@ -190,7 +216,8 @@ model Matricula {
   escola Escola @relation(fields: [escolaId], references: [id])
   aluno  Aluno  @relation(fields: [alunoId], references: [id])
 
-  tarefas Tarefa[]
+  tarefas    Tarefa[]
+  documentos DocumentoMatricula[]
 
   conviteMatricula ConviteMatricula?
 }
@@ -229,10 +256,67 @@ model ConviteMatricula {
   turma     Turma?     @relation(fields: [turmaId], references: [id])
   matricula Matricula? @relation(fields: [matriculaId], references: [id])
 
+  documentos DocumentoMatricula[]
+
   @@index([escolaId])
   @@index([turmaId])
   @@index([status])
   @@index([expiraEm])
+}
+
+model DocumentoMatricula {
+  id String @id @default(cuid())
+
+  tipo   TipoDocumentoMatricula
+  status StatusDocumentoMatricula @default(PENDENTE)
+
+  titulo        String
+  descricao     String?
+  obrigatorio   Boolean @default(true)
+  ordemExibicao Int     @default(0)
+
+  nomeArquivoOriginal String?
+  nomeArquivoInterno  String?
+  urlArquivo          String?
+  chaveArmazenamento  String?
+
+  mimeType     String?
+  extensao     String?
+  tamanhoBytes Int?
+
+  versao Int @default(1)
+
+  observacaoResponsavel String?
+  observacaoSecretaria  String?
+  motivoRejeicao        String?
+
+  enviadoEm           DateTime?
+  analisadoEm         DateTime?
+  aprovadoEm          DateTime?
+  rejeitadoEm         DateTime?
+  reenvioSolicitadoEm DateTime?
+
+  analisadoPor String?
+  aprovadoPor  String?
+  rejeitadoPor String?
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  escolaId    String
+  conviteId   String
+  matriculaId String?
+
+  escola    Escola           @relation(fields: [escolaId], references: [id])
+  convite   ConviteMatricula @relation(fields: [conviteId], references: [id], onDelete: Cascade)
+  matricula Matricula?       @relation(fields: [matriculaId], references: [id], onDelete: SetNull)
+
+  @@index([escolaId])
+  @@index([conviteId])
+  @@index([matriculaId])
+  @@index([status])
+  @@index([tipo])
+  @@index([conviteId, tipo])
 }
 
 model Tarefa {
