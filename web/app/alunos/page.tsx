@@ -242,10 +242,10 @@ export default async function AlunosPage({
       <PageHeader
         eyebrow="Vida Escolar"
         title="Alunos"
-        description="Consulte alunos, responsáveis, turmas, situação de matrícula e alertas rápidos antes de abrir o prontuário."
+        description="Consulte e acompanhe os alunos que já passaram pelo fluxo de matrícula da escola."
         action={{
-          label: "Novo aluno",
-          href: "/alunos/novo",
+          label: "Nova matrícula",
+          href: "/matriculas/novo",
           icon: Plus,
         }}
       />
@@ -457,10 +457,10 @@ export default async function AlunosPage({
           <EmptyState
             icon={GraduationCap}
             title="Nenhum aluno encontrado"
-            description="Tente limpar os filtros ou cadastrar um novo aluno."
+            description="Tente limpar os filtros ou iniciar uma nova matrícula."
             action={{
-              label: "Cadastrar aluno",
-              href: "/alunos/novo",
+              label: "Iniciar matrícula",
+              href: "/matriculas/novo",
               icon: Plus,
             }}
           />
