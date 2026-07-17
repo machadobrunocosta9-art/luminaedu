@@ -9,6 +9,30 @@ type SessionPayload = {
   expiresAt: number;
 };
 
+type AdminSessionConfiguration = {
+  email: string;
+  passwordHash: string;
+};
+
+export function normalizeAdminSessionConfiguration(
+  email: string | undefined,
+  passwordHash: string | undefined,
+): AdminSessionConfiguration | null {
+  const normalizedEmail = email?.trim().toLowerCase();
+  const normalizedPasswordHash = passwordHash
+    ?.trim()
+    .replaceAll("\\$", "$");
+
+  if (!normalizedEmail || !normalizedPasswordHash) {
+    return null;
+  }
+
+  return {
+    email: normalizedEmail,
+    passwordHash: normalizedPasswordHash,
+  };
+}
+
 function encodeBase64Url(value: string | ArrayBuffer) {
   const bytes =
     typeof value === "string"
@@ -29,7 +53,10 @@ function encodeBase64Url(value: string | ArrayBuffer) {
 function decodeBase64Url(value: string) {
   const normalized = value.replaceAll("-", "+").replaceAll("_", "/");
   const padding = "=".repeat((4 - (normalized.length % 4)) % 4);
-  return atob(normalized + padding);
+  return Uint8Array.from(
+    atob(normalized + padding),
+    (character) => character.charCodeAt(0),
+  );
 }
 
 async function getSigningKey(passwordHash: string) {
@@ -51,15 +78,24 @@ export async function createSessionToken(
   email: string,
   passwordHash: string,
 ) {
+  const configuration = normalizeAdminSessionConfiguration(
+    email,
+    passwordHash,
+  );
+
+  if (!configuration) {
+    throw new Error("A configuração da sessão administrativa é inválida.");
+  }
+
   const payload: SessionPayload = {
     version: SESSION_VERSION,
-    email,
+    email: configuration.email,
     expiresAt: Date.now() + ADMIN_SESSION_DURATION_SECONDS * 1000,
   };
   const encodedPayload = encodeBase64Url(JSON.stringify(payload));
   const signature = await crypto.subtle.sign(
     "HMAC",
-    await getSigningKey(passwordHash),
+    await getSigningKey(configuration.passwordHash),
     new TextEncoder().encode(encodedPayload),
   );
 
@@ -71,7 +107,12 @@ export async function verifySessionToken(
   expectedEmail: string | undefined,
   passwordHash: string | undefined,
 ) {
-  if (!token || !expectedEmail || !passwordHash) {
+  const configuration = normalizeAdminSessionConfiguration(
+    expectedEmail,
+    passwordHash,
+  );
+
+  if (!token || !configuration) {
     return false;
   }
 
@@ -82,13 +123,10 @@ export async function verifySessionToken(
   }
 
   try {
-    const signature = Uint8Array.from(
-      decodeBase64Url(encodedSignature),
-      (character) => character.charCodeAt(0),
-    );
+    const signature = decodeBase64Url(encodedSignature);
     const validSignature = await crypto.subtle.verify(
       "HMAC",
-      await getSigningKey(passwordHash),
+      await getSigningKey(configuration.passwordHash),
       signature,
       new TextEncoder().encode(encodedPayload),
     );
@@ -98,12 +136,12 @@ export async function verifySessionToken(
     }
 
     const payload = JSON.parse(
-      decodeBase64Url(encodedPayload),
+      new TextDecoder().decode(decodeBase64Url(encodedPayload)),
     ) as Partial<SessionPayload>;
 
     return (
       payload.version === SESSION_VERSION &&
-      payload.email === expectedEmail &&
+      payload.email === configuration.email &&
       typeof payload.expiresAt === "number" &&
       payload.expiresAt > Date.now()
     );

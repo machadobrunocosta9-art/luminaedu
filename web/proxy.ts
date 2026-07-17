@@ -25,8 +25,8 @@ export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const authenticated = await verifySessionToken(
     request.cookies.get(ADMIN_SESSION_COOKIE)?.value,
-    process.env.ADMIN_EMAIL?.trim(),
-    process.env.ADMIN_PASSWORD_HASH?.trim(),
+    process.env.ADMIN_EMAIL,
+    process.env.ADMIN_PASSWORD_HASH,
   );
 
   if (pathname === "/login" && authenticated) {

@@ -7,6 +7,7 @@ import {
   ADMIN_SESSION_COOKIE,
   createSessionToken,
   getSessionCookieOptions,
+  normalizeAdminSessionConfiguration,
   verifySessionToken,
 } from "@/lib/auth-session";
 
@@ -42,14 +43,10 @@ function derivePasswordHash(
 }
 
 function getAdminConfiguration() {
-  const email = process.env.ADMIN_EMAIL?.trim();
-  const passwordHash = process.env.ADMIN_PASSWORD_HASH?.trim();
-
-  if (!email || !passwordHash) {
-    return null;
-  }
-
-  return { email, passwordHash };
+  return normalizeAdminSessionConfiguration(
+    process.env.ADMIN_EMAIL,
+    process.env.ADMIN_PASSWORD_HASH,
+  );
 }
 
 function parsePasswordHash(value: string): PasswordHashParts | null {
