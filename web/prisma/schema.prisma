@@ -52,6 +52,22 @@ enum StatusDocumentoMatricula {
   CANCELADO
 }
 
+enum StatusPagamentoMatricula {
+  PENDENTE
+  EM_ANALISE
+  CONFIRMADO
+  CANCELADO
+}
+
+enum FormaPagamentoMatricula {
+  PIX
+  CARTAO
+  BOLETO
+  DINHEIRO
+  TRANSFERENCIA
+  OUTRO
+}
+
 enum StatusTarefa {
   A_FAZER
   EM_ANDAMENTO
@@ -130,6 +146,7 @@ model Escola {
 
   convitesMatricula   ConviteMatricula[]
   documentosMatricula DocumentoMatricula[]
+  pagamentosMatricula PagamentoMatricula[]
 
   comunicados              Comunicado[]
   destinatariosComunicados DestinatarioComunicado[]
@@ -218,6 +235,8 @@ model Matricula {
 
   tarefas    Tarefa[]
   documentos DocumentoMatricula[]
+
+  pagamentoMatricula PagamentoMatricula?
 
   conviteMatricula ConviteMatricula?
 }
@@ -317,6 +336,37 @@ model DocumentoMatricula {
   @@index([status])
   @@index([tipo])
   @@index([conviteId, tipo])
+}
+
+model PagamentoMatricula {
+  id String @id @default(cuid())
+
+  status StatusPagamentoMatricula @default(PENDENTE)
+
+  descricao     String    @default("Taxa de matrícula")
+  valorCentavos Int
+  vencimento    DateTime?
+
+  formaPagamento FormaPagamentoMatricula?
+  referencia     String?
+  observacao     String?
+
+  pagoEm       DateTime?
+  confirmadoEm DateTime?
+  canceladoEm  DateTime?
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  escolaId    String
+  matriculaId String @unique
+
+  escola    Escola    @relation(fields: [escolaId], references: [id])
+  matricula Matricula @relation(fields: [matriculaId], references: [id], onDelete: Cascade)
+
+  @@index([escolaId])
+  @@index([status])
+  @@index([vencimento])
 }
 
 model Tarefa {

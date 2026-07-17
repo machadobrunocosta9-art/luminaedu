@@ -1,20 +1,19 @@
 import { prisma } from "@/lib/prisma";
 import {
   AlertTriangle,
-  CalendarDays,
   CheckCircle2,
   ClipboardCheck,
+  CreditCard,
   FileText,
   GraduationCap,
   HeartPulse,
-  Home,
   LockKeyhole,
-  Mail,
   Phone,
   Save,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -323,21 +322,20 @@ export default async function ConvitePublicoPage({
 }: PageProps) {
   const { token } = await params;
 
-  const convite =
-    await prisma.conviteMatricula.findUnique({
-      where: {
-        token,
-      },
-      include: {
-        escola: true,
-        turma: true,
-        matricula: {
-          include: {
-            aluno: true,
-          },
+  const convite = await prisma.conviteMatricula.findUnique({
+    where: {
+      token,
+    },
+    include: {
+      escola: true,
+      turma: true,
+      matricula: {
+        include: {
+          aluno: true,
         },
       },
-    });
+    },
+  });
 
   if (!convite) {
     notFound();
@@ -466,8 +464,24 @@ export default async function ConvitePublicoPage({
               </div>
             </div>
 
-            <p className="mt-6 text-xs leading-5 text-[#6b7280]">
-              Você já pode fechar esta página.
+            <Link
+              href={`/matricula/convite/${token}/documentos`}
+              className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#5b3fd6] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              <FileText size={18} />
+              Enviar documentos da matrícula
+            </Link>
+
+            <Link
+              href={`/matricula/convite/${token}/pagamento`}
+              className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[#dcd8fb] bg-[#f4f1ff] px-5 py-3 text-sm font-semibold text-[#5b3fd6] transition hover:bg-[#ebe6ff]"
+            >
+              <CreditCard size={18} />
+              Acompanhar pagamento
+            </Link>
+
+            <p className="mt-4 text-xs leading-5 text-[#6b7280]">
+              Você pode voltar a este link para acompanhar os envios.
             </p>
           </section>
         ) : conviteBloqueado ? (

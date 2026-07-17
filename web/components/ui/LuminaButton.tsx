@@ -3,7 +3,7 @@ import clsx from "clsx";
 
 interface LuminaButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "premium" | "secondary" | "ghost";
 }
 
 export default function LuminaButton({
@@ -20,6 +20,9 @@ export default function LuminaButton({
         {
           "bg-[#5B3FD6] text-white hover:opacity-90":
             variant === "primary",
+
+          "bg-gradient-to-r from-primary to-accent text-white shadow-[0_12px_28px_rgba(91,63,214,0.24)] hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(91,63,214,0.3)] active:translate-y-0 active:scale-[0.99] disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-65 disabled:shadow-none":
+            variant === "premium",
 
           "border border-border bg-white text-foreground hover:bg-muted":
             variant === "secondary",

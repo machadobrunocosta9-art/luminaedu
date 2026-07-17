@@ -1,4 +1,5 @@
 import AppLayout from "@/components/layout/AppLayout";
+import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -17,6 +18,8 @@ function getString(formData: FormData, key: string) {
 
 async function atualizarEscola(formData: FormData) {
   "use server";
+
+  await requireAdmin();
 
   const nome = getString(formData, "nome");
 

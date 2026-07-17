@@ -1,7 +1,9 @@
 import AppLayout from "@/components/layout/AppLayout";
+import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +19,8 @@ function getString(formData: FormData, key: string) {
 
 async function atualizarStatusFinanceiro(formData: FormData) {
   "use server";
+
+  await requireAdmin();
 
   const tarefaId = getString(formData, "tarefaId");
   const status = getString(formData, "status");
@@ -139,6 +143,13 @@ export default async function FinanceiroPage() {
             vinculadas ao Pulse.
           </p>
         </div>
+
+        <Link
+          href="/financeiro/matriculas"
+          className="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+        >
+          Pagamentos de matrícula
+        </Link>
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-4">

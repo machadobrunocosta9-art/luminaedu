@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from "react";
 import clsx from "clsx";
 
-interface LuminaCardProps extends HTMLAttributes<HTMLDivElement> {}
+type LuminaCardProps = HTMLAttributes<HTMLDivElement>;
 
 export default function LuminaCard({
   children,

@@ -1,4 +1,5 @@
 import AppLayout from "@/components/layout/AppLayout";
+import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -18,6 +19,8 @@ function getString(formData: FormData, key: string) {
 
 async function atualizarStatusDocumento(formData: FormData) {
   "use server";
+
+  await requireAdmin();
 
   const tarefaId = getString(formData, "tarefaId");
   const status = getString(formData, "status");
@@ -142,10 +145,10 @@ export default async function DocumentosPage() {
         </div>
 
         <Link
-          href="/documentos/novo"
+          href="/documentos/matriculas"
           className="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
         >
-          Nova pendência
+          Analisar arquivos enviados
         </Link>
       </div>
 

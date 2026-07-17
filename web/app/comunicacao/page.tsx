@@ -1,4 +1,5 @@
 import AppLayout from "@/components/layout/AppLayout";
+import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
@@ -12,6 +13,8 @@ import {
   Plus,
   Send,
 } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 
 function formatDateTime(date?: Date | null) {
   if (!date) return "Não informado";
@@ -105,6 +108,8 @@ export default async function ComunicacaoPage() {
 
   async function marcarComoEnviado(formData: FormData) {
     "use server";
+
+    await requireAdmin();
 
     const comunicadoId = String(formData.get("comunicadoId") || "");
 

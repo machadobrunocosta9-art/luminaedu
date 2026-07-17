@@ -1,4 +1,5 @@
 import AppLayout from "@/components/layout/AppLayout";
+import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
@@ -183,6 +184,8 @@ export default async function NovaOcorrenciaPage({
 
   async function criarOcorrencia(formData: FormData) {
     "use server";
+
+    await requireAdmin();
 
     const tipo = normalizarTipo(String(formData.get("tipo") || "OCORRENCIA"));
     const titulo = String(formData.get("titulo") || "").trim();

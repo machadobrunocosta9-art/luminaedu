@@ -1,4 +1,5 @@
 import AppLayout from "@/components/layout/AppLayout";
+import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
@@ -17,6 +18,8 @@ function getString(formData: FormData, key: string) {
 
 async function atualizarStatus(formData: FormData) {
   "use server";
+
+  await requireAdmin();
 
   const tarefaId = getString(formData, "tarefaId");
   const status = getString(formData, "status");

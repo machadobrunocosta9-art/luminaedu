@@ -2,16 +2,13 @@ import AppLayout from "@/components/layout/AppLayout";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import {
-  AlertTriangle,
   ArrowRight,
   CalendarDays,
   CheckCircle2,
-  ClipboardList,
   CreditCard,
   GraduationCap,
   MessageCircle,
   Sparkles,
-  UsersRound,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";

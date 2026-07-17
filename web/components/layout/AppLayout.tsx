@@ -17,6 +17,7 @@ import {
   FileText,
   GraduationCap,
   Home,
+  LogOut,
   Menu,
   MessageCircle,
   Search,
@@ -25,6 +26,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
+import { logoutAction } from "@/app/login/actions";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -299,17 +301,28 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
               <div className="hidden items-center gap-3 rounded-3xl border border-border bg-card px-4 py-2 shadow-sm sm:flex">
                 <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground">
-                  B
+                  A
                 </div>
 
                 <div>
                   <p className="text-sm font-semibold text-foreground">
-                    Bruno Machado
-                  </p>
-                  <p className="text-xs text-muted-foreground">
                     Administrador
                   </p>
+                  <p className="text-xs text-muted-foreground">
+                    Sessão protegida
+                  </p>
                 </div>
+
+                <form action={logoutAction}>
+                  <button
+                    type="submit"
+                    className="flex h-9 w-9 items-center justify-center rounded-2xl text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                    aria-label="Sair do painel"
+                    title="Sair"
+                  >
+                    <LogOut size={17} />
+                  </button>
+                </form>
               </div>
             </div>
           </div>

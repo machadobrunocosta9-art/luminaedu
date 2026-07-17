@@ -1,4 +1,5 @@
 import AppLayout from "@/components/layout/AppLayout";
+import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -13,6 +14,8 @@ import {
   Sparkles,
   UsersRound,
 } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 
 function parseValorCentavos(valor: string) {
   if (!valor) return null;
@@ -138,6 +141,8 @@ export default async function NovoComunicadoPage() {
 
   async function criarComunicado(formData: FormData) {
     "use server";
+
+    await requireAdmin();
 
     const tipo = String(formData.get("tipo") || "SIMPLES");
     const publicoAlvo = String(formData.get("publicoAlvo") || "ESCOLA");

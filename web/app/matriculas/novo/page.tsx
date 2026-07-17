@@ -3,6 +3,7 @@ import PageHeader from "@/components/lumina/PageHeader";
 import ProgressBar from "@/components/lumina/ProgressBar";
 import SectionCard from "@/components/lumina/SectionCard";
 import StatusBadge from "@/components/lumina/StatusBadge";
+import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { randomBytes } from "crypto";
 import {
@@ -40,6 +41,8 @@ function gerarTokenSeguro() {
 
 async function criarConviteMatricula(formData: FormData) {
   "use server";
+
+  await requireAdmin();
 
   const nomeAluno = getString(formData, "nomeAluno");
   const nomeResponsavel = getString(
