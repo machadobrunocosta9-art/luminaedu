@@ -131,6 +131,44 @@ enum TipoRespostaComunicado {
   RESPOSTA_TEXTO
 }
 
+enum PapelUsuario {
+  ADMINISTRADOR
+  SECRETARIA
+  COORDENACAO
+  FINANCEIRO
+  RESPONSAVEL
+}
+
+enum StatusUsuario {
+  PENDENTE
+  ATIVO
+  BLOQUEADO
+}
+
+enum StatusConviteAcesso {
+  PENDENTE
+  UTILIZADO
+  CANCELADO
+  EXPIRADO
+}
+
+enum TipoEmailTransacional {
+  CONVITE_ACESSO
+  RECUPERACAO_SENHA
+  CONFIRMACAO_CONTA
+  COMUNICADO
+  AVISO_DOCUMENTO
+  ATUALIZACAO_MATRICULA
+  CRM
+}
+
+enum StatusEmailTransacional {
+  PENDENTE
+  ENVIADO
+  FALHOU
+  NAO_CONFIGURADO
+}
+
 model Escola {
   id           String   @id @default(cuid())
   nome         String
@@ -151,6 +189,13 @@ model Escola {
   comunicados              Comunicado[]
   destinatariosComunicados DestinatarioComunicado[]
   respostasComunicados     RespostaComunicado[]
+
+  usuarios            Usuario[]
+  convitesAcesso      ConviteAcesso[]
+  recuperacoesSenha   RecuperacaoSenha[]
+  tentativasLogin     TentativaLogin[]
+  registrosAuditoria  RegistroAuditoria[]
+  emailsTransacionais EmailTransacional[]
 }
 
 model Responsavel {
@@ -171,6 +216,9 @@ model Responsavel {
 
   destinatariosComunicados DestinatarioComunicado[]
   respostasComunicados     RespostaComunicado[]
+
+  usuario        Usuario?
+  convitesAcesso ConviteAcesso[]
 }
 
 model Turma {
@@ -217,6 +265,8 @@ model Aluno {
   comunicados              Comunicado[]
   destinatariosComunicados DestinatarioComunicado[]
   respostasComunicados     RespostaComunicado[]
+
+  convitesAcesso ConviteAcesso[]
 }
 
 model Matricula {
@@ -239,6 +289,8 @@ model Matricula {
   pagamentoMatricula PagamentoMatricula?
 
   conviteMatricula ConviteMatricula?
+
+  convitesAcesso ConviteAcesso[]
 }
 
 model ConviteMatricula {
@@ -525,4 +577,165 @@ model RespostaComunicado {
   destinatario DestinatarioComunicado @relation(fields: [destinatarioId], references: [id])
   aluno        Aluno?                 @relation(fields: [alunoId], references: [id])
   responsavel  Responsavel?           @relation(fields: [responsavelId], references: [id])
+}
+
+model Usuario {
+  id        String        @id @default(cuid())
+  nome      String
+  email     String        @unique
+  senhaHash String
+  papel     PapelUsuario
+  status    StatusUsuario @default(PENDENTE)
+
+  ultimoAcessoEm DateTime?
+  criadoEm       DateTime  @default(now())
+  atualizadoEm   DateTime  @updatedAt
+
+  escolaId      String
+  responsavelId String? @unique
+
+  escola      Escola       @relation(fields: [escolaId], references: [id])
+  responsavel Responsavel? @relation(fields: [responsavelId], references: [id])
+
+  sessoes                    SessaoUsuario[]
+  convitesCriados            ConviteAcesso[]     @relation("ConviteAcessoCriador")
+  convitesAtivados           ConviteAcesso[]     @relation("ConviteAcessoUsuarioAtivado")
+  recuperacoesSenha          RecuperacaoSenha[]
+  registrosAuditoria         RegistroAuditoria[]
+  emailsTransacionaisCriados EmailTransacional[] @relation("EmailTransacionalCriador")
+
+  @@index([escolaId])
+  @@index([papel])
+  @@index([status])
+}
+
+model SessaoUsuario {
+  id          String    @id @default(cuid())
+  tokenHash   String    @unique
+  expiraEm    DateTime
+  revogadaEm  DateTime?
+  ultimoUsoEm DateTime?
+  criadoEm    DateTime  @default(now())
+
+  usuarioId String
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@index([expiraEm])
+  @@index([revogadaEm])
+}
+
+model ConviteAcesso {
+  id        String              @id @default(cuid())
+  tokenHash String              @unique
+  status    StatusConviteAcesso @default(PENDENTE)
+  expiraEm  DateTime
+
+  utilizadoEm  DateTime?
+  canceladoEm  DateTime?
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+
+  escolaId           String
+  responsavelId      String
+  alunoId            String?
+  matriculaId        String?
+  criadoPorUsuarioId String?
+  usuarioAtivadoId   String?
+
+  escola         Escola      @relation(fields: [escolaId], references: [id])
+  responsavel    Responsavel @relation(fields: [responsavelId], references: [id])
+  aluno          Aluno?      @relation(fields: [alunoId], references: [id])
+  matricula      Matricula?  @relation(fields: [matriculaId], references: [id])
+  criadoPor      Usuario?    @relation("ConviteAcessoCriador", fields: [criadoPorUsuarioId], references: [id], onDelete: SetNull)
+  usuarioAtivado Usuario?    @relation("ConviteAcessoUsuarioAtivado", fields: [usuarioAtivadoId], references: [id], onDelete: SetNull)
+
+  @@index([escolaId])
+  @@index([responsavelId])
+  @@index([alunoId])
+  @@index([matriculaId])
+  @@index([status])
+  @@index([expiraEm])
+}
+
+model RecuperacaoSenha {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiraEm  DateTime
+
+  utilizadoEm DateTime?
+  revogadoEm  DateTime?
+  criadoEm    DateTime  @default(now())
+
+  escolaId  String
+  usuarioId String
+
+  escola  Escola  @relation(fields: [escolaId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([escolaId])
+  @@index([usuarioId])
+  @@index([expiraEm])
+}
+
+model TentativaLogin {
+  id                String   @id @default(cuid())
+  identificadorHash String
+  ipHash            String?
+  sucesso           Boolean  @default(false)
+  bloqueada         Boolean  @default(false)
+  criadaEm          DateTime @default(now())
+
+  escolaId String?
+  escola   Escola? @relation(fields: [escolaId], references: [id], onDelete: SetNull)
+
+  @@index([identificadorHash, criadaEm])
+  @@index([ipHash, criadaEm])
+  @@index([escolaId])
+}
+
+model RegistroAuditoria {
+  id         String   @id @default(cuid())
+  acao       String
+  resultado  String
+  entidade   String?
+  entidadeId String?
+  metadados  Json?
+  criadoEm   DateTime @default(now())
+
+  escolaId  String
+  usuarioId String?
+
+  escola  Escola   @relation(fields: [escolaId], references: [id])
+  usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@index([escolaId, criadoEm])
+  @@index([usuarioId])
+  @@index([acao])
+}
+
+model EmailTransacional {
+  id                String                  @id @default(cuid())
+  tipo              TipoEmailTransacional
+  status            StatusEmailTransacional @default(PENDENTE)
+  destinatario      String
+  assunto           String
+  conteudo          String
+  provedor          String?
+  mensagemExternaId String?
+  tentativas        Int                     @default(0)
+  erroClasse        String?
+  enviadoEm         DateTime?
+  criadoEm          DateTime                @default(now())
+  atualizadoEm      DateTime                @updatedAt
+
+  escolaId           String
+  criadoPorUsuarioId String?
+
+  escola    Escola   @relation(fields: [escolaId], references: [id])
+  criadoPor Usuario? @relation("EmailTransacionalCriador", fields: [criadoPorUsuarioId], references: [id], onDelete: SetNull)
+
+  @@index([escolaId, criadoEm])
+  @@index([status])
+  @@index([tipo])
 }

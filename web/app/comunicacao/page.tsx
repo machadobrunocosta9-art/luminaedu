@@ -109,7 +109,7 @@ export default async function ComunicacaoPage() {
   async function marcarComoEnviado(formData: FormData) {
     "use server";
 
-    await requireAdmin();
+    await requireAdmin("GERENCIAR_COMUNICACAO");
 
     const comunicadoId = String(formData.get("comunicadoId") || "");
 

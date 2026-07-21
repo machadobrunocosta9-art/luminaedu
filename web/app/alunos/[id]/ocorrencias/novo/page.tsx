@@ -185,7 +185,7 @@ export default async function NovaOcorrenciaPage({
   async function criarOcorrencia(formData: FormData) {
     "use server";
 
-    await requireAdmin();
+    await requireAdmin("GERENCIAR_COMUNICACAO");
 
     const tipo = normalizarTipo(String(formData.get("tipo") || "OCORRENCIA"));
     const titulo = String(formData.get("titulo") || "").trim();

@@ -1,4 +1,5 @@
-import { isAdminAuthenticated } from "@/lib/auth";
+import { getAuthContext } from "@/lib/auth";
+import { hasPermission } from "@/lib/security/permissions";
 import { prisma } from "@/lib/prisma";
 import { get } from "@vercel/blob";
 
@@ -18,7 +19,9 @@ export async function GET(
   _request: Request,
   { params }: RouteProps,
 ) {
-  if (!(await isAdminAuthenticated())) {
+  const auth = await getAuthContext();
+
+  if (!auth || !hasPermission(auth.papel, "GERENCIAR_DOCUMENTOS")) {
     return new Response("Não autorizado.", { status: 401 });
   }
 

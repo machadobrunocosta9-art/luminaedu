@@ -51,7 +51,7 @@ function isStatusPermitido(
 async function analisarDocumento(formData: FormData) {
   "use server";
 
-  await requireAdmin();
+  await requireAdmin("GERENCIAR_DOCUMENTOS");
 
   const documentoId = getString(formData, "documentoId");
   const status = getString(formData, "status");

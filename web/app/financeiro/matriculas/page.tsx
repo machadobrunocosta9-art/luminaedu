@@ -71,7 +71,7 @@ function isFormaPagamento(
 async function salvarCobranca(formData: FormData) {
   "use server";
 
-  await requireAdmin();
+  await requireAdmin("GERENCIAR_FINANCEIRO");
 
   const matriculaId = getString(formData, "matriculaId");
   const descricao = getString(formData, "descricao");
@@ -157,7 +157,7 @@ async function salvarCobranca(formData: FormData) {
 async function confirmarPagamento(formData: FormData) {
   "use server";
 
-  await requireAdmin();
+  await requireAdmin("GERENCIAR_FINANCEIRO");
 
   const pagamentoId = getString(formData, "pagamentoId");
   const forma = getString(formData, "formaPagamento");
@@ -220,7 +220,7 @@ async function confirmarPagamento(formData: FormData) {
 async function reabrirPagamento(formData: FormData) {
   "use server";
 
-  await requireAdmin();
+  await requireAdmin("GERENCIAR_FINANCEIRO");
 
   const pagamentoId = getString(formData, "pagamentoId");
 

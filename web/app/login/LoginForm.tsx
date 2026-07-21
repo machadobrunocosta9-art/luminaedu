@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Eye, EyeOff, LoaderCircle, LockKeyhole, Mail } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 import { loginAction, type LoginState } from "@/app/login/actions";
 import LuminaButton from "@/components/ui/LuminaButton";
 import { LuminaInput } from "@/components/ui/LuminaInput";
@@ -60,6 +61,14 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
           required
           placeholder="Digite sua senha"
         />
+        <div className="mt-2 text-right">
+          <Link
+            href="/recuperar-senha"
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            Esqueci minha senha
+          </Link>
+        </div>
       </div>
 
       <div

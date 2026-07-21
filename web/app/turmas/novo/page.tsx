@@ -19,7 +19,7 @@ function getString(formData: FormData, key: string) {
 async function criarTurma(formData: FormData) {
   "use server";
 
-  await requireAdmin();
+  await requireAdmin("GERENCIAR_ALUNOS");
 
   const nome = getString(formData, "nome");
   const segmento = getString(formData, "segmento");

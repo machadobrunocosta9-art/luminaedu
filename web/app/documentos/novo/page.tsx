@@ -20,7 +20,7 @@ function getString(formData: FormData, key: string) {
 async function criarPendenciaDocumento(formData: FormData) {
   "use server";
 
-  await requireAdmin();
+  await requireAdmin("GERENCIAR_DOCUMENTOS");
 
   const tipoDocumento = getString(formData, "tipoDocumento");
   const alunoId = getString(formData, "alunoId");

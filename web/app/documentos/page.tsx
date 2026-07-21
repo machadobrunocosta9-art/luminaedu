@@ -20,7 +20,7 @@ function getString(formData: FormData, key: string) {
 async function atualizarStatusDocumento(formData: FormData) {
   "use server";
 
-  await requireAdmin();
+  await requireAdmin("GERENCIAR_DOCUMENTOS");
 
   const tarefaId = getString(formData, "tarefaId");
   const status = getString(formData, "status");

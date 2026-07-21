@@ -20,7 +20,7 @@ function getString(formData: FormData, key: string) {
 async function criarAcompanhamentoAcademico(formData: FormData) {
   "use server";
 
-  await requireAdmin();
+  await requireAdmin("GERENCIAR_ALUNOS");
 
   const tipo = getString(formData, "tipo");
   const alunoId = getString(formData, "alunoId");

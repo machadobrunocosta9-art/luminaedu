@@ -142,7 +142,7 @@ export default async function NovoComunicadoPage() {
   async function criarComunicado(formData: FormData) {
     "use server";
 
-    await requireAdmin();
+    await requireAdmin("GERENCIAR_COMUNICACAO");
 
     const tipo = String(formData.get("tipo") || "SIMPLES");
     const publicoAlvo = String(formData.get("publicoAlvo") || "ESCOLA");

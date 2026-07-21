@@ -1,11 +1,14 @@
-import { isAdminAuthenticated } from "@/lib/auth";
+import { getAuthContext } from "@/lib/auth";
+import { hasPermission } from "@/lib/security/permissions";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  if (!(await isAdminAuthenticated())) {
+  const auth = await getAuthContext();
+
+  if (!auth || !hasPermission(auth.papel, "ACESSAR_PAINEL")) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
 

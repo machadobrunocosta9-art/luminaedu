@@ -1,8 +1,8 @@
 import "server-only";
 
-import { scrypt, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import {
   ADMIN_SESSION_COOKIE,
   createSessionToken,
@@ -10,79 +10,22 @@ import {
   normalizeAdminSessionConfiguration,
   verifySessionToken,
 } from "@/lib/auth-session";
-
-type PasswordHashParts = {
-  cost: number;
-  blockSize: number;
-  parallelization: number;
-  salt: Buffer;
-  expectedHash: Buffer;
-};
-
-function derivePasswordHash(
-  password: string,
-  parts: PasswordHashParts,
-): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    scrypt(
-      password,
-      parts.salt,
-      64,
-      {
-        N: parts.cost,
-        r: parts.blockSize,
-        p: parts.parallelization,
-        maxmem: 64 * 1024 * 1024,
-      },
-      (error, derivedKey) => {
-        if (error) reject(error);
-        else resolve(derivedKey);
-      },
-    );
-  });
-}
+import {
+  hasPermission,
+  type Permission,
+  type UserRole,
+} from "@/lib/security/permissions";
+import { verifyPassword } from "@/lib/security/password";
+import {
+  getAuthenticatedDatabaseUser,
+  revokeCurrentDatabaseSession,
+} from "@/lib/user-auth";
 
 function getAdminConfiguration() {
   return normalizeAdminSessionConfiguration(
     process.env.ADMIN_EMAIL,
     process.env.ADMIN_PASSWORD_HASH,
   );
-}
-
-function parsePasswordHash(value: string): PasswordHashParts | null {
-  const [algorithm, cost, blockSize, parallelization, salt, expectedHash] =
-    value.split("$");
-
-  if (
-    algorithm !== "scrypt" ||
-    !cost ||
-    !blockSize ||
-    !parallelization ||
-    !salt ||
-    !expectedHash
-  ) {
-    return null;
-  }
-
-  const parsed = {
-    cost: Number(cost),
-    blockSize: Number(blockSize),
-    parallelization: Number(parallelization),
-    salt: Buffer.from(salt, "base64url"),
-    expectedHash: Buffer.from(expectedHash, "base64url"),
-  };
-
-  if (
-    parsed.cost !== 16_384 ||
-    parsed.blockSize !== 8 ||
-    parsed.parallelization !== 1 ||
-    parsed.salt.length < 16 ||
-    parsed.expectedHash.length !== 64
-  ) {
-    return null;
-  }
-
-  return parsed;
 }
 
 export function isAdminConfigured() {
@@ -96,19 +39,11 @@ export async function verifyAdminCredentials(email: string, password: string) {
     return false;
   }
 
-  const parsedHash = parsePasswordHash(configuration.passwordHash);
-
-  if (!parsedHash || email.trim().toLowerCase() !== configuration.email.toLowerCase()) {
+  if (email.trim().toLowerCase() !== configuration.email.toLowerCase()) {
     return false;
   }
 
-  try {
-    const suppliedHash = await derivePasswordHash(password, parsedHash);
-
-    return timingSafeEqual(suppliedHash, parsedHash.expectedHash);
-  } catch {
-    return false;
-  }
+  return verifyPassword(password, configuration.passwordHash);
 }
 
 export async function createAdminSession() {
@@ -136,7 +71,7 @@ export async function destroyAdminSession() {
   });
 }
 
-export async function isAdminAuthenticated() {
+async function isLegacyAdminAuthenticated() {
   const configuration = getAdminConfiguration();
 
   if (!configuration) {
@@ -153,8 +88,130 @@ export async function isAdminAuthenticated() {
   );
 }
 
-export async function requireAdmin() {
-  if (!(await isAdminAuthenticated())) {
+export type AuthContext =
+  | {
+      kind: "user";
+      usuarioId: string;
+      nome: string;
+      email: string;
+      papel: UserRole;
+      escolaId: string;
+      responsavelId: string | null;
+    }
+  | {
+      kind: "legacy";
+      usuarioId: null;
+      nome: "Administrador";
+      email: null;
+      papel: "ADMINISTRADOR";
+      escolaId: null;
+      responsavelId: null;
+    };
+
+export async function getAuthContext(): Promise<AuthContext | null> {
+  const databaseUser = await getAuthenticatedDatabaseUser();
+
+  if (databaseUser) {
+    return {
+      kind: "user",
+      usuarioId: databaseUser.id,
+      nome: databaseUser.nome,
+      email: databaseUser.email,
+      papel: databaseUser.papel,
+      escolaId: databaseUser.escolaId,
+      responsavelId: databaseUser.responsavelId,
+    };
+  }
+
+  if (await isLegacyAdminAuthenticated()) {
+    return {
+      kind: "legacy",
+      usuarioId: null,
+      nome: "Administrador",
+      email: null,
+      papel: "ADMINISTRADOR",
+      escolaId: null,
+      responsavelId: null,
+    };
+  }
+
+  return null;
+}
+
+export async function isAdminAuthenticated() {
+  const context = await getAuthContext();
+  return Boolean(
+    context && hasPermission(context.papel, "ACESSAR_PAINEL"),
+  );
+}
+
+export async function requirePermission(permission: Permission) {
+  const context = await getAuthContext();
+
+  if (!context) {
     redirect("/login");
   }
+
+  if (!hasPermission(context.papel, permission)) {
+    redirect(
+      context.papel === "RESPONSAVEL" ? "/portal-familia" : "/dashboard",
+    );
+  }
+
+  return context;
+}
+
+export async function requireAdmin(
+  permission: Permission = "ACESSAR_PAINEL",
+) {
+  return requirePermission(permission);
+}
+
+export async function requireFamily() {
+  const context = await getAuthContext();
+
+  if (!context) {
+    redirect("/login?next=/portal-familia");
+  }
+
+  if (
+    context.kind !== "user" ||
+    context.papel !== "RESPONSAVEL" ||
+    !context.responsavelId ||
+    !hasPermission(context.papel, "ACESSAR_PORTAL_FAMILIA")
+  ) {
+    redirect("/dashboard");
+  }
+
+  return {
+    ...context,
+    responsavelId: context.responsavelId,
+  };
+}
+
+export async function resolveAuthSchoolId(context: AuthContext) {
+  if (context.escolaId) {
+    return context.escolaId;
+  }
+
+  const schools = await prisma.escola.findMany({
+    select: { id: true },
+    take: 2,
+    orderBy: { criadoEm: "asc" },
+  });
+
+  if (schools.length !== 1) {
+    throw new Error(
+      "O administrador legado requer uma única escola para esta operação.",
+    );
+  }
+
+  return schools[0].id;
+}
+
+export async function destroyAuthenticatedSession() {
+  await Promise.all([
+    revokeCurrentDatabaseSession(),
+    destroyAdminSession(),
+  ]);
 }

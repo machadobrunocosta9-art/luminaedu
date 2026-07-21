@@ -42,7 +42,7 @@ function gerarTokenSeguro() {
 async function criarConviteMatricula(formData: FormData) {
   "use server";
 
-  await requireAdmin();
+  await requireAdmin("GERENCIAR_MATRICULAS");
 
   const nomeAluno = getString(formData, "nomeAluno");
   const nomeResponsavel = getString(

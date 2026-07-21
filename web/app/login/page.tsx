@@ -1,6 +1,8 @@
 import Image from "next/image";
 import { LoginForm } from "@/app/login/LoginForm";
 
+export const runtime = "nodejs";
+
 type LoginPageProps = {
   searchParams: Promise<{ next?: string | string[] }>;
 };

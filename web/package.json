@@ -8,6 +8,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
+    "test:security": "node --test tests/sprint0-security.test.ts",
+    "test:integration": "node --test tests/sprint0-database.integration.test.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

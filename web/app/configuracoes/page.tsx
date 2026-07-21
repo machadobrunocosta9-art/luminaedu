@@ -19,7 +19,7 @@ function getString(formData: FormData, key: string) {
 async function atualizarEscola(formData: FormData) {
   "use server";
 
-  await requireAdmin();
+  await requireAdmin("ADMINISTRAR_SISTEMA");
 
   const nome = getString(formData, "nome");
 

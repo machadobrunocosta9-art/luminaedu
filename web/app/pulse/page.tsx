@@ -19,7 +19,7 @@ function getString(formData: FormData, key: string) {
 async function atualizarStatus(formData: FormData) {
   "use server";
 
-  await requireAdmin();
+  await requireAdmin("ACESSAR_PAINEL");
 
   const tarefaId = getString(formData, "tarefaId");
   const status = getString(formData, "status");
