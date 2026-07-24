@@ -11,6 +11,7 @@ import {
   canAccessFamilyStudent,
   canAuthenticateUserStatus,
   hasPermission,
+  permissionForAdminPath,
 } from "../lib/security/permissions.ts";
 import {
   hashPassword,
@@ -112,6 +113,18 @@ test("responsável não possui permissão administrativa", () => {
     true,
   );
   assert.equal(hasPermission("ADMINISTRADOR", "ADMINISTRAR_SISTEMA"), true);
+});
+
+test("gestão de usuários e acessos é exclusiva do administrador", () => {
+  assert.equal(hasPermission("ADMINISTRADOR", "GERENCIAR_USUARIOS"), true);
+  assert.equal(hasPermission("SECRETARIA", "GERENCIAR_USUARIOS"), false);
+  assert.equal(hasPermission("COORDENACAO", "GERENCIAR_USUARIOS"), false);
+  assert.equal(hasPermission("FINANCEIRO", "GERENCIAR_USUARIOS"), false);
+  assert.equal(hasPermission("RESPONSAVEL", "GERENCIAR_USUARIOS"), false);
+  assert.equal(
+    permissionForAdminPath("/convites-acesso"),
+    "ADMINISTRAR_SISTEMA",
+  );
 });
 
 test("isolamento familiar exige simultaneamente escola e responsável", () => {

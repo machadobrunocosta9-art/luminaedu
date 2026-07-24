@@ -1,7 +1,9 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ArrowRight, UserCog } from "lucide-react";
 import { revalidatePath } from "next/cache";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -78,6 +80,7 @@ async function getConfiguracoesData() {
 }
 
 export default async function ConfiguracoesPage() {
+  await requireAdmin("ADMINISTRAR_SISTEMA");
   const data = await getConfiguracoesData();
 
   return (
@@ -185,6 +188,32 @@ export default async function ConfiguracoesPage() {
           </div>
         </div>
       </div>
+
+      <Link
+        href="/convites-acesso"
+        className="group mt-6 flex flex-col gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <UserCog size={22} />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">
+              Usuários e acessos
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Consulte usuários e gerencie convites para o Portal da Família.
+            </p>
+          </div>
+        </div>
+        <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+          Gerenciar
+          <ArrowRight
+            size={17}
+            className="transition group-hover:translate-x-0.5"
+          />
+        </span>
+      </Link>
 
       <div className="mt-6 rounded-3xl border border-border bg-card p-6 shadow-sm">
         <h2 className="text-xl font-semibold text-foreground">
