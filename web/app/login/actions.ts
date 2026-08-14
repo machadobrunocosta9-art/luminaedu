@@ -38,6 +38,14 @@ export async function loginAction(
     return { error: "E-mail ou senha inválidos." };
   }
 
+  // O e-mail do administrador tem prioridade sobre qualquer usuário do
+  // banco com o mesmo e-mail, para que uma conta de teste nunca sequestre
+  // o acesso administrativo.
+  if (await verifyAdminCredentials(email, password)) {
+    await createAdminSession();
+    redirect(getSafeDestination(formData.get("next")));
+  }
+
   const databaseAuthentication = await authenticateDatabaseUser(
     email,
     password,
@@ -50,15 +58,6 @@ export async function loginAction(
         ? "/portal-familia"
         : getSafeDestination(formData.get("next")),
     );
-  }
-
-  if (
-    (databaseAuthentication.status === "not_found" ||
-      databaseAuthentication.status === "unavailable") &&
-    (await verifyAdminCredentials(email, password))
-  ) {
-    await createAdminSession();
-    redirect(getSafeDestination(formData.get("next")));
   }
 
   return { error: "E-mail ou senha inválidos." };
