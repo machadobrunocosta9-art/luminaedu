@@ -248,6 +248,13 @@ export default async function AlunosPage({
           href: "/matriculas/novo",
           icon: Plus,
         }}
+        secondaryContent={
+          <SecondaryAction
+            label="Adicionar aluno já matriculado"
+            href="/alunos/novo"
+            icon={Plus}
+          />
+        }
       />
 
       <section className="mb-7 overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm">

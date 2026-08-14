@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { confirmarCienciaOcorrencia } from "@/lib/ocorrencias";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { CheckCircle2, FileText, ShieldCheck } from "lucide-react";
@@ -74,21 +75,16 @@ export default async function CienciaPage({ params }: CienciaPageProps) {
       throw new Error("Nome e parentesco são obrigatórios.");
     }
 
-    await prisma.ocorrenciaAluno.update({
-      where: {
-        id: ocorrenciaEncontrada.id,
-      },
-      data: {
-        cienciaConfirmada: true,
-        dataCiencia: new Date(),
-        nomeConfirmante,
-        parentescoConfirmante,
-        observacaoCiencia: observacaoCiencia || null,
-      },
+    await confirmarCienciaOcorrencia({
+      ocorrenciaId: ocorrenciaEncontrada.id,
+      nomeConfirmante,
+      parentescoConfirmante,
+      observacaoCiencia: observacaoCiencia || null,
     });
 
     revalidatePath(`/ciencia/${token}`);
     revalidatePath(`/alunos/${ocorrenciaEncontrada.alunoId}`);
+    revalidatePath(`/portal-familia/filhos/${ocorrenciaEncontrada.alunoId}`);
 
     redirect(`/ciencia/${token}`);
   }

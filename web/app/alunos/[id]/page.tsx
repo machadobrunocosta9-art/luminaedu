@@ -1,7 +1,11 @@
 import AppLayout from "@/components/layout/AppLayout";
+import { requireAdmin, resolveAuthSchoolId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ImageUploadField from "@/components/ui/ImageUploadField";
+import DocumentoAlunoUpload from "@/components/alunos/DocumentoAlunoUpload";
 import {
   AlertTriangle,
   ArrowRight,
@@ -9,11 +13,13 @@ import {
   CheckCircle2,
   ClipboardList,
   CreditCard,
+  Download,
   FileText,
   GraduationCap,
   MessageCircle,
   Plus,
   Sparkles,
+  Trash2,
   UserRound,
 } from "lucide-react";
 
@@ -128,11 +134,54 @@ export default async function AlunoPage({ params }: PageProps) {
           },
         },
       },
+      documentos: {
+        orderBy: {
+          criadoEm: "desc",
+        },
+      },
     },
   });
 
   if (!aluno) {
     notFound();
+  }
+
+  async function atualizarFotoAluno(url: string) {
+    "use server";
+
+    await requireAdmin("GERENCIAR_ALUNOS");
+
+    await prisma.aluno.update({
+      where: { id },
+      data: { fotoUrl: url },
+    });
+
+    revalidatePath(`/alunos/${id}`);
+    revalidatePath("/alunos");
+  }
+
+  async function removerDocumentoAluno(formData: FormData) {
+    "use server";
+
+    const auth = await requireAdmin("GERENCIAR_ALUNOS");
+
+    const documentoId = String(formData.get("documentoId") || "");
+
+    if (!documentoId) {
+      throw new Error("Documento inválido.");
+    }
+
+    const escolaId = await resolveAuthSchoolId(auth);
+
+    await prisma.documentoAluno.deleteMany({
+      where: {
+        id: documentoId,
+        alunoId: id,
+        escolaId,
+      },
+    });
+
+    revalidatePath(`/alunos/${id}`);
   }
 
   const matriculaAtual = aluno.matriculas[0] ?? null;
@@ -278,6 +327,16 @@ export default async function AlunoPage({ params }: PageProps) {
             Histórico escolar, família, matrícula, comunicação, ocorrências e
             pendências em um só lugar.
           </p>
+
+          <div className="mt-5">
+            <ImageUploadField
+              label="Alterar foto"
+              pathPrefix={`alunos/${aluno.id}/foto/`}
+              clientPayload={{ kind: "foto-aluno", alunoId: aluno.id }}
+              currentUrl={aluno.fotoUrl}
+              onUploaded={atualizarFotoAluno}
+            />
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -628,6 +687,70 @@ export default async function AlunoPage({ params }: PageProps) {
                 ))}
               </div>
             )}
+          </section>
+
+          <section className="rounded-[2rem] border border-border bg-card p-6 shadow-sm">
+            <div className="mb-5 flex items-center gap-3">
+              <FileText size={22} className="text-primary" />
+
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">
+                  Arquivos anexados
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Documentos do aluno para consulta rápida
+                </p>
+              </div>
+            </div>
+
+            {aluno.documentos.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nenhum documento anexado ainda.
+              </p>
+            ) : (
+              <div className="mb-5 space-y-3">
+                {aluno.documentos.map((documento) => (
+                  <div
+                    key={documento.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-muted p-4"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-foreground">
+                        {documento.titulo}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatDate(documento.criadoEm)}
+                      </p>
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-2">
+                      <a
+                        href={`/api/alunos/documentos/${documento.id}/arquivo`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-background text-foreground transition hover:bg-card"
+                        title="Abrir documento"
+                      >
+                        <Download size={16} />
+                      </a>
+
+                      <form action={removerDocumentoAluno}>
+                        <input type="hidden" name="documentoId" value={documento.id} />
+                        <button
+                          type="submit"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-background text-red-600 transition hover:bg-red-50"
+                          title="Remover documento"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <DocumentoAlunoUpload alunoId={aluno.id} />
           </section>
 
           <section className="rounded-[2rem] border border-border bg-card p-6 shadow-sm">

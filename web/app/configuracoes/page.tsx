@@ -1,10 +1,11 @@
 import AppLayout from "@/components/layout/AppLayout";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, resolveAuthSchoolId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ArrowRight, UserCog } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import ImageUploadField from "@/components/ui/ImageUploadField";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,23 @@ async function atualizarEscola(formData: FormData) {
   revalidatePath("/dashboard");
 
   redirect("/configuracoes");
+}
+
+async function atualizarLogoEscola(url: string) {
+  "use server";
+
+  const auth = await requireAdmin("ADMINISTRAR_SISTEMA");
+  const escolaId = await resolveAuthSchoolId(auth);
+
+  await prisma.escola.update({
+    where: { id: escolaId },
+    data: { logoUrl: url },
+  });
+
+  revalidatePath("/configuracoes");
+  revalidatePath("/dashboard");
+  revalidatePath("/login");
+  revalidatePath("/portal-familia");
 }
 
 async function getConfiguracoesData() {
@@ -112,6 +130,21 @@ export default async function ConfiguracoesPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             Essas informações aparecem nos módulos principais da plataforma.
           </p>
+
+          <div className="mt-6">
+            <label className="mb-2 block text-sm font-medium text-foreground">
+              Logo da escola
+            </label>
+
+            <ImageUploadField
+              label="Alterar logo"
+              pathPrefix={`escola/${data.escola.id}/logo/`}
+              clientPayload={{ kind: "logo-escola", escolaId: data.escola.id }}
+              currentUrl={data.escola.logoUrl}
+              onUploaded={atualizarLogoEscola}
+              shape="square"
+            />
+          </div>
 
           <div className="mt-6">
             <label className="text-sm font-medium text-foreground">

@@ -172,6 +172,7 @@ enum StatusEmailTransacional {
 model Escola {
   id           String   @id @default(cuid())
   nome         String
+  logoUrl      String?
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
@@ -184,6 +185,7 @@ model Escola {
 
   convitesMatricula   ConviteMatricula[]
   documentosMatricula DocumentoMatricula[]
+  documentosAluno     DocumentoAluno[]
   pagamentosMatricula PagamentoMatricula[]
 
   comunicados              Comunicado[]
@@ -241,6 +243,7 @@ model Turma {
 model Aluno {
   id                 String   @id @default(cuid())
   nome               String
+  fotoUrl            String?
   dataNascimento     DateTime
   sexo               String?
   cpf                String?
@@ -261,12 +264,38 @@ model Aluno {
   matriculas  Matricula[]
   tarefas     Tarefa[]
   ocorrencias OcorrenciaAluno[]
+  documentos  DocumentoAluno[]
 
   comunicados              Comunicado[]
   destinatariosComunicados DestinatarioComunicado[]
   respostasComunicados     RespostaComunicado[]
 
   convitesAcesso ConviteAcesso[]
+}
+
+model DocumentoAluno {
+  id String @id @default(cuid())
+
+  titulo    String
+  descricao String?
+
+  nomeArquivoOriginal String?
+  urlArquivo          String
+  chaveArmazenamento  String
+  mimeType            String?
+  tamanhoBytes        Int?
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  escolaId String
+  alunoId  String
+
+  escola Escola @relation(fields: [escolaId], references: [id])
+  aluno  Aluno  @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+
+  @@index([escolaId])
+  @@index([alunoId])
 }
 
 model Matricula {

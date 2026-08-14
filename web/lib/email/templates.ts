@@ -89,3 +89,34 @@ export function accountConfirmationTemplate(input: {
     actionUrl: input.portalUrl,
   });
 }
+
+export function comunicadoTemplate(input: {
+  name: string;
+  schoolName: string;
+  title: string;
+  responderUrl: string;
+}) {
+  return actionTemplate({
+    greetingName: input.name,
+    title: `Novo comunicado de ${input.schoolName}`,
+    message: `A escola enviou o comunicado "${input.title}". Leia e responda quando puder.`,
+    actionLabel: "Ler e responder",
+    actionUrl: input.responderUrl,
+  });
+}
+
+export function ocorrenciaTemplate(input: {
+  name: string;
+  schoolName: string;
+  alunoNome: string;
+  title: string;
+  cienciaUrl: string;
+}) {
+  return actionTemplate({
+    greetingName: input.name,
+    title: `Novo registro no prontuário de ${input.alunoNome}`,
+    message: `${input.schoolName} registrou "${input.title}" no prontuário digital de ${input.alunoNome}. Leia e confirme ciência.`,
+    actionLabel: "Ler e confirmar ciência",
+    actionUrl: input.cienciaUrl,
+  });
+}

@@ -28,6 +28,42 @@ export default async function FamilyPortalPage() {
     orderBy: { nome: "asc" },
   });
 
+  const studentIds = children.map((student) => student.id);
+
+  const [pendingComunicadosGroups, pendingOcorrenciasGroups] =
+    studentIds.length === 0
+      ? [[], []]
+      : await Promise.all([
+          prisma.destinatarioComunicado.groupBy({
+            by: ["alunoId"],
+            where: {
+              escolaId: auth.escolaId,
+              responsavelId: auth.responsavelId,
+              alunoId: { in: studentIds },
+              status: { not: "RESPONDIDO" },
+              comunicado: { status: "ENVIADO" },
+            },
+            _count: { _all: true },
+          }),
+          prisma.ocorrenciaAluno.groupBy({
+            by: ["alunoId"],
+            where: {
+              escolaId: auth.escolaId,
+              alunoId: { in: studentIds },
+              enviarParaResponsavel: true,
+              cienciaConfirmada: false,
+            },
+            _count: { _all: true },
+          }),
+        ]);
+
+  const pendingComunicadosByAluno = new Map(
+    pendingComunicadosGroups.map((group) => [group.alunoId, group._count._all]),
+  );
+  const pendingOcorrenciasByAluno = new Map(
+    pendingOcorrenciasGroups.map((group) => [group.alunoId, group._count._all]),
+  );
+
   return (
     <main className="mx-auto w-full max-w-6xl p-4 sm:p-6">
       <p className="text-sm font-medium text-primary">Visão da família</p>
@@ -52,6 +88,10 @@ export default async function FamilyPortalPage() {
                   document.obrigatorio &&
                   !["APROVADO", "CANCELADO"].includes(document.status),
               ).length ?? 0;
+            const pendingComunicados =
+              pendingComunicadosByAluno.get(student.id) ?? 0;
+            const pendingOcorrencias =
+              pendingOcorrenciasByAluno.get(student.id) ?? 0;
 
             return (
               <Link
@@ -70,6 +110,16 @@ export default async function FamilyPortalPage() {
                   <span className="rounded-full bg-muted px-3 py-1">
                     {pendingDocuments} pendência(s) documental(is)
                   </span>
+                  {pendingComunicados > 0 && (
+                    <span className="rounded-full bg-primary/10 px-3 py-1 font-medium text-primary">
+                      {pendingComunicados} comunicado(s) aguardando resposta
+                    </span>
+                  )}
+                  {pendingOcorrencias > 0 && (
+                    <span className="rounded-full bg-primary/10 px-3 py-1 font-medium text-primary">
+                      {pendingOcorrencias} aviso(s) aguardando ciência
+                    </span>
+                  )}
                 </div>
               </Link>
             );

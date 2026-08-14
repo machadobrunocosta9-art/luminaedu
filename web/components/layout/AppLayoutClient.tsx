@@ -32,6 +32,8 @@ import { logoutAction } from "@/app/login/actions";
 type AppLayoutProps = {
   children: ReactNode;
   canManageUsers: boolean;
+  escolaNome?: string | null;
+  escolaLogoUrl?: string | null;
 };
 
 type LumiResumo = {
@@ -145,6 +147,8 @@ const lumiActions = [
 export default function AppLayoutClient({
   children,
   canManageUsers,
+  escolaNome,
+  escolaLogoUrl,
 }: AppLayoutProps) {
   const pathname = usePathname();
 
@@ -212,9 +216,18 @@ export default function AppLayoutClient({
               sidebarOpen ? "gap-3" : "w-full justify-center"
             }`}
           >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-3xl bg-primary text-xl font-bold text-primary-foreground shadow-sm">
-              L
-            </div>
+            {escolaLogoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={escolaLogoUrl}
+                alt={escolaNome ?? "Logo da escola"}
+                className="h-12 w-12 shrink-0 rounded-3xl object-cover shadow-sm"
+              />
+            ) : (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-3xl bg-primary text-xl font-bold text-primary-foreground shadow-sm">
+                L
+              </div>
+            )}
 
             {sidebarOpen && (
               <div className="min-w-0">
@@ -222,7 +235,7 @@ export default function AppLayoutClient({
                   Lumina
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
-                  Jardim Escola Girassol Encantado
+                  {escolaNome ?? "Gestão escolar"}
                 </p>
               </div>
             )}

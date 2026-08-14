@@ -1,6 +1,9 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getApplicationBaseUrl } from "@/lib/application-url";
+import { comunicadoTemplate } from "@/lib/email/templates";
+import { sendTransactionalEmail } from "@/lib/email/service";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import {
@@ -109,7 +112,7 @@ export default async function ComunicacaoPage() {
   async function marcarComoEnviado(formData: FormData) {
     "use server";
 
-    await requireAdmin("GERENCIAR_COMUNICACAO");
+    const auth = await requireAdmin("GERENCIAR_COMUNICACAO");
 
     const comunicadoId = String(formData.get("comunicadoId") || "");
 
@@ -117,7 +120,7 @@ export default async function ComunicacaoPage() {
       throw new Error("Comunicado não encontrado.");
     }
 
-    await prisma.comunicado.update({
+    const comunicadoEnviado = await prisma.comunicado.update({
       where: {
         id: comunicadoId,
       },
@@ -136,12 +139,49 @@ export default async function ComunicacaoPage() {
           },
         },
       },
+      include: {
+        escola: true,
+      },
     });
+
+    const destinatariosComEmail = await prisma.destinatarioComunicado.findMany({
+      where: {
+        comunicadoId,
+        email: { not: null },
+        tokenResposta: { not: null },
+      },
+    });
+
+    if (destinatariosComEmail.length > 0) {
+      const baseUrl = await getApplicationBaseUrl();
+
+      for (const destinatario of destinatariosComEmail) {
+        if (!destinatario.email || !destinatario.tokenResposta) continue;
+
+        const mensagem = comunicadoTemplate({
+          name: destinatario.nomeResponsavel || "responsável",
+          schoolName: comunicadoEnviado.escola.nome,
+          title: comunicadoEnviado.titulo,
+          responderUrl: `${baseUrl}/responder/${destinatario.tokenResposta}`,
+        });
+
+        await sendTransactionalEmail({
+          escolaId: comunicadoEnviado.escolaId,
+          criadoPorUsuarioId: auth.usuarioId,
+          tipo: "COMUNICADO",
+          destinatario: destinatario.email,
+          assunto: mensagem.assunto,
+          conteudoTexto: mensagem.conteudoTexto,
+          conteudoHtml: mensagem.conteudoHtml,
+        });
+      }
+    }
 
     revalidatePath("/comunicacao");
     revalidatePath("/dashboard");
     revalidatePath("/pulse");
     revalidatePath("/relatorios");
+    revalidatePath("/portal-familia/comunicados");
   }
 
   const totalComunicados = comunicados.length;

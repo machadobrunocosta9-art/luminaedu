@@ -1,8 +1,12 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getApplicationBaseUrl } from "@/lib/application-url";
+import { ocorrenciaTemplate } from "@/lib/email/templates";
+import { sendTransactionalEmail } from "@/lib/email/service";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
+import { randomUUID } from "crypto";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -185,7 +189,7 @@ export default async function NovaOcorrenciaPage({
   async function criarOcorrencia(formData: FormData) {
     "use server";
 
-    await requireAdmin("GERENCIAR_COMUNICACAO");
+    const auth = await requireAdmin("GERENCIAR_COMUNICACAO");
 
     const tipo = normalizarTipo(String(formData.get("tipo") || "OCORRENCIA"));
     const titulo = String(formData.get("titulo") || "").trim();
@@ -218,7 +222,13 @@ export default async function NovaOcorrenciaPage({
       fimSuspensao: fimSuspensaoValue,
     });
 
-    await prisma.ocorrenciaAluno.create({
+    const destinatarioEmail = enviarParaResponsavel
+      ? emailResponsavel || alunoEncontrado.responsavel.email
+      : null;
+
+    const tokenCiencia = enviarParaResponsavel ? randomUUID() : null;
+
+    const ocorrencia = await prisma.ocorrenciaAluno.create({
       data: {
         tipo: tipo as
           | "ADVERTENCIA"
@@ -231,9 +241,8 @@ export default async function NovaOcorrenciaPage({
         descricao,
         textoFinal,
         enviarParaResponsavel,
-        emailResponsavel: enviarParaResponsavel
-          ? emailResponsavel || alunoEncontrado.responsavel.email
-          : null,
+        emailResponsavel: destinatarioEmail,
+        tokenCiencia,
         inicioSuspensao: inicioSuspensaoValue
           ? new Date(`${inicioSuspensaoValue}T00:00:00`)
           : null,
@@ -244,6 +253,34 @@ export default async function NovaOcorrenciaPage({
         alunoId: alunoEncontrado.id,
       },
     });
+
+    if (enviarParaResponsavel && destinatarioEmail && tokenCiencia) {
+      const baseUrl = await getApplicationBaseUrl();
+      const mensagem = ocorrenciaTemplate({
+        name: alunoEncontrado.responsavel.nome,
+        schoolName: alunoEncontrado.escola.nome,
+        alunoNome: alunoEncontrado.nome,
+        title: titulo,
+        cienciaUrl: `${baseUrl}/ciencia/${tokenCiencia}`,
+      });
+
+      const resultado = await sendTransactionalEmail({
+        escolaId: alunoEncontrado.escolaId,
+        criadoPorUsuarioId: auth.usuarioId,
+        tipo: "AVISO_DOCUMENTO",
+        destinatario: destinatarioEmail,
+        assunto: mensagem.assunto,
+        conteudoTexto: mensagem.conteudoTexto,
+        conteudoHtml: mensagem.conteudoHtml,
+      });
+
+      if (resultado.status === "sent") {
+        await prisma.ocorrenciaAluno.update({
+          where: { id: ocorrencia.id },
+          data: { enviadoPorEmail: true, dataEnvioEmail: new Date() },
+        });
+      }
+    }
 
     await prisma.tarefa.create({
       data: {
@@ -438,9 +475,9 @@ export default async function NovaOcorrenciaPage({
                 </label>
 
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  A Lumina vai salvar o texto final no prontuário e deixar o
-                  envio preparado. O envio real por e-mail entra na próxima
-                  etapa.
+                  A Lumina salva o texto final no prontuário, envia um e-mail
+                  ao responsável e disponibiliza a confirmação de ciência no
+                  Portal da Família.
                 </p>
 
                 <div className="mt-4">
@@ -564,8 +601,8 @@ export default async function NovaOcorrenciaPage({
               </p>
 
               <p>
-                O envio por e-mail será ativado na próxima fase, junto com a
-                comunicação inteligente.
+                Quando marcado, o responsável recebe um e-mail e também vê o
+                registro no Portal da Família para confirmar ciência.
               </p>
             </div>
           </section>
