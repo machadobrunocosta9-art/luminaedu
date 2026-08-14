@@ -1,5 +1,8 @@
 import { CreateAccessInvitationForm } from "@/app/convites-acesso/CreateAccessInvitationForm";
-import { cancelAccessInvitationAction } from "@/app/convites-acesso/actions";
+import {
+  cancelAccessInvitationAction,
+  deleteUserAccessAction,
+} from "@/app/convites-acesso/actions";
 import AppLayout from "@/components/layout/AppLayout";
 import {
   requirePermission,
@@ -136,6 +139,7 @@ export default async function AccessInvitationsPage() {
                       Responsável vinculado
                     </th>
                     <th className="px-6 py-3 font-medium">Último acesso</th>
+                    <th className="px-6 py-3 font-medium">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -164,6 +168,17 @@ export default async function AccessInvitationsPage() {
                         {user.ultimoAcessoEm
                           ? user.ultimoAcessoEm.toLocaleString("pt-BR")
                           : "Ainda não acessou"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <form action={deleteUserAccessAction}>
+                          <input type="hidden" name="userId" value={user.id} />
+                          <button
+                            type="submit"
+                            className="rounded-xl px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+                          >
+                            Excluir acesso
+                          </button>
+                        </form>
                       </td>
                     </tr>
                   ))}

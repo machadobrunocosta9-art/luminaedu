@@ -120,6 +120,39 @@ export async function createAccessInvitationAction(
   };
 }
 
+export async function deleteUserAccessAction(formData: FormData) {
+  const auth = await requirePermission("GERENCIAR_USUARIOS");
+  const escolaId = await resolveAuthSchoolId(auth);
+  const userId = formData.get("userId");
+
+  if (typeof userId !== "string" || !userId) {
+    return;
+  }
+
+  const usuario = await prisma.usuario.findFirst({
+    where: { id: userId, escolaId },
+    select: { id: true, email: true },
+  });
+
+  if (!usuario) {
+    return;
+  }
+
+  await prisma.usuario.delete({ where: { id: usuario.id } });
+
+  await recordAudit({
+    acao: "ACESSO_USUARIO_EXCLUIDO",
+    resultado: "SUCESSO",
+    escolaId,
+    usuarioId: auth.usuarioId,
+    entidade: "Usuario",
+    entidadeId: usuario.id,
+    metadados: { email: usuario.email },
+  });
+
+  revalidatePath("/convites-acesso");
+}
+
 export async function cancelAccessInvitationAction(formData: FormData) {
   const auth = await requirePermission("GERENCIAR_USUARIOS");
   const escolaId = await resolveAuthSchoolId(auth);

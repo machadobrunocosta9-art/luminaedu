@@ -1,7 +1,7 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { requireAdmin, resolveAuthSchoolId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ArrowRight, UserCog } from "lucide-react";
+import { ArrowRight, CheckCircle2, TriangleAlert, UserCog } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -66,6 +66,61 @@ async function atualizarLogoEscola(url: string) {
   revalidatePath("/portal-familia");
 }
 
+const TABELAS_PARA_LIMPAR = [
+  "RespostaComunicado",
+  "DestinatarioComunicado",
+  "Comunicado",
+  "OcorrenciaAluno",
+  "Tarefa",
+  "PagamentoMatricula",
+  "DocumentoMatricula",
+  "ConviteMatricula",
+  "DocumentoAluno",
+  "Matricula",
+  "ConviteAcesso",
+  "RecuperacaoSenha",
+  "SessaoUsuario",
+  "Usuario",
+  "Aluno",
+  "Turma",
+  "Responsavel",
+  "RegistroAuditoria",
+  "EmailTransacional",
+  "TentativaLogin",
+  "Escola",
+];
+
+async function limparDadosTeste(formData: FormData) {
+  "use server";
+
+  await requireAdmin("ADMINISTRAR_SISTEMA");
+
+  const confirmacao = getString(formData, "confirmacao");
+
+  if (confirmacao !== "LIMPAR") {
+    throw new Error('Digite "LIMPAR" para confirmar a limpeza dos dados.');
+  }
+
+  const listaTabelas = TABELAS_PARA_LIMPAR.map((tabela) => `"${tabela}"`).join(
+    ", ",
+  );
+
+  await prisma.$executeRawUnsafe(
+    `TRUNCATE TABLE ${listaTabelas} RESTART IDENTITY CASCADE;`,
+  );
+
+  revalidatePath("/configuracoes");
+  revalidatePath("/dashboard");
+  revalidatePath("/alunos");
+  revalidatePath("/responsaveis");
+  revalidatePath("/turmas");
+  revalidatePath("/matriculas");
+  revalidatePath("/comunicacao");
+  revalidatePath("/portal-familia");
+
+  redirect("/configuracoes?limpo=1");
+}
+
 async function getConfiguracoesData() {
   const escola = await prisma.escola.upsert({
     where: {
@@ -97,9 +152,14 @@ async function getConfiguracoesData() {
   };
 }
 
-export default async function ConfiguracoesPage() {
+export default async function ConfiguracoesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ limpo?: string }>;
+}) {
   await requireAdmin("ADMINISTRAR_SISTEMA");
   const data = await getConfiguracoesData();
+  const query = searchParams ? await searchParams : {};
 
   return (
     <AppLayout>
@@ -283,6 +343,54 @@ export default async function ConfiguracoesPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {query.limpo === "1" && (
+        <div className="mt-6 flex items-center gap-3 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 text-sm font-semibold text-emerald-700">
+          <CheckCircle2 size={20} />
+          Todos os dados de teste foram apagados. A escola foi reiniciada em
+          branco.
+        </div>
+      )}
+
+      <div className="mt-6 rounded-3xl border border-red-200 bg-red-50/60 p-6">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-100 text-red-700">
+            <TriangleAlert size={20} />
+          </div>
+
+          <div>
+            <h2 className="text-lg font-semibold text-red-800">
+              Zona de risco
+            </h2>
+            <p className="text-sm text-red-700/80">
+              Apaga permanentemente alunos, responsáveis, turmas, matrículas,
+              comunicados, contas do Portal da Família e tudo mais. Não pode
+              ser desfeito.
+            </p>
+          </div>
+        </div>
+
+        <form action={limparDadosTeste} className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-red-800">
+              Digite LIMPAR para confirmar
+            </label>
+            <input
+              name="confirmacao"
+              required
+              placeholder="LIMPAR"
+              className="h-12 w-56 rounded-2xl border border-red-200 bg-white px-4 text-sm outline-none transition focus:border-red-500"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="h-12 rounded-2xl bg-red-600 px-6 text-sm font-semibold text-white transition hover:bg-red-700"
+          >
+            Apagar todos os dados de teste
+          </button>
+        </form>
       </div>
     </AppLayout>
   );
