@@ -15,6 +15,11 @@ import {
 const PUBLIC_API_ROUTES = new Set([
   "/api/matricula/documentos/upload",
   "/api/matricula/documentos/registrar",
+  // Estas rotas geram o token de upload e recebem o callback
+  // "blob.upload-completed" da Vercel Blob, que chega sem cookie de sessao.
+  // A autorizacao real acontece dentro de cada rota (getAuthContext()).
+  "/api/uploads/imagem",
+  "/api/alunos/documentos/upload",
 ]);
 
 function isPublicPage(pathname: string) {
