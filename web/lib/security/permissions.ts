@@ -84,7 +84,8 @@ export function permissionForAdminPath(pathname: string): Permission {
 
   if (
     path.startsWith("/comunicacao") ||
-    path.startsWith("/ocorrencias")
+    path.startsWith("/ocorrencias") ||
+    path.startsWith("/mensagens")
   ) {
     return "GERENCIAR_COMUNICACAO";
   }

@@ -10,20 +10,28 @@ export default async function FamilyPortalLayout({
 }) {
   const auth = await requireFamily();
 
-  const [comunicadosPendentes, escola] = await Promise.all([
-    prisma.destinatarioComunicado.count({
-      where: {
-        escolaId: auth.escolaId,
-        responsavelId: auth.responsavelId,
-        status: { not: "RESPONDIDO" },
-        comunicado: { status: "ENVIADO" },
-      },
-    }),
-    prisma.escola.findUnique({
-      where: { id: auth.escolaId },
-      select: { nome: true, logoUrl: true },
-    }),
-  ]);
+  const [comunicadosPendentes, mensagensRespondidas, escola] =
+    await Promise.all([
+      prisma.destinatarioComunicado.count({
+        where: {
+          escolaId: auth.escolaId,
+          responsavelId: auth.responsavelId,
+          status: { not: "RESPONDIDO" },
+          comunicado: { status: "ENVIADO" },
+        },
+      }),
+      prisma.mensagemFamilia.count({
+        where: {
+          escolaId: auth.escolaId,
+          responsavelId: auth.responsavelId,
+          status: "RESPONDIDA",
+        },
+      }),
+      prisma.escola.findUnique({
+        where: { id: auth.escolaId },
+        select: { nome: true, logoUrl: true },
+      }),
+    ]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,7 +51,7 @@ export default async function FamilyPortalLayout({
             ) : null}
             <span>{escola?.nome ?? "Lumina"} · Portal da Família</span>
           </Link>
-          <nav className="flex items-center gap-4">
+          <nav className="flex flex-wrap items-center gap-3 sm:gap-4">
             <Link
               href="/portal-familia/comunicados"
               className="relative text-sm font-medium text-foreground transition hover:text-primary"
@@ -55,9 +63,23 @@ export default async function FamilyPortalLayout({
                 </span>
               )}
             </Link>
-            <span className="hidden text-sm text-muted-foreground sm:inline">
+            <Link
+              href="/portal-familia/mensagens"
+              className="relative text-sm font-medium text-foreground transition hover:text-primary"
+            >
+              Fale com a escola
+              {mensagensRespondidas > 0 && (
+                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">
+                  {mensagensRespondidas}
+                </span>
+              )}
+            </Link>
+            <Link
+              href="/portal-familia/senha"
+              className="hidden text-sm font-medium text-muted-foreground transition hover:text-primary sm:inline"
+            >
               {auth.nome}
-            </span>
+            </Link>
             <form action={logoutAction}>
               <button
                 type="submit"

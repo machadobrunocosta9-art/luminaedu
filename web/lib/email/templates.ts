@@ -105,6 +105,21 @@ export function comunicadoTemplate(input: {
   });
 }
 
+export function mensagemFamiliaTemplate(input: {
+  name: string;
+  schoolName: string;
+  assunto: string;
+  mensagensUrl: string;
+}) {
+  return actionTemplate({
+    greetingName: input.name,
+    title: `${input.schoolName} respondeu sua mensagem`,
+    message: `A escola respondeu sua mensagem sobre "${input.assunto}". Veja a resposta e continue a conversa.`,
+    actionLabel: "Ver resposta",
+    actionUrl: input.mensagensUrl,
+  });
+}
+
 export function ocorrenciaTemplate(input: {
   name: string;
   schoolName: string;

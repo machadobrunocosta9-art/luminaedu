@@ -20,6 +20,7 @@ import {
   LogOut,
   Menu,
   MessageCircle,
+  MessageSquare,
   Search,
   Settings,
   Sparkles,
@@ -73,6 +74,11 @@ const menuItems = [
     label: "Comunicação",
     href: "/comunicacao",
     icon: MessageCircle,
+  },
+  {
+    label: "Mensagens",
+    href: "/mensagens",
+    icon: MessageSquare,
   },
   {
     label: "Financeiro",

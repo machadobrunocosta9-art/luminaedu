@@ -169,6 +169,17 @@ enum StatusEmailTransacional {
   NAO_CONFIGURADO
 }
 
+enum StatusMensagemFamilia {
+  ABERTA
+  RESPONDIDA
+  ENCERRADA
+}
+
+enum AutorMensagemFamilia {
+  RESPONSAVEL
+  ESCOLA
+}
+
 model Escola {
   id           String   @id @default(cuid())
   nome         String
@@ -187,6 +198,7 @@ model Escola {
   documentosMatricula DocumentoMatricula[]
   documentosAluno     DocumentoAluno[]
   pagamentosMatricula PagamentoMatricula[]
+  mensagensFamilia    MensagemFamilia[]
 
   comunicados              Comunicado[]
   destinatariosComunicados DestinatarioComunicado[]
@@ -219,8 +231,9 @@ model Responsavel {
   destinatariosComunicados DestinatarioComunicado[]
   respostasComunicados     RespostaComunicado[]
 
-  usuario        Usuario?
-  convitesAcesso ConviteAcesso[]
+  usuario          Usuario?
+  convitesAcesso   ConviteAcesso[]
+  mensagensFamilia MensagemFamilia[]
 }
 
 model Turma {
@@ -270,7 +283,8 @@ model Aluno {
   destinatariosComunicados DestinatarioComunicado[]
   respostasComunicados     RespostaComunicado[]
 
-  convitesAcesso ConviteAcesso[]
+  convitesAcesso   ConviteAcesso[]
+  mensagensFamilia MensagemFamilia[]
 }
 
 model DocumentoAluno {
@@ -296,6 +310,45 @@ model DocumentoAluno {
 
   @@index([escolaId])
   @@index([alunoId])
+}
+
+model MensagemFamilia {
+  id String @id @default(cuid())
+
+  assunto String
+  status  StatusMensagemFamilia @default(ABERTA)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  escolaId      String
+  responsavelId String
+  alunoId       String?
+
+  escola      Escola      @relation(fields: [escolaId], references: [id])
+  responsavel Responsavel @relation(fields: [responsavelId], references: [id])
+  aluno       Aluno?      @relation(fields: [alunoId], references: [id])
+
+  itens MensagemFamiliaItem[]
+
+  @@index([escolaId])
+  @@index([responsavelId])
+  @@index([status])
+}
+
+model MensagemFamiliaItem {
+  id String @id @default(cuid())
+
+  autor     AutorMensagemFamilia
+  autorNome String
+  texto     String
+
+  criadoEm DateTime @default(now())
+
+  mensagemId String
+  mensagem   MensagemFamilia @relation(fields: [mensagemId], references: [id], onDelete: Cascade)
+
+  @@index([mensagemId])
 }
 
 model Matricula {
