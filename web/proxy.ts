@@ -121,6 +121,17 @@ export async function proxy(request: NextRequest) {
     return redirectToLogin(request);
   }
 
+  // Imagens (logo da escola, foto do aluno e de perfil) sao usadas por
+  // todos os papeis, inclusive responsavel e professor. Cada rota em
+  // /api/imagens faz a sua propria checagem de quem pode ver o arquivo.
+  if (pathname.startsWith("/api/imagens/")) {
+    if (legacyAuthenticated || userSession) {
+      return NextResponse.next();
+    }
+
+    return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+  }
+
   if (legacyAuthenticated) {
     return NextResponse.next();
   }
