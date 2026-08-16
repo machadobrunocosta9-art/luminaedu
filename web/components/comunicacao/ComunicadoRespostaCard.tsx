@@ -105,76 +105,86 @@ export default function ComunicadoRespostaCard({
     !comunicado.requerParticipacao &&
     !comunicado.requerAutorizacao;
 
+  const TIPO_LABELS: Record<string, string> = {
+    SIMPLES: "Comunicado",
+    CIENCIA: "Ciência",
+    EVENTO: "Evento",
+    AUTORIZACAO: "Autorização",
+    PAGAMENTO: "Pagamento",
+  };
+
   return (
     <>
-      <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-        <div className="mb-5 flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground">
-            {comunicado.tipo}
-          </span>
-
-          {comunicado.requerCiencia && (
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-              Ciência digital
+      <section className="overflow-hidden rounded-[22px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]">
+        <div className="p-5">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+              {TIPO_LABELS[comunicado.tipo] ?? comunicado.tipo}
             </span>
-          )}
 
-          {comunicado.requerParticipacao && (
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-              Participação
-            </span>
-          )}
+            {comunicado.requerCiencia && (
+              <span className="rounded-full bg-[#f5f5f7] px-2.5 py-1 text-[11px] font-medium text-[#8e8e93]">
+                Ciência digital
+              </span>
+            )}
 
-          {comunicado.requerAutorizacao && (
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-              Autorização
-            </span>
-          )}
-        </div>
+            {comunicado.requerParticipacao && (
+              <span className="rounded-full bg-[#f5f5f7] px-2.5 py-1 text-[11px] font-medium text-[#8e8e93]">
+                Participação
+              </span>
+            )}
 
-        <h2 className="text-2xl font-semibold text-foreground">
-          {comunicado.titulo}
-        </h2>
+            {comunicado.requerAutorizacao && (
+              <span className="rounded-full bg-[#f5f5f7] px-2.5 py-1 text-[11px] font-medium text-[#8e8e93]">
+                Autorização
+              </span>
+            )}
+          </div>
 
-        <div className="mt-4 whitespace-pre-wrap rounded-2xl bg-background p-4 text-sm leading-7 text-muted-foreground">
-          {comunicado.conteudo}
+          <h2 className="text-[19px] font-semibold leading-tight text-foreground">
+            {comunicado.titulo}
+          </h2>
+
+          <div className="mt-3 whitespace-pre-wrap text-[14px] leading-6 text-[#6b7280]">
+            {comunicado.conteudo}
+          </div>
         </div>
 
         {(comunicado.dataEvento ||
           comunicado.horaEvento ||
           comunicado.localEvento ||
           valorFormatado) && (
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
-            <div className="rounded-2xl bg-muted p-4">
-              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-                <CalendarDays size={18} />
+          <div className="grid gap-px bg-black/5 sm:grid-cols-2">
+            <div className="bg-white p-4">
+              <div className="mb-1.5 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
+                <CalendarDays size={15} />
                 Data e horário
               </div>
 
-              <p className="text-sm text-muted-foreground">
+              <p className="text-[14px] text-foreground">
                 {formatDate(comunicado.dataEvento)}
                 {comunicado.horaEvento ? ` às ${comunicado.horaEvento}` : ""}
               </p>
             </div>
 
-            <div className="rounded-2xl bg-muted p-4">
-              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-                <MapPin size={18} />
+            <div className="bg-white p-4">
+              <div className="mb-1.5 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
+                <MapPin size={15} />
                 Local
               </div>
 
-              <p className="text-sm text-muted-foreground">
+              <p className="text-[14px] text-foreground">
                 {comunicado.localEvento || "Não informado"}
               </p>
             </div>
 
             {valorFormatado && (
-              <div className="rounded-2xl bg-muted p-4 md:col-span-2">
-                <p className="text-sm font-semibold text-foreground">
+              <div className="bg-white p-4 sm:col-span-2">
+                <p className="text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
                   Valor informado
                 </p>
 
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-[14px] font-medium text-foreground">
                   {valorFormatado}
                 </p>
               </div>
@@ -183,60 +193,51 @@ export default function ComunicadoRespostaCard({
         )}
 
         {(alunoNome || turmaNome) && (
-          <div className="mt-5 rounded-2xl bg-muted p-4">
-            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-              <UserRound size={18} />
-              Aluno
-            </div>
-
-            <p className="text-sm text-muted-foreground">
+          <div className="flex items-center gap-2.5 border-t border-black/5 px-5 py-3.5">
+            <UserRound size={15} className="shrink-0 text-[#8e8e93]" />
+            <p className="text-[13px] text-[#8e8e93]">
               {alunoNome || "Aluno não informado"}
+              {turmaNome ? ` · ${turmaNome}` : ""}
             </p>
-
-            {turmaNome && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                Turma: {turmaNome}
-              </p>
-            )}
           </div>
         )}
       </section>
 
-      <section className="mt-5 rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <section className="mt-3 rounded-[22px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]">
         {jaRespondido ? (
           <div className="text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-3xl bg-muted text-foreground">
-              <CheckCircle2 size={28} />
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+              <CheckCircle2 size={24} />
             </div>
 
-            <h2 className="text-xl font-semibold text-foreground">
+            <h2 className="text-[17px] font-semibold text-foreground">
               Resposta registrada
             </h2>
 
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-1 text-[13px] text-[#8e8e93]">
               Obrigado. A escola já recebeu sua confirmação.
             </p>
 
             {respostaExistente && (
-              <div className="mt-5 rounded-2xl bg-muted p-4 text-left">
-                <p className="text-sm font-semibold text-foreground">
+              <div className="mt-4 rounded-2xl bg-[#f5f5f7] p-4 text-left">
+                <p className="text-[14px] font-semibold text-foreground">
                   {getTipoRespostaLabel(respostaExistente.tipo)}
                 </p>
 
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-[13px] text-[#8e8e93]">
                   Respondido por{" "}
                   {respostaExistente.nomeRespondente || "responsável"} em{" "}
                   {formatDateTime(respostaExistente.dataResposta)}.
                 </p>
 
                 {respostaExistente.motivoNegativa && (
-                  <p className="mt-3 text-sm text-muted-foreground">
+                  <p className="mt-2 text-[13px] text-[#8e8e93]">
                     Motivo: {respostaExistente.motivoNegativa}
                   </p>
                 )}
 
                 {respostaExistente.observacao && (
-                  <p className="mt-3 text-sm text-muted-foreground">
+                  <p className="mt-2 text-[13px] text-[#8e8e93]">
                     Observação: {respostaExistente.observacao}
                   </p>
                 )}
@@ -245,24 +246,24 @@ export default function ComunicadoRespostaCard({
           </div>
         ) : (
           <>
-            <div className="mb-5">
-              <h2 className="text-xl font-semibold text-foreground">
+            <div className="mb-4">
+              <h2 className="text-[17px] font-semibold text-foreground">
                 Registrar resposta
               </h2>
 
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Preencha seus dados e selecione uma das opções abaixo.
+              <p className="mt-1 text-[13px] text-[#8e8e93]">
+                Preencha seus dados e escolha uma das opções.
               </p>
             </div>
 
             {erro === "dados" && (
-              <div className="mb-4 rounded-2xl border border-border bg-muted p-4 text-sm font-semibold text-foreground">
+              <div className="mb-4 rounded-2xl bg-red-50 p-3 text-[13px] font-medium text-red-600">
                 Informe seu nome e parentesco com o aluno para continuar.
               </div>
             )}
 
             {erro === "motivo" && (
-              <div className="mb-4 rounded-2xl border border-border bg-muted p-4 text-sm font-semibold text-foreground">
+              <div className="mb-4 rounded-2xl bg-red-50 p-3 text-[13px] font-medium text-red-600">
                 Para negar participação ou autorização, informe o motivo.
               </div>
             )}
@@ -276,41 +277,41 @@ export default function ComunicadoRespostaCard({
 
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="block">
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-[13px] font-medium text-[#8e8e93]">
                     Seu nome
                   </span>
 
                   <input
                     name="nomeRespondente"
                     required
-                    className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary"
+                    className="mt-2 w-full rounded-xl bg-[#f5f5f7] px-4 py-3 text-[15px] outline-none transition focus:ring-2 focus:ring-primary/30"
                     placeholder="Ex: Maria Silva"
                   />
                 </label>
 
                 <label className="block">
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-[13px] font-medium text-[#8e8e93]">
                     Parentesco
                   </span>
 
                   <input
                     name="parentescoRespondente"
                     required
-                    className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary"
+                    className="mt-2 w-full rounded-xl bg-[#f5f5f7] px-4 py-3 text-[15px] outline-none transition focus:ring-2 focus:ring-primary/30"
                     placeholder="Ex: mãe, pai, avó, responsável"
                   />
                 </label>
               </div>
 
               <label className="block">
-                <span className="text-sm font-medium text-foreground">
+                <span className="text-[13px] font-medium text-[#8e8e93]">
                   Observação, se desejar
                 </span>
 
                 <textarea
                   name="observacao"
                   rows={3}
-                  className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary"
+                  className="mt-2 w-full rounded-xl bg-[#f5f5f7] px-4 py-3 text-[15px] outline-none transition focus:ring-2 focus:ring-primary/30"
                   placeholder="Escreva uma observação para a escola, se necessário."
                 />
               </label>
@@ -318,14 +319,14 @@ export default function ComunicadoRespostaCard({
               {(comunicado.requerParticipacao ||
                 comunicado.requerAutorizacao) && (
                 <label className="block">
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-[13px] font-medium text-[#8e8e93]">
                     Motivo da negativa
                   </span>
 
                   <textarea
                     name="motivoNegativa"
                     rows={3}
-                    className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary"
+                    className="mt-2 w-full rounded-xl bg-[#f5f5f7] px-4 py-3 text-[15px] outline-none transition focus:ring-2 focus:ring-primary/30"
                     placeholder="Preencha este campo se escolher não participar ou não autorizar."
                   />
                 </label>
@@ -337,7 +338,7 @@ export default function ComunicadoRespostaCard({
                     type="submit"
                     name="tipoResposta"
                     value="CIENTE"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-[15px] font-semibold text-primary-foreground transition active:opacity-80"
                   >
                     <ShieldCheck size={18} />
                     Estou ciente
@@ -350,7 +351,7 @@ export default function ComunicadoRespostaCard({
                       type="submit"
                       name="tipoResposta"
                       value="PARTICIPA"
-                      className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-[15px] font-semibold text-primary-foreground transition active:opacity-80"
                     >
                       <CheckCircle2 size={18} />
                       Vai participar
@@ -360,7 +361,7 @@ export default function ComunicadoRespostaCard({
                       type="submit"
                       name="tipoResposta"
                       value="NAO_PARTICIPA"
-                      className="inline-flex items-center gap-2 rounded-2xl border border-border px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#f5f5f7] px-5 py-3.5 text-[15px] font-semibold text-foreground transition active:opacity-80"
                     >
                       <XCircle size={18} />
                       Não vai participar
@@ -374,7 +375,7 @@ export default function ComunicadoRespostaCard({
                       type="submit"
                       name="tipoResposta"
                       value="AUTORIZADO"
-                      className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-[15px] font-semibold text-primary-foreground transition active:opacity-80"
                     >
                       <CheckCircle2 size={18} />
                       Autorizo
@@ -384,7 +385,7 @@ export default function ComunicadoRespostaCard({
                       type="submit"
                       name="tipoResposta"
                       value="NAO_AUTORIZADO"
-                      className="inline-flex items-center gap-2 rounded-2xl border border-border px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#f5f5f7] px-5 py-3.5 text-[15px] font-semibold text-foreground transition active:opacity-80"
                     >
                       <XCircle size={18} />
                       Não autorizo
@@ -397,7 +398,7 @@ export default function ComunicadoRespostaCard({
                     type="submit"
                     name="tipoResposta"
                     value="RESPOSTA_TEXTO"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-[15px] font-semibold text-primary-foreground transition active:opacity-80"
                   >
                     <MessageCircle size={18} />
                     Enviar resposta
