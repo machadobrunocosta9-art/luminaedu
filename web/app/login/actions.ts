@@ -53,11 +53,16 @@ export async function loginAction(
 
   if (databaseAuthentication.status === "authenticated") {
     await createDatabaseUserSession(databaseAuthentication.user);
-    redirect(
-      databaseAuthentication.user.papel === "RESPONSAVEL"
-        ? "/portal-familia"
-        : getSafeDestination(formData.get("next")),
-    );
+
+    if (databaseAuthentication.user.papel === "RESPONSAVEL") {
+      redirect("/portal-familia");
+    }
+
+    if (databaseAuthentication.user.papel === "PROFESSOR") {
+      redirect("/professor");
+    }
+
+    redirect(getSafeDestination(formData.get("next")));
   }
 
   return { error: "E-mail ou senha inválidos." };

@@ -153,9 +153,15 @@ export async function requirePermission(permission: Permission) {
   }
 
   if (!hasPermission(context.papel, permission)) {
-    redirect(
-      context.papel === "RESPONSAVEL" ? "/portal-familia" : "/dashboard",
-    );
+    if (context.papel === "RESPONSAVEL") {
+      redirect("/portal-familia");
+    }
+
+    if (context.papel === "PROFESSOR") {
+      redirect("/professor");
+    }
+
+    redirect("/dashboard");
   }
 
   return context;
@@ -186,6 +192,28 @@ export async function requireFamily() {
   return {
     ...context,
     responsavelId: context.responsavelId,
+  };
+}
+
+export async function requireProfessor() {
+  const context = await getAuthContext();
+
+  if (!context) {
+    redirect("/login?next=/professor");
+  }
+
+  if (
+    context.kind !== "user" ||
+    context.papel !== "PROFESSOR" ||
+    !context.usuarioId ||
+    !hasPermission(context.papel, "ACESSAR_PORTAL_PROFESSOR")
+  ) {
+    redirect("/dashboard");
+  }
+
+  return {
+    ...context,
+    usuarioId: context.usuarioId,
   };
 }
 

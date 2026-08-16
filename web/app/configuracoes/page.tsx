@@ -7,6 +7,7 @@ import {
   Mail,
   TriangleAlert,
   UserCog,
+  Users,
 } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
@@ -302,6 +303,31 @@ export default async function ConfiguracoesPage({
             </h2>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
               Consulte usuários e gerencie convites para o Portal da Família.
+            </p>
+          </div>
+        </div>
+        <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+          Gerenciar
+          <ArrowRight
+            size={17}
+            className="transition group-hover:translate-x-0.5"
+          />
+        </span>
+      </Link>
+
+      <Link
+        href="/equipe"
+        className="group mt-6 flex flex-col gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <Users size={22} />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Equipe</h2>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Contas de professores(as) e demais funcionários com login
+              próprio.
             </p>
           </div>
         </div>

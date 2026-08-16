@@ -3,6 +3,7 @@ export const USER_ROLES = [
   "SECRETARIA",
   "COORDENACAO",
   "FINANCEIRO",
+  "PROFESSOR",
   "RESPONSAVEL",
 ] as const;
 
@@ -19,6 +20,9 @@ export const PERMISSIONS = [
   "GERENCIAR_COMUNICACAO",
   "ACESSAR_PORTAL_FAMILIA",
   "ACESSAR_DOCUMENTOS_FAMILIA",
+  "ACESSAR_PORTAL_PROFESSOR",
+  "LANCAR_NOTAS",
+  "GERENCIAR_ATIVIDADES",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -37,8 +41,14 @@ const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<Permission>> = {
     "GERENCIAR_ALUNOS",
     "GERENCIAR_DOCUMENTOS",
     "GERENCIAR_COMUNICACAO",
+    "LANCAR_NOTAS",
   ]),
   FINANCEIRO: new Set(["ACESSAR_PAINEL", "GERENCIAR_FINANCEIRO"]),
+  PROFESSOR: new Set([
+    "ACESSAR_PORTAL_PROFESSOR",
+    "LANCAR_NOTAS",
+    "GERENCIAR_ATIVIDADES",
+  ]),
   RESPONSAVEL: new Set([
     "ACESSAR_PORTAL_FAMILIA",
     "ACESSAR_DOCUMENTOS_FAMILIA",
@@ -58,7 +68,7 @@ export function permissionForAdminPath(pathname: string): Permission {
     ? pathname.slice("/api".length)
     : pathname;
 
-  if (path.startsWith("/configuracoes") || path.startsWith("/convites-acesso")) {
+  if (path.startsWith("/configuracoes") || path.startsWith("/convites-acesso") || path.startsWith("/equipe")) {
     return "ADMINISTRAR_SISTEMA";
   }
 

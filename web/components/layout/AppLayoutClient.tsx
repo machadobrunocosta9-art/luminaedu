@@ -35,6 +35,8 @@ type AppLayoutProps = {
   canManageUsers: boolean;
   escolaNome?: string | null;
   escolaLogoUrl?: string | null;
+  userNome?: string | null;
+  userFotoUrl?: string | null;
 };
 
 type LumiResumo = {
@@ -155,6 +157,8 @@ export default function AppLayoutClient({
   canManageUsers,
   escolaNome,
   escolaLogoUrl,
+  userNome,
+  userFotoUrl,
 }: AppLayoutProps) {
   const pathname = usePathname();
 
@@ -341,18 +345,29 @@ export default function AppLayoutClient({
               </button>
 
               <div className="hidden items-center gap-3 rounded-3xl border border-border bg-card px-4 py-2 shadow-sm sm:flex">
-                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground">
-                  A
-                </div>
+                <Link href="/perfil" className="flex items-center gap-3">
+                  {userFotoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={userFotoUrl}
+                      alt={userNome ?? "Perfil"}
+                      className="h-9 w-9 rounded-2xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground">
+                      {(userNome ?? "A").slice(0, 1).toUpperCase()}
+                    </div>
+                  )}
 
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    Administrador
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Sessão protegida
-                  </p>
-                </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {userNome ?? "Administrador"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Sessão protegida
+                    </p>
+                  </div>
+                </Link>
 
                 <form action={logoutAction}>
                   <button

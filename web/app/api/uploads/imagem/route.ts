@@ -6,7 +6,8 @@ import { NextResponse } from "next/server";
 
 type ClientPayload =
   | { kind: "foto-aluno"; alunoId: string }
-  | { kind: "logo-escola"; escolaId: string };
+  | { kind: "logo-escola"; escolaId: string }
+  | { kind: "foto-usuario"; usuarioId: string };
 
 const TIPOS_PERMITIDOS = ["image/jpeg", "image/png", "image/webp"];
 
@@ -70,6 +71,16 @@ export async function POST(request: Request): Promise<NextResponse> {
           }
 
           const prefixoEsperado = `escola/${escolaId}/logo/`;
+
+          if (!pathname.startsWith(prefixoEsperado)) {
+            throw new Error("Caminho do arquivo inválido.");
+          }
+        } else if (payload.kind === "foto-usuario") {
+          if (payload.usuarioId !== auth.usuarioId) {
+            throw new Error("Você só pode alterar sua própria foto.");
+          }
+
+          const prefixoEsperado = `usuarios/${auth.usuarioId}/foto/`;
 
           if (!pathname.startsWith(prefixoEsperado)) {
             throw new Error("Caminho do arquivo inválido.");

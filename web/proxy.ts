@@ -46,6 +46,10 @@ function isFamilyRoute(pathname: string) {
   );
 }
 
+function isProfessorRoute(pathname: string) {
+  return pathname === "/professor" || pathname.startsWith("/professor/");
+}
+
 function redirectToLogin(request: NextRequest) {
   const loginUrl = new URL("/login", request.url);
   loginUrl.searchParams.set(
@@ -73,6 +77,10 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/portal-familia", request.url));
     }
 
+    if (userSession?.papel === "PROFESSOR") {
+      return NextResponse.redirect(new URL("/professor", request.url));
+    }
+
     if (legacyAuthenticated || userSession) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
@@ -96,6 +104,24 @@ export async function proxy(request: NextRequest) {
       : redirectToLogin(request);
   }
 
+  if (isProfessorRoute(pathname)) {
+    if (userSession?.papel === "PROFESSOR") {
+      return NextResponse.next();
+    }
+
+    return legacyAuthenticated || userSession
+      ? NextResponse.redirect(new URL("/dashboard", request.url))
+      : redirectToLogin(request);
+  }
+
+  if (pathname === "/perfil" || pathname.startsWith("/perfil/")) {
+    if (legacyAuthenticated || (userSession && userSession.papel !== "RESPONSAVEL")) {
+      return NextResponse.next();
+    }
+
+    return redirectToLogin(request);
+  }
+
   if (legacyAuthenticated) {
     return NextResponse.next();
   }
@@ -116,6 +142,10 @@ export async function proxy(request: NextRequest) {
 
   if (userSession?.papel === "RESPONSAVEL") {
     return NextResponse.redirect(new URL("/portal-familia", request.url));
+  }
+
+  if (userSession?.papel === "PROFESSOR") {
+    return NextResponse.redirect(new URL("/professor", request.url));
   }
 
   return userSession

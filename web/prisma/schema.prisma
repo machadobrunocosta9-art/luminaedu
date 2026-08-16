@@ -136,6 +136,7 @@ enum PapelUsuario {
   SECRETARIA
   COORDENACAO
   FINANCEIRO
+  PROFESSOR
   RESPONSAVEL
 }
 
@@ -180,6 +181,12 @@ enum AutorMensagemFamilia {
   ESCOLA
 }
 
+enum TipoAtividade {
+  TRABALHO
+  ATIVIDADE
+  AVISO
+}
+
 model Escola {
   id           String   @id @default(cuid())
   nome         String
@@ -210,6 +217,11 @@ model Escola {
   tentativasLogin     TentativaLogin[]
   registrosAuditoria  RegistroAuditoria[]
   emailsTransacionais EmailTransacional[]
+
+  disciplinas          Disciplina[]
+  atribuicoesProfessor AtribuicaoProfessor[]
+  notas                Nota[]
+  atividades           Atividade[]
 }
 
 model Responsavel {
@@ -251,6 +263,9 @@ model Turma {
   alunos            Aluno[]
   comunicados       Comunicado[]
   convitesMatricula ConviteMatricula[]
+  atribuicoes       AtribuicaoProfessor[]
+  notas             Nota[]
+  atividades        Atividade[]
 }
 
 model Aluno {
@@ -285,6 +300,7 @@ model Aluno {
 
   convitesAcesso   ConviteAcesso[]
   mensagensFamilia MensagemFamilia[]
+  notas            Nota[]
 }
 
 model DocumentoAluno {
@@ -349,6 +365,97 @@ model MensagemFamiliaItem {
   mensagem   MensagemFamilia @relation(fields: [mensagemId], references: [id], onDelete: Cascade)
 
   @@index([mensagemId])
+}
+
+model Disciplina {
+  id   String @id @default(cuid())
+  nome String
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  escolaId String
+  escola   Escola @relation(fields: [escolaId], references: [id])
+
+  atribuicoes AtribuicaoProfessor[]
+  notas       Nota[]
+  atividades  Atividade[]
+
+  @@index([escolaId])
+}
+
+model AtribuicaoProfessor {
+  id String @id @default(cuid())
+
+  criadoEm DateTime @default(now())
+
+  escolaId     String
+  usuarioId    String
+  turmaId      String
+  disciplinaId String
+
+  escola     Escola     @relation(fields: [escolaId], references: [id])
+  usuario    Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  turma      Turma      @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  disciplina Disciplina @relation(fields: [disciplinaId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, turmaId, disciplinaId])
+  @@index([escolaId])
+  @@index([usuarioId])
+  @@index([turmaId])
+}
+
+model Nota {
+  id    String  @id @default(cuid())
+  valor Decimal @db.Decimal(5, 2)
+
+  bimestre  Int
+  anoLetivo Int
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  escolaId            String
+  alunoId             String
+  disciplinaId        String
+  turmaId             String
+  lancadoPorUsuarioId String?
+
+  escola     Escola     @relation(fields: [escolaId], references: [id])
+  aluno      Aluno      @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  disciplina Disciplina @relation(fields: [disciplinaId], references: [id], onDelete: Cascade)
+  turma      Turma      @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  lancadoPor Usuario?   @relation(fields: [lancadoPorUsuarioId], references: [id], onDelete: SetNull)
+
+  @@unique([alunoId, disciplinaId, bimestre, anoLetivo])
+  @@index([escolaId])
+  @@index([turmaId])
+  @@index([alunoId])
+}
+
+model Atividade {
+  id String @id @default(cuid())
+
+  tipo        TipoAtividade @default(ATIVIDADE)
+  titulo      String
+  descricao   String?
+  dataEntrega DateTime?
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  escolaId           String
+  turmaId            String
+  disciplinaId       String?
+  criadoPorUsuarioId String?
+
+  escola     Escola      @relation(fields: [escolaId], references: [id])
+  turma      Turma       @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  disciplina Disciplina? @relation(fields: [disciplinaId], references: [id], onDelete: SetNull)
+  criadoPor  Usuario?    @relation(fields: [criadoPorUsuarioId], references: [id], onDelete: SetNull)
+
+  @@index([escolaId])
+  @@index([turmaId])
 }
 
 model Matricula {
@@ -664,6 +771,7 @@ model RespostaComunicado {
 model Usuario {
   id        String        @id @default(cuid())
   nome      String
+  fotoUrl   String?
   email     String        @unique
   senhaHash String
   papel     PapelUsuario
@@ -685,6 +793,10 @@ model Usuario {
   recuperacoesSenha          RecuperacaoSenha[]
   registrosAuditoria         RegistroAuditoria[]
   emailsTransacionaisCriados EmailTransacional[] @relation("EmailTransacionalCriador")
+
+  atribuicoes       AtribuicaoProfessor[]
+  notasLancadas     Nota[]
+  atividadesCriadas Atividade[]
 
   @@index([escolaId])
   @@index([papel])

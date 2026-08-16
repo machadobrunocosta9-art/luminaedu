@@ -17,6 +17,7 @@ const roleLabels = {
   SECRETARIA: "Secretaria",
   COORDENACAO: "Coordenação",
   FINANCEIRO: "Financeiro",
+  PROFESSOR: "Professor(a)",
   RESPONSAVEL: "Responsável",
 } as const;
 

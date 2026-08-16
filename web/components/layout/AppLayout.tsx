@@ -12,6 +12,8 @@ export default async function AppLayout({ children }: AppLayoutProps) {
 
   let escolaNome: string | null = null;
   let escolaLogoUrl: string | null = null;
+  let userNome: string | null = null;
+  let userFotoUrl: string | null = null;
 
   if (auth) {
     const escolaId = await resolveAuthSchoolId(auth);
@@ -22,6 +24,17 @@ export default async function AppLayout({ children }: AppLayoutProps) {
 
     escolaNome = escola?.nome ?? null;
     escolaLogoUrl = escola?.logoUrl ?? null;
+
+    if (auth.kind === "user" && auth.usuarioId) {
+      const usuario = await prisma.usuario.findUnique({
+        where: { id: auth.usuarioId },
+        select: { fotoUrl: true },
+      });
+
+      userFotoUrl = usuario?.fotoUrl ?? null;
+    }
+
+    userNome = auth.nome;
   }
 
   return (
@@ -29,6 +42,8 @@ export default async function AppLayout({ children }: AppLayoutProps) {
       canManageUsers={auth?.papel === "ADMINISTRADOR"}
       escolaNome={escolaNome}
       escolaLogoUrl={escolaLogoUrl}
+      userNome={userNome}
+      userFotoUrl={userFotoUrl}
     >
       {children}
     </AppLayoutClient>
