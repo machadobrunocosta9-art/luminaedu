@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Mail, TriangleAlert } from "lucide-react";
+import CampoSenhaApp from "@/components/configuracoes/CampoSenhaApp";
 
 export const dynamic = "force-dynamic";
 
@@ -241,26 +242,7 @@ export default async function ConfiguracaoEmailPage({
           />
         </div>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-foreground">
-            Senha de app {configuracao ? "(opcional)" : "*"}
-          </label>
-          <input
-            name="senha"
-            type="password"
-            required={!configuracao}
-            placeholder={
-              configuracao ? "Deixe vazio para manter a atual" : "16 letras do Google"
-            }
-            className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm outline-none focus:border-primary"
-          />
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Não é a senha normal do e-mail. Gere em{" "}
-            <span className="font-medium">myaccount.google.com/apppasswords</span>{" "}
-            (precisa da verificação em duas etapas ativa). Pode colar com
-            espaços, que a gente remove.
-          </p>
-        </div>
+        <CampoSenhaApp obrigatorio={!configuracao} />
 
         <details className="rounded-2xl bg-muted/40 p-4">
           <summary className="cursor-pointer text-sm font-medium text-foreground">
