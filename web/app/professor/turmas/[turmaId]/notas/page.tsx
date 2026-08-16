@@ -14,7 +14,11 @@ export default async function ProfessorNotasPage({
   searchParams,
 }: {
   params: Promise<{ turmaId: string }>;
-  searchParams?: Promise<{ disciplinaId?: string; bimestre?: string }>;
+  searchParams?: Promise<{
+    disciplinaId?: string;
+    bimestre?: string;
+    salvo?: string;
+  }>;
 }) {
   const auth = await requireProfessor();
   const { turmaId } = await params;
@@ -147,40 +151,63 @@ export default async function ProfessorNotasPage({
         </p>
       </header>
 
-      <form
-        method="get"
-        className="flex gap-3 rounded-[22px] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]"
-      >
-        <select
-          name="disciplinaId"
-          defaultValue={disciplinaId}
-          className="h-11 flex-1 rounded-xl bg-[#f5f5f7] px-3 text-[14px] outline-none"
-        >
-          {atribuicoes.map((atribuicao) => (
-            <option key={atribuicao.disciplina.id} value={atribuicao.disciplina.id}>
-              {atribuicao.disciplina.nome}
-            </option>
-          ))}
-        </select>
+      <section className="space-y-3">
+        <div>
+          <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
+            Disciplina
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {atribuicoes.map((atribuicao) => {
+              const ativa = atribuicao.disciplina.id === disciplinaId;
 
-        <select
-          name="bimestre"
-          defaultValue={String(bimestre)}
-          className="h-11 rounded-xl bg-[#f5f5f7] px-3 text-[14px] outline-none"
-        >
-          <option value="1">1º bimestre</option>
-          <option value="2">2º bimestre</option>
-          <option value="3">3º bimestre</option>
-          <option value="4">4º bimestre</option>
-        </select>
+              return (
+                <Link
+                  key={atribuicao.disciplina.id}
+                  href={`/professor/turmas/${turmaId}/notas?disciplinaId=${atribuicao.disciplina.id}&bimestre=${bimestre}`}
+                  className={`rounded-full px-4 py-2 text-[13px] font-semibold transition ${
+                    ativa
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-white text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+                  }`}
+                >
+                  {atribuicao.disciplina.nome}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
 
-        <button
-          type="submit"
-          className="rounded-xl bg-[#f5f5f7] px-4 text-[13px] font-semibold text-foreground"
-        >
-          Ver
-        </button>
-      </form>
+        <div>
+          <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
+            Bimestre
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {[1, 2, 3, 4].map((numero) => {
+              const ativo = numero === bimestre;
+
+              return (
+                <Link
+                  key={numero}
+                  href={`/professor/turmas/${turmaId}/notas?disciplinaId=${disciplinaId}&bimestre=${numero}`}
+                  className={`rounded-full px-4 py-2 text-[13px] font-semibold transition ${
+                    ativo
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-white text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+                  }`}
+                >
+                  {numero}º
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {query.salvo === "1" && (
+        <div className="rounded-2xl bg-emerald-50 p-3 text-center text-[13px] font-medium text-emerald-700">
+          Notas salvas.
+        </div>
+      )}
 
       <form action={salvarNotas} className="space-y-3">
         <input type="hidden" name="disciplinaId" value={disciplinaId} />
@@ -194,7 +221,7 @@ export default async function ProfessorNotasPage({
           ) : (
             alunos.map((aluno, index) => (
               <div
-                key={aluno.id}
+                key={`${disciplinaId}-${bimestre}-${aluno.id}`}
                 className={`flex items-center justify-between gap-3 px-4 py-3 ${
                   index > 0 ? "border-t border-black/5" : ""
                 }`}

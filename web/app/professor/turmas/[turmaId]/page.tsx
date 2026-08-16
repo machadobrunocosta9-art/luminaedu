@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { ChevronLeft, ClipboardList, MessageSquare, NotebookPen } from "lucide-react";
+import {
+  ChevronLeft,
+  ClipboardList,
+  FileText,
+  MessageSquare,
+  NotebookPen,
+} from "lucide-react";
 import { notFound } from "next/navigation";
 import { requireProfessor } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -47,6 +53,12 @@ export default async function ProfessorTurmaPage({
       label: "Atividades",
       description: "Trabalhos e atividades para a turma",
       icon: ClipboardList,
+    },
+    {
+      href: `/professor/turmas/${turmaId}/boletins`,
+      label: "Boletins",
+      description: "Consultar e imprimir por aluno",
+      icon: FileText,
     },
     {
       href: `/professor/turmas/${turmaId}/bilhete`,

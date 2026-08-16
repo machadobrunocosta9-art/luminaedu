@@ -146,20 +146,6 @@ export default async function AlunoPage({ params }: PageProps) {
     notFound();
   }
 
-  async function atualizarFotoAluno(url: string) {
-    "use server";
-
-    await requireAdmin("GERENCIAR_ALUNOS");
-
-    await prisma.aluno.update({
-      where: { id },
-      data: { fotoUrl: url },
-    });
-
-    revalidatePath(`/alunos/${id}`);
-    revalidatePath("/alunos");
-  }
-
   async function removerDocumentoAluno(formData: FormData) {
     "use server";
 
@@ -331,10 +317,9 @@ export default async function AlunoPage({ params }: PageProps) {
           <div className="mt-5">
             <ImageUploadField
               label="Alterar foto"
-              pathPrefix={`alunos/${aluno.id}/foto/`}
-              clientPayload={{ kind: "foto-aluno", alunoId: aluno.id }}
+              kind="foto-aluno"
+              targetId={aluno.id}
               currentUrl={aluno.fotoUrl}
-              onUploaded={atualizarFotoAluno}
             />
           </div>
         </div>

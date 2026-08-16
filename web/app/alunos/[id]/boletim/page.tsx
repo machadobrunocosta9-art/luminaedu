@@ -26,7 +26,7 @@ export default async function BoletimAlunoPage({
     select: {
       nome: true,
       turma: { select: { nome: true } },
-      escola: { select: { nome: true } },
+      escola: { select: { nome: true, logoUrl: true } },
     },
   });
 
@@ -58,6 +58,7 @@ export default async function BoletimAlunoPage({
         alunoNome={aluno.nome}
         turmaNome={aluno.turma?.nome ?? null}
         escolaNome={aluno.escola.nome}
+        escolaLogoUrl={aluno.escola.logoUrl}
         anoLetivo={ANO_ATUAL}
         linhas={linhas}
       />

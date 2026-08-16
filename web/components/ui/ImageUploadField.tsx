@@ -1,36 +1,26 @@
 "use client";
 
-import { upload } from "@vercel/blob/client";
 import { ImageIcon, LoaderCircle, UploadCloud } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ChangeEvent, useRef, useState } from "react";
 
-const TAMANHO_MAXIMO = 5 * 1024 * 1024;
+const TAMANHO_MAXIMO = 4 * 1024 * 1024;
 const TIPOS_ACEITOS = ["image/jpeg", "image/png", "image/webp"];
-
-function limparNomeArquivo(nome: string) {
-  return nome
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/[^a-zA-Z0-9._-]/g, "-")
-    .replace(/-+/g, "-")
-    .toLowerCase();
-}
 
 export default function ImageUploadField({
   label,
-  pathPrefix,
-  clientPayload,
+  kind,
+  targetId,
   currentUrl,
-  onUploaded,
   shape = "circle",
 }: {
   label: string;
-  pathPrefix: string;
-  clientPayload: Record<string, string>;
+  kind: "foto-aluno" | "logo-escola" | "foto-usuario";
+  targetId?: string;
   currentUrl?: string | null;
-  onUploaded: (url: string) => Promise<void>;
   shape?: "circle" | "square";
 }) {
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(currentUrl ?? null);
   const [enviando, setEnviando] = useState(false);
@@ -51,7 +41,7 @@ export default function ImageUploadField({
     }
 
     if (file.size > TAMANHO_MAXIMO) {
-      setErro("A imagem deve ter no máximo 5 MB.");
+      setErro("A imagem deve ter no máximo 4 MB.");
       event.target.value = "";
       return;
     }
@@ -59,16 +49,27 @@ export default function ImageUploadField({
     try {
       setEnviando(true);
 
-      const pathname = `${pathPrefix}${Date.now()}-${limparNomeArquivo(file.name)}`;
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("kind", kind);
 
-      const blob = await upload(pathname, file, {
-        access: "public",
-        handleUploadUrl: "/api/uploads/imagem",
-        clientPayload: JSON.stringify(clientPayload),
+      if (targetId) {
+        formData.append("targetId", targetId);
+      }
+
+      const response = await fetch("/api/uploads/foto", {
+        method: "POST",
+        body: formData,
       });
 
-      await onUploaded(blob.url);
-      setPreview(blob.url);
+      const data = (await response.json()) as { url?: string; error?: string };
+
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || "Não foi possível enviar a imagem.");
+      }
+
+      setPreview(data.url);
+      router.refresh();
     } catch (error) {
       setErro(
         error instanceof Error
@@ -85,9 +86,7 @@ export default function ImageUploadField({
   }
 
   const previewClasses =
-    shape === "circle"
-      ? "h-20 w-20 rounded-full"
-      : "h-20 w-40 rounded-2xl";
+    shape === "circle" ? "h-20 w-20 rounded-full" : "h-20 w-40 rounded-2xl";
 
   return (
     <div className="flex items-center gap-4">
@@ -96,7 +95,11 @@ export default function ImageUploadField({
       >
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt={label} className="h-full w-full object-cover" />
+          <img
+            src={preview}
+            alt={label}
+            className="h-full w-full object-cover"
+          />
         ) : (
           <ImageIcon size={24} />
         )}
@@ -121,7 +124,7 @@ export default function ImageUploadField({
         </label>
 
         <p className="mt-2 text-xs text-muted-foreground">
-          JPG, PNG ou WEBP · máximo de 5 MB
+          JPG, PNG ou WEBP · máximo de 4 MB
         </p>
 
         {erro && <p className="mt-2 text-xs text-red-600">{erro}</p>}

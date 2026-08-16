@@ -1,5 +1,5 @@
 import AppLayout from "@/components/layout/AppLayout";
-import { requireAdmin, resolveAuthSchoolId } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   ArrowRight,
@@ -54,23 +54,6 @@ async function atualizarEscola(formData: FormData) {
   revalidatePath("/dashboard");
 
   redirect("/configuracoes");
-}
-
-async function atualizarLogoEscola(url: string) {
-  "use server";
-
-  const auth = await requireAdmin("ADMINISTRAR_SISTEMA");
-  const escolaId = await resolveAuthSchoolId(auth);
-
-  await prisma.escola.update({
-    where: { id: escolaId },
-    data: { logoUrl: url },
-  });
-
-  revalidatePath("/configuracoes");
-  revalidatePath("/dashboard");
-  revalidatePath("/login");
-  revalidatePath("/portal-familia");
 }
 
 const TABELAS_PARA_LIMPAR = [
@@ -205,10 +188,8 @@ export default async function ConfiguracoesPage({
 
             <ImageUploadField
               label="Alterar logo"
-              pathPrefix={`escola/${data.escola.id}/logo/`}
-              clientPayload={{ kind: "logo-escola", escolaId: data.escola.id }}
+              kind="logo-escola"
               currentUrl={data.escola.logoUrl}
-              onUploaded={atualizarLogoEscola}
               shape="square"
             />
           </div>

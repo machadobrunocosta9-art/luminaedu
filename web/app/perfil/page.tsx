@@ -34,21 +34,6 @@ export default async function PerfilEquipePage() {
     redirect("/login?next=/perfil");
   }
 
-  async function atualizarFoto(url: string) {
-    "use server";
-
-    const authAction = await getAuthContext();
-
-    if (!authAction || authAction.kind !== "user") {
-      throw new Error("Não autorizado.");
-    }
-
-    await prisma.usuario.update({
-      where: { id: authAction.usuarioId! },
-      data: { fotoUrl: url },
-    });
-  }
-
   const iniciais = usuario.nome
     .split(" ")
     .slice(0, 2)
@@ -61,10 +46,8 @@ export default async function PerfilEquipePage() {
       <header className="flex flex-col items-center gap-3 pt-2 text-center">
         <ImageUploadField
           label="Alterar foto"
-          pathPrefix={`usuarios/${usuario.id}/foto/`}
-          clientPayload={{ kind: "foto-usuario", usuarioId: usuario.id }}
+          kind="foto-usuario"
           currentUrl={usuario.fotoUrl}
-          onUploaded={atualizarFoto}
         />
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
