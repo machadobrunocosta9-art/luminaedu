@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { redirect } from "next/navigation";
 import { requireFamily } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -74,50 +75,63 @@ export default async function TrocarSenhaPage({
   const erro = query.erro ? ERROS[query.erro] : null;
 
   return (
-    <main className="mx-auto w-full max-w-lg space-y-6 p-4 sm:p-6">
-      <Link href="/portal-familia" className="text-sm font-medium text-primary">
-        ← Voltar
+    <main className="mx-auto w-full max-w-md space-y-6 px-4 pt-4 sm:px-6">
+      <Link
+        href="/portal-familia/perfil"
+        className="inline-flex items-center gap-1 text-[15px] font-medium text-primary"
+      >
+        <ChevronLeft size={18} />
+        Perfil
       </Link>
 
       <header>
-        <h1 className="text-3xl font-semibold tracking-tight">Trocar senha</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <h1 className="text-[26px] font-semibold tracking-tight text-foreground">
+          Trocar senha
+        </h1>
+        <p className="mt-1 text-[14px] text-[#8e8e93]">
           Depois de trocar, você será desconectado e precisará entrar de novo
           com a nova senha.
         </p>
       </header>
 
       {erro && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+        <div className="rounded-2xl bg-red-50 p-4 text-sm font-medium text-red-600">
           {erro}
         </div>
       )}
 
-      <form action={trocarSenha} className="space-y-4 rounded-2xl border bg-white p-5">
+      <form
+        action={trocarSenha}
+        className="space-y-4 rounded-[22px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]"
+      >
         <div>
-          <label className="mb-2 block text-sm font-medium">Senha atual</label>
+          <label className="mb-2 block text-[13px] font-medium text-[#8e8e93]">
+            Senha atual
+          </label>
           <input
             type="password"
             name="senhaAtual"
             required
-            className="h-12 w-full rounded-xl border bg-background px-4 text-sm outline-none focus:border-primary"
+            className="h-12 w-full rounded-xl bg-[#f5f5f7] px-4 text-[15px] outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium">Nova senha</label>
+          <label className="mb-2 block text-[13px] font-medium text-[#8e8e93]">
+            Nova senha
+          </label>
           <input
             type="password"
             name="novaSenha"
             required
             minLength={12}
-            className="h-12 w-full rounded-xl border bg-background px-4 text-sm outline-none focus:border-primary"
+            className="h-12 w-full rounded-xl bg-[#f5f5f7] px-4 text-[15px] outline-none focus:ring-2 focus:ring-primary/30"
           />
-          <p className="mt-1 text-xs text-muted-foreground">Mínimo de 12 caracteres.</p>
+          <p className="mt-1 text-[12px] text-[#8e8e93]">Mínimo de 12 caracteres.</p>
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium">
+          <label className="mb-2 block text-[13px] font-medium text-[#8e8e93]">
             Confirmar nova senha
           </label>
           <input
@@ -125,13 +139,13 @@ export default async function TrocarSenhaPage({
             name="confirmarSenha"
             required
             minLength={12}
-            className="h-12 w-full rounded-xl border bg-background px-4 text-sm outline-none focus:border-primary"
+            className="h-12 w-full rounded-xl bg-[#f5f5f7] px-4 text-[15px] outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
 
         <button
           type="submit"
-          className="w-full rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+          className="w-full rounded-xl bg-primary px-5 py-3.5 text-[15px] font-semibold text-primary-foreground transition active:opacity-80"
         >
           Salvar nova senha
         </button>

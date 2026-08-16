@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { logoutAction } from "@/app/login/actions";
 import { requireFamily } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import FamilyTabBar from "@/components/portal-familia/FamilyTabBar";
 
 export default async function FamilyPortalLayout({
   children,
@@ -34,64 +34,38 @@ export default async function FamilyPortalLayout({
     ]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+    <div className="min-h-screen bg-[#f5f5f7]">
+      <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f5f5f7]/85 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-md items-center gap-2.5 px-4 py-3 sm:px-6">
           <Link
             href="/portal-familia"
-            className="flex items-center gap-3 font-semibold text-primary"
+            className="flex min-w-0 items-center gap-2.5"
           >
             {escola?.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={escola.logoUrl}
                 alt={escola.nome}
-                className="h-9 w-9 rounded-xl object-cover"
+                className="h-8 w-8 shrink-0 rounded-[10px] object-cover"
               />
-            ) : null}
-            <span>{escola?.nome ?? "Lumina"} · Portal da Família</span>
+            ) : (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-primary text-xs font-semibold text-primary-foreground">
+                {(escola?.nome ?? "L").slice(0, 1)}
+              </div>
+            )}
+            <span className="truncate text-[15px] font-semibold text-foreground">
+              {escola?.nome ?? "Portal da Família"}
+            </span>
           </Link>
-          <nav className="flex flex-wrap items-center gap-3 sm:gap-4">
-            <Link
-              href="/portal-familia/comunicados"
-              className="relative text-sm font-medium text-foreground transition hover:text-primary"
-            >
-              Comunicados
-              {comunicadosPendentes > 0 && (
-                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">
-                  {comunicadosPendentes}
-                </span>
-              )}
-            </Link>
-            <Link
-              href="/portal-familia/mensagens"
-              className="relative text-sm font-medium text-foreground transition hover:text-primary"
-            >
-              Fale com a escola
-              {mensagensRespondidas > 0 && (
-                <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">
-                  {mensagensRespondidas}
-                </span>
-              )}
-            </Link>
-            <Link
-              href="/portal-familia/senha"
-              className="hidden text-sm font-medium text-muted-foreground transition hover:text-primary sm:inline"
-            >
-              {auth.nome}
-            </Link>
-            <form action={logoutAction}>
-              <button
-                type="submit"
-                className="rounded-lg border px-3 py-2 text-sm font-medium"
-              >
-                Sair
-              </button>
-            </form>
-          </nav>
         </div>
       </header>
-      {children}
+
+      <div className="pb-24">{children}</div>
+
+      <FamilyTabBar
+        comunicadosBadge={comunicadosPendentes}
+        mensagensBadge={mensagensRespondidas}
+      />
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Inbox } from "lucide-react";
@@ -123,31 +122,25 @@ export default async function FamilyComunicadosPage({
   );
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-6 p-4 sm:p-6">
-      <Link href="/portal-familia" className="text-sm font-medium text-primary">
-        ← Voltar
-      </Link>
-
+    <main className="mx-auto w-full max-w-md space-y-6 px-4 pt-6 sm:px-6">
       <header>
-        <p className="text-sm font-medium text-primary">Portal da família</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">
+        <h1 className="text-[28px] font-semibold tracking-tight text-foreground">
           Comunicados
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Acompanhe e responda diretamente aqui os comunicados, eventos e
-          autorizações enviados pela escola para seus filhos.
+        <p className="mt-1 text-[15px] text-[#8e8e93]">
+          Acompanhe e responda os avisos da escola.
         </p>
       </header>
 
       {destinatarios.length === 0 ? (
-        <div className="rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-foreground">
+        <div className="rounded-[22px] bg-white p-8 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Inbox size={22} />
           </div>
           <p className="font-medium text-foreground">
             Nenhum comunicado recebido ainda
           </p>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-[#8e8e93]">
             Assim que a escola enviar um comunicado, ele aparecerá aqui.
           </p>
         </div>

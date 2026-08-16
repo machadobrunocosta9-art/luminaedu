@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { requireFamily } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -79,64 +80,82 @@ export default async function FamilyMensagemDetailPage({
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl space-y-6 p-4 sm:p-6">
-      <Link href="/portal-familia/mensagens" className="text-sm font-medium text-primary">
-        ← Voltar
+    <main className="mx-auto w-full max-w-md space-y-5 px-4 pt-4 sm:px-6">
+      <Link
+        href="/portal-familia/mensagens"
+        className="inline-flex items-center gap-1 text-[15px] font-medium text-primary"
+      >
+        <ChevronLeft size={18} />
+        Mensagens
       </Link>
 
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">{mensagem.assunto}</h1>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-secondary px-3 py-1 text-xs">
+        <h1 className="text-[22px] font-semibold tracking-tight text-foreground">
+          {mensagem.assunto}
+        </h1>
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-[#f5f5f7] px-2.5 py-1 text-[11px] font-medium text-[#8e8e93]">
             {STATUS_LABELS[mensagem.status] ?? mensagem.status}
           </span>
           {mensagem.aluno && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-[12px] text-[#8e8e93]">
               Sobre: {mensagem.aluno.nome}
             </span>
           )}
         </div>
       </header>
 
-      <section className="space-y-3">
-        {mensagem.itens.map((item) => (
-          <div
-            key={item.id}
-            className={`rounded-2xl border p-4 ${
-              item.autor === "ESCOLA" ? "bg-primary/5" : "bg-white"
-            }`}
-          >
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold">
-                {item.autor === "ESCOLA" ? "Escola" : item.autorNome}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {formatDateTime(item.criadoEm)}
-              </p>
+      <section className="space-y-2.5">
+        {mensagem.itens.map((item) => {
+          const daEscola = item.autor === "ESCOLA";
+
+          return (
+            <div
+              key={item.id}
+              className={`flex ${daEscola ? "justify-start" : "justify-end"}`}
+            >
+              <div
+                className={`max-w-[85%] rounded-[20px] px-4 py-2.5 ${
+                  daEscola
+                    ? "rounded-bl-[6px] bg-[#e9e9eb] text-foreground"
+                    : "rounded-br-[6px] bg-primary text-primary-foreground"
+                }`}
+              >
+                <p className="whitespace-pre-line text-[15px] leading-snug">
+                  {item.texto}
+                </p>
+                <p
+                  className={`mt-1 text-[11px] ${
+                    daEscola ? "text-[#8e8e93]" : "text-primary-foreground/70"
+                  }`}
+                >
+                  {daEscola ? "Escola" : "Você"} · {formatDateTime(item.criadoEm)}
+                </p>
+              </div>
             </div>
-            <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">
-              {item.texto}
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </section>
 
       {mensagem.status === "ENCERRADA" ? (
-        <p className="rounded-2xl border bg-muted/50 p-4 text-sm text-muted-foreground">
+        <p className="rounded-[18px] bg-white p-4 text-center text-[13px] text-[#8e8e93] shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]">
           Esta conversa foi encerrada pela escola.
         </p>
       ) : (
-        <form action={responder} className="space-y-3 rounded-2xl border bg-white p-5">
-          <label className="block text-sm font-medium">Responder</label>
+        <form
+          action={responder}
+          className="space-y-3 rounded-[22px] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]"
+        >
           <textarea
             name="texto"
             required
             rows={3}
-            className="w-full resize-none rounded-xl border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+            placeholder="Escreva sua resposta..."
+            className="w-full resize-none rounded-xl bg-[#f5f5f7] px-4 py-3 text-[15px] outline-none placeholder:text-[#c7c7cc] focus:ring-2 focus:ring-primary/30"
           />
           <button
             type="submit"
-            className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+            className="w-full rounded-xl bg-primary px-5 py-3 text-[15px] font-semibold text-primary-foreground transition active:opacity-80"
           >
             Enviar
           </button>
