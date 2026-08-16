@@ -47,9 +47,25 @@ export async function sendWithResend(
     });
 
     if (!response.ok) {
+      // Guarda o motivo que o provedor devolveu, para o log de e-mails
+      // mostrar algo acionavel em vez de apenas o codigo HTTP.
+      let detalhe = "";
+
+      try {
+        const corpoErro = (await response.json()) as { message?: unknown };
+
+        if (typeof corpoErro.message === "string") {
+          detalhe = corpoErro.message.slice(0, 180);
+        }
+      } catch {
+        // Sem corpo legivel: fica so o codigo HTTP.
+      }
+
       return {
         status: "failed",
-        errorClass: `EmailProviderHttp${response.status}`,
+        errorClass: detalhe
+          ? `HTTP ${response.status}: ${detalhe}`
+          : `EmailProviderHttp${response.status}`,
       };
     }
 
