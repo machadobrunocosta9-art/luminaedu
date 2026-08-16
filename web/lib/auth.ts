@@ -194,19 +194,21 @@ export async function resolveAuthSchoolId(context: AuthContext) {
     return context.escolaId;
   }
 
-  const schools = await prisma.escola.findMany({
+  const school = await prisma.escola.findFirst({
     select: { id: true },
-    take: 2,
     orderBy: { criadoEm: "asc" },
   });
 
-  if (schools.length !== 1) {
-    throw new Error(
-      "O administrador legado requer uma única escola para esta operação.",
-    );
+  if (school) {
+    return school.id;
   }
 
-  return schools[0].id;
+  const createdSchool = await prisma.escola.create({
+    data: { nome: "Minha escola" },
+    select: { id: true },
+  });
+
+  return createdSchool.id;
 }
 
 export async function destroyAuthenticatedSession() {
