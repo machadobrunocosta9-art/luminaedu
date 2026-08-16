@@ -1,7 +1,13 @@
 import AppLayout from "@/components/layout/AppLayout";
 import { requireAdmin, resolveAuthSchoolId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ArrowRight, CheckCircle2, TriangleAlert, UserCog } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Mail,
+  TriangleAlert,
+  UserCog,
+} from "lucide-react";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -301,6 +307,32 @@ export default async function ConfiguracoesPage({
         </div>
         <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
           Gerenciar
+          <ArrowRight
+            size={17}
+            className="transition group-hover:translate-x-0.5"
+          />
+        </span>
+      </Link>
+
+      <Link
+        href="/configuracoes/emails"
+        className="group mt-6 flex flex-col gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <Mail size={22} />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">
+              Log de e-mails
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Veja o status de cada e-mail enviado pelo sistema.
+            </p>
+          </div>
+        </div>
+        <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+          Ver log
           <ArrowRight
             size={17}
             className="transition group-hover:translate-x-0.5"
