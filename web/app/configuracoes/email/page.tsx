@@ -113,6 +113,22 @@ async function enviarTeste(formData: FormData) {
   redirect(`/configuracoes/email?teste=falhou&motivo=${motivo}`);
 }
 
+async function alternarAtivo(formData: FormData) {
+  "use server";
+
+  const auth = await requireAdmin("ADMINISTRAR_SISTEMA");
+  const escolaId = await resolveAuthSchoolId(auth);
+  const ativar = String(formData.get("ativar") || "") === "1";
+
+  await prisma.configuracaoEmail.updateMany({
+    where: { escolaId },
+    data: { ativo: ativar },
+  });
+
+  revalidatePath("/configuracoes/email");
+  redirect("/configuracoes/email");
+}
+
 const ERROS: Record<string, string> = {
   campos: "Preencha o nome de exibição e o e-mail.",
   senha: "Informe a senha de app na primeira configuração.",
@@ -282,6 +298,37 @@ export default async function ConfiguracaoEmailPage({
       </form>
 
       {configuracao && (
+        <form
+          action={alternarAtivo}
+          className="mb-6 flex max-w-xl flex-wrap items-center justify-between gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm"
+        >
+          <div>
+            <h2 className="font-semibold text-foreground">
+              {configuracao.ativo ? "Envio ativo" : "Envio desativado"}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {configuracao.ativo
+                ? "Desative se esta conta parar de funcionar, para não acumular falhas."
+                : "Esta configuração está desligada e não é usada nos envios."}
+            </p>
+          </div>
+
+          <input
+            type="hidden"
+            name="ativar"
+            value={configuracao.ativo ? "0" : "1"}
+          />
+
+          <button
+            type="submit"
+            className="rounded-2xl border border-border px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
+          >
+            {configuracao.ativo ? "Desativar" : "Ativar"}
+          </button>
+        </form>
+      )}
+
+      {configuracao && configuracao.ativo && (
         <form
           action={enviarTeste}
           className="max-w-xl space-y-4 rounded-3xl border border-border bg-card p-6 shadow-sm"
