@@ -39,7 +39,6 @@ export default async function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <AppLayoutClient
-      canManageUsers={auth?.papel === "ADMINISTRADOR"}
       escolaNome={escolaNome}
       escolaLogoUrl={escolaLogoUrl}
       userNome={userNome}

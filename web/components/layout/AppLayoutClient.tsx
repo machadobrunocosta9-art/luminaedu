@@ -6,7 +6,6 @@ import { ReactNode, useEffect, useState } from "react";
 import {
   ArrowRight,
   BarChart3,
-  Bell,
   BookOpen,
   CalendarDays,
   CheckCircle2,
@@ -24,15 +23,14 @@ import {
   Search,
   Settings,
   Sparkles,
-  UserCog,
   UsersRound,
   X,
 } from "lucide-react";
 import { logoutAction } from "@/app/login/actions";
+import NotificationBell from "@/components/layout/NotificationBell";
 
 type AppLayoutProps = {
   children: ReactNode;
-  canManageUsers: boolean;
   escolaNome?: string | null;
   escolaLogoUrl?: string | null;
   userNome?: string | null;
@@ -154,7 +152,6 @@ const lumiActions = [
 
 export default function AppLayoutClient({
   children,
-  canManageUsers,
   escolaNome,
   escolaLogoUrl,
   userNome,
@@ -269,40 +266,28 @@ export default function AppLayoutClient({
             const active =
               pathname === item.href ||
               (item.href !== "/dashboard" && pathname.startsWith(item.href)) ||
-              (isSettings && pathname.startsWith("/convites-acesso"));
+              (isSettings &&
+                (pathname.startsWith("/convites-acesso") ||
+                  pathname.startsWith("/equipe") ||
+                  pathname.startsWith("/perfil")));
 
             return (
-              <div key={item.label}>
-                <Link
-                  href={item.href}
-                  title={!sidebarOpen ? item.label : undefined}
-                  className={`group flex h-11 items-center rounded-2xl text-sm font-medium transition ${
-                    sidebarOpen ? "justify-start gap-3 px-4" : "justify-center"
-                  } ${
-                    active
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
-                  }`}
-                >
-                  <Icon size={20} className="shrink-0" />
+              <Link
+                key={item.label}
+                href={item.href}
+                title={!sidebarOpen ? item.label : undefined}
+                className={`group flex h-11 items-center rounded-2xl text-sm font-medium transition ${
+                  sidebarOpen ? "justify-start gap-3 px-4" : "justify-center"
+                } ${
+                  active
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
+                }`}
+              >
+                <Icon size={20} className="shrink-0" />
 
-                  {sidebarOpen && <span>{item.label}</span>}
-                </Link>
-
-                {isSettings && canManageUsers && sidebarOpen ? (
-                  <Link
-                    href="/convites-acesso"
-                    className={`ml-7 mt-1 flex h-10 items-center gap-3 rounded-2xl px-4 text-sm font-medium transition ${
-                      pathname.startsWith("/convites-acesso")
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-primary/5 hover:text-primary"
-                    }`}
-                  >
-                    <UserCog size={17} className="shrink-0" />
-                    <span>Usuários e acessos</span>
-                  </Link>
-                ) : null}
-              </div>
+                {sidebarOpen && <span>{item.label}</span>}
+              </Link>
             );
           })}
         </nav>
@@ -328,21 +313,29 @@ export default function AppLayoutClient({
               </button>
 
               {!esconderBuscaTopo && (
-                <div className="hidden h-11 min-w-[320px] items-center gap-3 rounded-2xl border border-border bg-card px-4 shadow-sm md:flex">
-                  <Search size={18} className="text-muted-foreground" />
+                <form
+                  action="/busca"
+                  method="get"
+                  className="hidden h-11 min-w-[320px] items-center gap-3 rounded-2xl border border-border bg-card px-4 shadow-sm md:flex"
+                >
+                  <button
+                    type="submit"
+                    aria-label="Buscar"
+                    className="text-muted-foreground transition hover:text-primary"
+                  >
+                    <Search size={18} />
+                  </button>
                   <input
+                    name="q"
                     placeholder="Buscar aluno, responsável, turma..."
                     className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                   />
-                </div>
+                </form>
               )}
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition hover:bg-primary/5">
-                <Bell size={19} />
-                <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-primary" />
-              </button>
+              <NotificationBell />
 
               <div className="hidden items-center gap-3 rounded-3xl border border-border bg-card px-4 py-2 shadow-sm sm:flex">
                 <Link href="/perfil" className="flex items-center gap-3">

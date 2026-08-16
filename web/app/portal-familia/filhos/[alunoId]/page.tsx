@@ -6,6 +6,16 @@ import { requireFamily } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { confirmarCienciaOcorrencia } from "@/lib/ocorrencias";
 
+function getTipoAtividadeLabel(tipo: string) {
+  const labels: Record<string, string> = {
+    TRABALHO: "Trabalho",
+    ATIVIDADE: "Atividade",
+    AVISO: "Aviso",
+  };
+
+  return labels[tipo] ?? tipo;
+}
+
 function getTipoOcorrenciaLabel(tipo: string) {
   const labels: Record<string, string> = {
     ADVERTENCIA: "Advertência",
@@ -39,6 +49,7 @@ export default async function FamilyStudentPage({
       id: true,
       nome: true,
       dataNascimento: true,
+      turmaId: true,
       turma: {
         select: { nome: true, segmento: true, turno: true },
       },
@@ -103,6 +114,15 @@ export default async function FamilyStudentPage({
     orderBy: { criadoEm: "desc" },
     take: 20,
   });
+
+  const atividades = student.turmaId
+    ? await prisma.atividade.findMany({
+        where: { escolaId: auth.escolaId, turmaId: student.turmaId },
+        include: { disciplina: { select: { nome: true } } },
+        orderBy: { criadoEm: "desc" },
+        take: 20,
+      })
+    : [];
 
   async function confirmarCienciaFamilia(formData: FormData) {
     "use server";
@@ -283,6 +303,56 @@ export default async function FamilyStudentPage({
                     : "Aguardando sua resposta"}
                 </p>
               </Link>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[#8e8e93]">
+          Atividades e trabalhos
+        </h2>
+        <div className="space-y-3">
+          {atividades.length === 0 ? (
+            <p className="rounded-[22px] bg-white p-5 text-sm text-[#8e8e93] shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]">
+              Nenhuma atividade publicada pelos professores ainda.
+            </p>
+          ) : (
+            atividades.map((atividade) => (
+              <article
+                key={atividade.id}
+                className="rounded-[22px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-[15px] font-semibold text-foreground">
+                    {atividade.titulo}
+                  </h3>
+                  <span className="rounded-full bg-[#f5f5f7] px-2.5 py-1 text-[11px] font-medium text-[#8e8e93]">
+                    {getTipoAtividadeLabel(atividade.tipo)}
+                  </span>
+                </div>
+
+                {atividade.disciplina && (
+                  <p className="mt-1 text-[12px] font-medium text-primary">
+                    {atividade.disciplina.nome}
+                  </p>
+                )}
+
+                {atividade.descricao && (
+                  <p className="mt-2 whitespace-pre-line text-[13px] text-[#8e8e93]">
+                    {atividade.descricao}
+                  </p>
+                )}
+
+                {atividade.dataEntrega && (
+                  <p className="mt-2 text-[12px] font-medium text-foreground">
+                    Entrega:{" "}
+                    {new Intl.DateTimeFormat("pt-BR", {
+                      timeZone: "UTC",
+                    }).format(atividade.dataEntrega)}
+                  </p>
+                )}
+              </article>
             ))
           )}
         </div>
