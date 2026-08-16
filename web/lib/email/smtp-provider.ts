@@ -10,54 +10,65 @@ type SmtpMessage = {
   html: string;
 };
 
-let transporterCache: Transporter | null = null;
+export type CredenciaisSmtp = {
+  remetente: string;
+  usuario: string;
+  senha: string;
+  host: string;
+  porta: number;
+};
 
-function getTransporter() {
-  if (transporterCache) {
-    return transporterCache;
-  }
+function criarTransporter(credenciais: CredenciaisSmtp): Transporter {
+  return nodemailer.createTransport({
+    host: credenciais.host,
+    port: credenciais.porta,
+    secure: credenciais.porta === 465,
+    auth: { user: credenciais.usuario, pass: credenciais.senha },
+  });
+}
 
-  const user = process.env.EMAIL_SMTP_USER?.trim();
-  const pass = process.env.EMAIL_SMTP_PASSWORD?.trim();
+/** Credenciais vindas das variaveis de ambiente (modo antigo). */
+function credenciaisDoAmbiente(): CredenciaisSmtp | null {
+  const usuario = process.env.EMAIL_SMTP_USER?.trim();
+  const senha = process.env.EMAIL_SMTP_PASSWORD?.trim();
+  const remetente = process.env.EMAIL_FROM?.trim();
 
-  if (!user || !pass) {
+  if (
+    process.env.EMAIL_DELIVERY_ENABLED !== "true" ||
+    !usuario ||
+    !senha ||
+    !remetente
+  ) {
     return null;
   }
 
-  // Padrao Gmail; da para apontar para outro servidor mudando host/porta.
-  const host = process.env.EMAIL_SMTP_HOST?.trim() || "smtp.gmail.com";
-  const port = Number(process.env.EMAIL_SMTP_PORT?.trim() || "465");
-
-  transporterCache = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-  });
-
-  return transporterCache;
+  return {
+    remetente,
+    usuario,
+    senha,
+    host: process.env.EMAIL_SMTP_HOST?.trim() || "smtp.gmail.com",
+    porta: Number(process.env.EMAIL_SMTP_PORT?.trim() || "465"),
+  };
 }
 
 export async function sendWithSmtp(
   message: SmtpMessage,
+  credenciaisInformadas?: CredenciaisSmtp | null,
 ): Promise<EmailProviderResult> {
-  const transporter = getTransporter();
-  const from = process.env.EMAIL_FROM?.trim();
+  const credenciais = credenciaisInformadas ?? credenciaisDoAmbiente();
 
-  if (
-    process.env.EMAIL_DELIVERY_ENABLED !== "true" ||
-    !transporter ||
-    !from
-  ) {
+  if (!credenciais) {
     return {
       status: "not_configured",
       errorClass: "EmailProviderNotConfigured",
     };
   }
 
+  const transporter = criarTransporter(credenciais);
+
   try {
     const resultado = await transporter.sendMail({
-      from,
+      from: credenciais.remetente,
       to: message.to,
       subject: message.subject,
       text: message.text,

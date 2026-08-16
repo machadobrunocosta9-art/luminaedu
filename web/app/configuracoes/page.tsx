@@ -322,6 +322,32 @@ export default async function ConfiguracoesPage({
       </Link>
 
       <Link
+        href="/configuracoes/email"
+        className="group mt-6 flex flex-col gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <Mail size={22} />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">
+              E-mail da escola
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Configure a conta que envia comunicados e avisos às famílias.
+            </p>
+          </div>
+        </div>
+        <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+          Configurar
+          <ArrowRight
+            size={17}
+            className="transition group-hover:translate-x-0.5"
+          />
+        </span>
+      </Link>
+
+      <Link
         href="/configuracoes/emails"
         className="group mt-6 flex flex-col gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
       >

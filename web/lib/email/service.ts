@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { sendWithResend } from "@/lib/email/resend-provider";
 import { sendWithSmtp } from "@/lib/email/smtp-provider";
+import { getCredenciaisSmtpDaEscola } from "@/lib/email/config";
 
 export type TransactionalEmailType =
   | "CONVITE_ACESSO"
@@ -32,10 +33,13 @@ export type TransactionalEmailResult = {
 export async function sendTransactionalEmail(
   input: TransactionalEmailInput,
 ): Promise<TransactionalEmailResult> {
-  // "smtp" envia por um servidor de e-mail comum (ex.: Gmail da escola);
-  // "resend" usa a API do Resend.
-  const provedor =
-    process.env.EMAIL_PROVIDER?.trim().toLowerCase() === "smtp"
+  // A configuracao feita pela escola (Configuracoes > E-mail) tem
+  // prioridade. Sem ela, cai para as variaveis de ambiente.
+  const credenciaisDaEscola = await getCredenciaisSmtpDaEscola(input.escolaId);
+
+  const provedor = credenciaisDaEscola
+    ? "smtp"
+    : process.env.EMAIL_PROVIDER?.trim().toLowerCase() === "smtp"
       ? "smtp"
       : "resend";
 
@@ -53,14 +57,17 @@ export async function sendTransactionalEmail(
     select: { id: true },
   });
 
-  const enviar = provedor === "smtp" ? sendWithSmtp : sendWithResend;
-
-  const providerResult = await enviar({
+  const mensagem = {
     to: input.destinatario,
     subject: input.assunto,
     text: input.conteudoTexto,
     html: input.conteudoHtml,
-  });
+  };
+
+  const providerResult =
+    provedor === "smtp"
+      ? await sendWithSmtp(mensagem, credenciaisDaEscola)
+      : await sendWithResend(mensagem);
 
   if (providerResult.status === "sent") {
     await prisma.emailTransacional.update({

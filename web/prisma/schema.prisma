@@ -224,6 +224,7 @@ model Escola {
   notas                Nota[]
   atividades           Atividade[]
   inscricoesPush       InscricaoPush[]
+  configuracaoEmail    ConfiguracaoEmail?
 }
 
 model Responsavel {
@@ -806,6 +807,23 @@ model Usuario {
   @@index([escolaId])
   @@index([papel])
   @@index([status])
+}
+
+model ConfiguracaoEmail {
+  id String @id @default(cuid())
+
+  ativo     Boolean @default(true)
+  remetente String
+  usuario   String
+  senha     String
+  host      String  @default("smtp.gmail.com")
+  porta     Int     @default(465)
+
+  atualizadoEm DateTime @updatedAt
+  criadoEm     DateTime @default(now())
+
+  escolaId String @unique
+  escola   Escola @relation(fields: [escolaId], references: [id])
 }
 
 model InscricaoPush {
