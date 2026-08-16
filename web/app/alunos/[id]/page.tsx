@@ -363,6 +363,13 @@ export default async function AlunoPage({ params }: PageProps) {
             />
             Nova ocorrência
           </Link>
+
+          <Link
+            href={`/alunos/${aluno.id}/boletim`}
+            className="group inline-flex items-center gap-2 rounded-2xl border border-border bg-card px-5 py-3 text-sm font-semibold text-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98]"
+          >
+            Ver boletim
+          </Link>
         </div>
       </div>
 

@@ -171,6 +171,12 @@ export default async function FamilyStudentPage({
             ? `${student.turma.nome} · ${student.turma.segmento} · ${student.turma.turno}`
             : "Turma ainda não definida"}
         </p>
+        <Link
+          href={`/portal-familia/filhos/${student.id}/boletim`}
+          className="mt-3 inline-flex items-center text-[14px] font-semibold text-primary"
+        >
+          Ver boletim
+        </Link>
       </header>
 
       <section className="space-y-3">
