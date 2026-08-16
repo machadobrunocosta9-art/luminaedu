@@ -223,6 +223,7 @@ model Escola {
   atribuicoesProfessor AtribuicaoProfessor[]
   notas                Nota[]
   atividades           Atividade[]
+  inscricoesPush       InscricaoPush[]
 }
 
 model Responsavel {
@@ -800,10 +801,31 @@ model Usuario {
   atribuicoes       AtribuicaoProfessor[]
   notasLancadas     Nota[]
   atividadesCriadas Atividade[]
+  inscricoesPush    InscricaoPush[]
 
   @@index([escolaId])
   @@index([papel])
   @@index([status])
+}
+
+model InscricaoPush {
+  id String @id @default(cuid())
+
+  endpoint String @unique
+  p256dh   String
+  auth     String
+
+  criadoEm    DateTime  @default(now())
+  ultimoUsoEm DateTime?
+
+  escolaId  String
+  usuarioId String
+
+  escola  Escola  @relation(fields: [escolaId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([escolaId])
+  @@index([usuarioId])
 }
 
 model SessaoUsuario {

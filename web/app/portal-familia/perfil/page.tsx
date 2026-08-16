@@ -3,6 +3,7 @@ import { ChevronRight, KeyRound, LogOut, Mail, Phone } from "lucide-react";
 import { logoutAction } from "@/app/login/actions";
 import { requireFamily } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import PushToggle from "@/components/portal-familia/PushToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,10 @@ export default async function PerfilPage() {
           <p className="mt-0.5 text-sm text-[#8e8e93]">Responsável</p>
         </div>
       </header>
+
+      <PushToggle
+        chavePublica={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null}
+      />
 
       <section className="overflow-hidden rounded-[22px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]">
         {responsavel?.email && (

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getApplicationBaseUrl } from "@/lib/application-url";
 import { mensagemFamiliaTemplate } from "@/lib/email/templates";
 import { sendTransactionalEmail } from "@/lib/email/service";
+import { enviarPushParaUsuarios, usuariosDeResponsaveis } from "@/lib/push";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
@@ -100,6 +101,15 @@ export default async function MensagemDetailPage({
         conteudoHtml: mensagemEmail.conteudoHtml,
       });
     }
+
+    const usuarioIds = await usuariosDeResponsaveis([thread.responsavelId]);
+
+    await enviarPushParaUsuarios(usuarioIds, {
+      titulo: thread.escola.nome,
+      corpo: `A escola respondeu: ${thread.assunto}`,
+      url: `/portal-familia/mensagens/${thread.id}`,
+      tag: `mensagem-${thread.id}`,
+    });
 
     revalidatePath("/mensagens");
     revalidatePath(`/mensagens/${thread.id}`);

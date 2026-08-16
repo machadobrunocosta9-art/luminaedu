@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getApplicationBaseUrl } from "@/lib/application-url";
 import { comunicadoTemplate } from "@/lib/email/templates";
 import { sendTransactionalEmail } from "@/lib/email/service";
+import { enviarPushParaUsuarios, usuariosDeResponsaveis } from "@/lib/push";
 
 export const TIPOS_RESPOSTA_PERMITIDOS = [
   "CIENTE",
@@ -108,11 +109,7 @@ export async function enviarEmailsComunicado(input: {
   }
 
   const destinatarios = await prisma.destinatarioComunicado.findMany({
-    where: {
-      comunicadoId: input.comunicadoId,
-      email: { not: null },
-      tokenResposta: { not: null },
-    },
+    where: { comunicadoId: input.comunicadoId },
   });
 
   if (destinatarios.length === 0) {
@@ -141,4 +138,22 @@ export async function enviarEmailsComunicado(input: {
       conteudoHtml: mensagem.conteudoHtml,
     });
   }
+
+  // Alem do e-mail, avisa no celular de quem instalou o portal.
+  const responsavelIds = Array.from(
+    new Set(
+      destinatarios
+        .map((destinatario) => destinatario.responsavelId)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
+
+  const usuarioIds = await usuariosDeResponsaveis(responsavelIds);
+
+  await enviarPushParaUsuarios(usuarioIds, {
+    titulo: comunicado.escola.nome,
+    corpo: `Novo comunicado: ${comunicado.titulo}`,
+    url: "/portal-familia/comunicados",
+    tag: `comunicado-${comunicado.id}`,
+  });
 }
