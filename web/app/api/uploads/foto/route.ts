@@ -102,30 +102,47 @@ export async function POST(request: Request) {
       );
     }
 
+    // O store de blobs desta conta e privado: as imagens sao gravadas com
+    // acesso privado e servidas pelas rotas em /api/imagens, que validam
+    // quem pode ver cada uma.
     const blob = await put(pathname, file, {
-      access: "public",
+      access: "private",
       addRandomSuffix: true,
       contentType: file.type,
     });
 
+    const versao = Date.now();
+    let urlPublica: string;
+
     if (kind === "foto-aluno") {
+      urlPublica = `/api/imagens/aluno/${targetId}?v=${versao}`;
+
       await prisma.aluno.updateMany({
         where: { id: targetId, escolaId },
-        data: { fotoUrl: blob.url },
+        data: { fotoUrl: urlPublica, fotoChave: blob.pathname },
       });
     } else if (kind === "logo-escola") {
+      urlPublica = `/api/imagens/escola?v=${versao}`;
+
       await prisma.escola.update({
         where: { id: escolaId },
-        data: { logoUrl: blob.url },
+        data: { logoUrl: urlPublica, logoChave: blob.pathname },
       });
     } else if (kind === "foto-usuario" && auth.usuarioId) {
+      urlPublica = `/api/imagens/usuario/${auth.usuarioId}?v=${versao}`;
+
       await prisma.usuario.update({
         where: { id: auth.usuarioId },
-        data: { fotoUrl: blob.url },
+        data: { fotoUrl: urlPublica, fotoChave: blob.pathname },
       });
+    } else {
+      return NextResponse.json(
+        { error: "Tipo de upload inválido." },
+        { status: 400 },
+      );
     }
 
-    return NextResponse.json({ url: blob.url });
+    return NextResponse.json({ url: urlPublica });
   } catch (error) {
     console.error("Erro ao enviar imagem:", error);
 

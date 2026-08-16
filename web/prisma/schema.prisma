@@ -191,6 +191,7 @@ model Escola {
   id           String   @id @default(cuid())
   nome         String
   logoUrl      String?
+  logoChave    String?
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
@@ -272,6 +273,7 @@ model Aluno {
   id                 String   @id @default(cuid())
   nome               String
   fotoUrl            String?
+  fotoChave          String?
   dataNascimento     DateTime
   sexo               String?
   cpf                String?
@@ -772,6 +774,7 @@ model Usuario {
   id        String        @id @default(cuid())
   nome      String
   fotoUrl   String?
+  fotoChave String?
   email     String        @unique
   senhaHash String
   papel     PapelUsuario
