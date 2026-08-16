@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  isReservedAdminEmail,
   requirePermission,
   resolveAuthSchoolId,
 } from "@/lib/auth";
@@ -58,6 +59,15 @@ export async function createAccessInvitationAction(
   if (!responsible || !responsible.email) {
     return {
       error: "O responsável precisa possuir um e-mail cadastrado.",
+      activationUrl: null,
+      emailStatus: null,
+    };
+  }
+
+  if (isReservedAdminEmail(responsible.email)) {
+    return {
+      error:
+        "Este e-mail é o do administrador do sistema. Cadastre outro e-mail para o responsável antes de enviar o convite.",
       activationUrl: null,
       emailStatus: null,
     };

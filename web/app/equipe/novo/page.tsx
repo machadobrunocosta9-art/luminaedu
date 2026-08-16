@@ -1,5 +1,9 @@
 import AppLayout from "@/components/layout/AppLayout";
-import { requireAdmin, resolveAuthSchoolId } from "@/lib/auth";
+import {
+  isReservedAdminEmail,
+  requireAdmin,
+  resolveAuthSchoolId,
+} from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/security/password";
 import { normalizeEmail } from "@/lib/security/tokens";
@@ -34,6 +38,12 @@ async function criarPessoaEquipe(formData: FormData) {
 
   if (senha.length < 12) {
     throw new Error("A senha temporária deve ter pelo menos 12 caracteres.");
+  }
+
+  if (isReservedAdminEmail(emailBruto)) {
+    throw new Error(
+      "Este e-mail é o do administrador do sistema e não pode ser usado para outra conta.",
+    );
   }
 
   const email = normalizeEmail(emailBruto);

@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { isReservedAdminEmail } from "@/lib/auth";
 import { recordAudit } from "@/lib/audit";
 import { createDatabaseUserSession } from "@/lib/user-auth";
 import { accountConfirmationTemplate } from "@/lib/email/templates";
@@ -72,6 +73,13 @@ export async function activateAccountAction(
     !invitation.responsavel.email
   ) {
     return { error: "Este convite é inválido ou não está mais disponível." };
+  }
+
+  if (isReservedAdminEmail(invitation.responsavel.email)) {
+    return {
+      error:
+        "Este e-mail pertence ao administrador do sistema e não pode ser usado no Portal da Família. Peça à escola para cadastrar outro e-mail.",
+    };
   }
 
   const email = normalizeEmail(invitation.responsavel.email);

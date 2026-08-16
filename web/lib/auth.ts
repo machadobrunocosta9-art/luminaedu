@@ -32,6 +32,21 @@ export function isAdminConfigured() {
   return getAdminConfiguration() !== null;
 }
 
+/**
+ * O e-mail do administrador nao pode ser reutilizado por contas do banco:
+ * o login sempre autentica o administrador primeiro, entao a conta criada
+ * ficaria inacessivel.
+ */
+export function isReservedAdminEmail(email: string) {
+  const configuration = getAdminConfiguration();
+
+  if (!configuration) {
+    return false;
+  }
+
+  return email.trim().toLowerCase() === configuration.email.toLowerCase();
+}
+
 export async function verifyAdminCredentials(email: string, password: string) {
   const configuration = getAdminConfiguration();
 
