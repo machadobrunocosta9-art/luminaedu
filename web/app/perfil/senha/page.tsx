@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import AppLayout from "@/components/layout/AppLayout";
+import ProfessorTabBar from "@/components/professor/ProfessorTabBar";
 import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -83,7 +85,7 @@ export default async function TrocarSenhaEquipePage({
   const query = searchParams ? await searchParams : {};
   const erro = query.erro ? ERROS[query.erro] : null;
 
-  return (
+  const conteudo = (
     <main className="mx-auto w-full max-w-md space-y-6 px-4 pt-6 sm:px-6">
       <Link
         href="/perfil"
@@ -163,4 +165,15 @@ export default async function TrocarSenhaEquipePage({
       </form>
     </main>
   );
+
+  if (auth.papel === "PROFESSOR") {
+    return (
+      <div className="min-h-screen bg-[#f5f5f7] pb-24">
+        {conteudo}
+        <ProfessorTabBar />
+      </div>
+    );
+  }
+
+  return <AppLayout>{conteudo}</AppLayout>;
 }

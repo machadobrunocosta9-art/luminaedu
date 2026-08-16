@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChevronRight, KeyRound, LogOut, Mail } from "lucide-react";
+import { ChevronLeft, ChevronRight, KeyRound, LogOut, Mail } from "lucide-react";
+import AppLayout from "@/components/layout/AppLayout";
+import ProfessorTabBar from "@/components/professor/ProfessorTabBar";
 import { getAuthContext, resolveAuthSchoolId } from "@/lib/auth";
 import { logoutAction } from "@/app/login/actions";
 import { prisma } from "@/lib/prisma";
@@ -41,7 +43,7 @@ export default async function PerfilEquipePage() {
     .join("")
     .toUpperCase();
 
-  return (
+  const conteudo = (
     <main className="mx-auto w-full max-w-md space-y-6 px-4 pb-8 pt-6 sm:px-6">
       <header className="flex flex-col items-center gap-3 pt-2 text-center">
         <ImageUploadField
@@ -94,4 +96,24 @@ export default async function PerfilEquipePage() {
       </form>
     </main>
   );
+
+  // Professor usa o portal proprio (com a barra inferior); os demais
+  // papeis usam o painel administrativo, para nao perderem o menu.
+  if (usuario.papel === "PROFESSOR") {
+    return (
+      <div className="min-h-screen bg-[#f5f5f7] pb-24">
+        <Link
+          href="/professor"
+          className="inline-flex items-center gap-1 px-4 pt-5 text-[15px] font-medium text-primary sm:px-6"
+        >
+          <ChevronLeft size={18} />
+          Turmas
+        </Link>
+        {conteudo}
+        <ProfessorTabBar />
+      </div>
+    );
+  }
+
+  return <AppLayout>{conteudo}</AppLayout>;
 }

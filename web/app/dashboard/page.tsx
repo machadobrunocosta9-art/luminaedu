@@ -1,4 +1,5 @@
 import AppLayout from "@/components/layout/AppLayout";
+import { getAuthContext } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import {
@@ -54,7 +55,17 @@ function getPrioridadeLabel(prioridade: string) {
   return labels[prioridade] ?? prioridade;
 }
 
+function getSaudacao() {
+  const hora = new Date().getHours();
+  if (hora < 12) return "Bom dia";
+  if (hora < 18) return "Boa tarde";
+  return "Boa noite";
+}
+
 export default async function DashboardPage() {
+  const auth = await getAuthContext();
+  const primeiroNome = auth?.nome?.split(" ")[0] ?? null;
+
   const dataLimite = new Date();
   dataLimite.setDate(dataLimite.getDate() - 90);
 
@@ -215,7 +226,8 @@ export default async function DashboardPage() {
               </p>
 
               <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-                Bom dia, Bruno.
+                {getSaudacao()}
+                {primeiroNome ? `, ${primeiroNome}` : ""}.
               </h1>
 
               <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
