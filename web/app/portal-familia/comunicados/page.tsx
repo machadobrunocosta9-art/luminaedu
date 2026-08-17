@@ -124,10 +124,10 @@ export default async function FamilyComunicadosPage({
   return (
     <main className="mx-auto w-full max-w-md space-y-6 px-4 pt-6 sm:px-6">
       <header>
-        <h1 className="text-[28px] font-semibold tracking-tight text-foreground">
+        <h1 className="text-[22px] font-semibold tracking-tight text-foreground">
           Comunicados
         </h1>
-        <p className="mt-1 text-[15px] text-[#8e8e93]">
+        <p className="mt-1 text-[14px] text-[#8e8e93]">
           Acompanhe e responda os avisos da escola.
         </p>
       </header>

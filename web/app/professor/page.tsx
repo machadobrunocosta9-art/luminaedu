@@ -59,10 +59,10 @@ export default async function ProfessorHomePage() {
   return (
     <main className="mx-auto w-full max-w-md space-y-6 px-4 pt-6 sm:px-6">
       <header>
-        <p className="text-[13px] font-medium uppercase tracking-wide text-[#8e8e93]">
+        <p className="text-[12px] font-medium uppercase tracking-wide text-[#8e8e93]">
           {getSaudacao()}
         </p>
-        <h1 className="mt-0.5 text-[28px] font-semibold tracking-tight text-foreground">
+        <h1 className="mt-0.5 text-[22px] font-semibold tracking-tight text-foreground">
           {primeiroNome}
         </h1>
       </header>
@@ -80,13 +80,13 @@ export default async function ProfessorHomePage() {
               className="flex items-center gap-3.5 rounded-[22px] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)] transition active:scale-[0.98] active:bg-black/[0.02]"
             >
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-[17px] font-semibold text-foreground">
+                <h2 className="truncate text-[15px] font-semibold text-foreground">
                   {turma.nome}
                 </h2>
-                <p className="mt-0.5 text-[13px] text-[#8e8e93]">
+                <p className="mt-0.5 text-[12px] text-[#8e8e93]">
                   {turma.segmento} · {turma.totalAlunos} aluno(s)
                 </p>
-                <p className="mt-1.5 text-[12px] text-primary">
+                <p className="mt-1.5 text-[11px] text-primary">
                   {turma.disciplinas.join(", ")}
                 </p>
               </div>

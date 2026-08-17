@@ -98,24 +98,24 @@ export default async function FamilyPortalPage() {
       label: "Comunicados",
       icon: MessageCircle,
       badge: totalComunicadosPendentes,
-      cor: "bg-[#eef0ff] text-[#5b3fd6]",
+      cor: "bg-primary/10 text-primary",
     },
     {
       href: "/portal-familia/mensagens",
       label: "Falar com a escola",
       icon: MessagesSquare,
       badge: 0,
-      cor: "bg-[#e8f7f0] text-[#0f9d63]",
+      cor: "bg-primary/10 text-primary",
     },
   ];
 
   return (
     <main className="mx-auto w-full max-w-md space-y-6 px-4 pt-6 sm:px-6">
       <header>
-        <p className="text-[13px] font-medium uppercase tracking-wide text-[#8e8e93]">
+        <p className="text-[12px] font-medium uppercase tracking-wide text-[#8e8e93]">
           {getSaudacao()}
         </p>
-        <h1 className="mt-0.5 text-[28px] font-semibold tracking-tight text-foreground">
+        <h1 className="mt-0.5 text-[22px] font-semibold tracking-tight text-foreground">
           {primeiroNome}
         </h1>
       </header>
@@ -133,7 +133,7 @@ export default async function FamilyPortalPage() {
               className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
                 totalPendenciasGeral > 0
                   ? "bg-white/20"
-                  : "bg-emerald-50 text-emerald-600"
+                  : "bg-primary/10 text-primary"
               }`}
             >
               {totalPendenciasGeral > 0 ? (
@@ -144,13 +144,13 @@ export default async function FamilyPortalPage() {
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="text-[15px] font-semibold">
+              <p className="text-[14px] font-semibold">
                 {totalPendenciasGeral > 0
                   ? `${totalPendenciasGeral} item(ns) esperando você`
                   : "Tudo em dia"}
               </p>
               <p
-                className={`mt-0.5 text-[12px] ${
+                className={`mt-0.5 text-[11px] ${
                   totalPendenciasGeral > 0
                     ? "text-primary-foreground/80"
                     : "text-[#8e8e93]"
@@ -165,7 +165,7 @@ export default async function FamilyPortalPage() {
             {totalPendenciasGeral > 0 && (
               <Link
                 href="/portal-familia/comunicados"
-                className="shrink-0 rounded-full bg-white/20 px-4 py-2 text-[13px] font-semibold"
+                className="shrink-0 rounded-full bg-white/20 px-4 py-2 text-[12px] font-semibold"
               >
                 Ver
               </Link>
@@ -189,7 +189,7 @@ export default async function FamilyPortalPage() {
               >
                 <Icon size={20} />
               </div>
-              <p className="mt-3 text-[14px] font-semibold leading-tight text-foreground">
+              <p className="mt-3 text-[13px] font-semibold leading-tight text-foreground">
                 {atalho.label}
               </p>
 
@@ -204,7 +204,7 @@ export default async function FamilyPortalPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[#8e8e93]">
+        <h2 className="text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
           {children.length === 1 ? "Seu filho(a)" : "Seus filhos"}
         </h2>
         {children.length === 0 ? (
@@ -255,20 +255,20 @@ export default async function FamilyPortalPage() {
                 )}
 
                 <div className="min-w-0 flex-1">
-                  <h2 className="truncate text-[17px] font-semibold text-foreground">
+                  <h2 className="truncate text-[15px] font-semibold text-foreground">
                     {student.nome}
                   </h2>
-                  <p className="mt-0.5 text-[13px] text-[#8e8e93]">
+                  <p className="mt-0.5 text-[12px] text-[#8e8e93]">
                     {student.turma?.nome ?? "Turma ainda não definida"}
                   </p>
 
                   {totalPendencias > 0 ? (
-                    <span className="mt-1.5 inline-flex items-center gap-1 text-[12px] font-medium text-primary">
+                    <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-primary">
                       <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                       {totalPendencias} pendência(s)
                     </span>
                   ) : (
-                    <span className="mt-1.5 inline-flex items-center gap-1 text-[12px] font-medium text-emerald-600">
+                    <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                       Tudo em dia
                     </span>

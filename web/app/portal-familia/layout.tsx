@@ -53,7 +53,7 @@ export default async function FamilyPortalLayout({
                 {(escola?.nome ?? "L").slice(0, 1)}
               </div>
             )}
-            <span className="truncate text-[15px] font-semibold text-foreground">
+            <span className="truncate text-[14px] font-semibold text-foreground">
               {escola?.nome ?? "Portal da Família"}
             </span>
           </Link>

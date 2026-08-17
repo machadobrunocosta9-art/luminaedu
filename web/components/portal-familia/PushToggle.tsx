@@ -150,7 +150,7 @@ export default function PushToggle({
 
   if (estado === "nao-suportado") {
     return (
-      <div className="rounded-[22px] bg-white p-4 text-[13px] text-[#8e8e93] shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]">
+      <div className="rounded-[22px] bg-white p-4 text-[12px] text-[#8e8e93] shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]">
         Para receber avisos no celular, adicione o Lumina à tela de início e
         abra por lá.
       </div>
@@ -159,7 +159,7 @@ export default function PushToggle({
 
   if (estado === "bloqueado") {
     return (
-      <div className="rounded-[22px] bg-white p-4 text-[13px] text-[#8e8e93] shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]">
+      <div className="rounded-[22px] bg-white p-4 text-[12px] text-[#8e8e93] shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]">
         As notificações estão bloqueadas nas configurações do seu navegador.
         Libere para receber avisos da escola.
       </div>
@@ -180,10 +180,10 @@ export default function PushToggle({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold text-foreground">
+          <p className="text-[14px] font-semibold text-foreground">
             Avisos no celular
           </p>
-          <p className="mt-0.5 text-[12px] text-[#8e8e93]">
+          <p className="mt-0.5 text-[11px] text-[#8e8e93]">
             {ativado
               ? "Você recebe avisos de novos comunicados e mensagens."
               : "Ative para saber na hora quando a escola enviar algo."}
@@ -194,7 +194,7 @@ export default function PushToggle({
           type="button"
           onClick={ativado ? desativar : ativar}
           disabled={ocupado}
-          className={`shrink-0 rounded-full px-4 py-2 text-[13px] font-semibold transition disabled:opacity-50 ${
+          className={`shrink-0 rounded-full px-4 py-2 text-[12px] font-semibold transition disabled:opacity-50 ${
             ativado
               ? "bg-[#f5f5f7] text-foreground"
               : "bg-primary text-primary-foreground"
@@ -210,7 +210,7 @@ export default function PushToggle({
         </button>
       </div>
 
-      {erro && <p className="mt-3 text-[12px] text-red-600">{erro}</p>}
+      {erro && <p className="mt-3 text-[11px] text-red-600">{erro}</p>}
     </div>
   );
 }

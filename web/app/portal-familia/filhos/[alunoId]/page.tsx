@@ -1,20 +1,27 @@
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import {
+  BookOpen,
+  CalendarDays,
+  ChevronLeft,
+  ClipboardList,
+  Megaphone,
+  PencilRuler,
+} from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireFamily } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { confirmarCienciaOcorrencia } from "@/lib/ocorrencias";
 
-function getTipoAtividadeLabel(tipo: string) {
-  const labels: Record<string, string> = {
-    TRABALHO: "Trabalho",
-    ATIVIDADE: "Atividade",
-    AVISO: "Aviso",
-  };
+const ESTILO_ATIVIDADE: Record<
+  string,
+  { rotulo: string; icone: typeof BookOpen }
+> = {
+  TRABALHO: { rotulo: "Trabalho", icone: PencilRuler },
+  ATIVIDADE: { rotulo: "Atividade", icone: BookOpen },
+  AVISO: { rotulo: "Aviso", icone: Megaphone },
+};
 
-  return labels[tipo] ?? tipo;
-}
 
 function getTipoOcorrenciaLabel(tipo: string) {
   const labels: Record<string, string> = {
@@ -177,30 +184,30 @@ export default async function FamilyStudentPage({
     <main className="mx-auto w-full max-w-md space-y-7 px-4 pt-4 sm:px-6">
       <Link
         href="/portal-familia"
-        className="inline-flex items-center gap-1 text-[15px] font-medium text-primary"
+        className="inline-flex items-center gap-1 text-[14px] font-medium text-primary"
       >
         <ChevronLeft size={18} />
         Início
       </Link>
       <header>
-        <h1 className="text-[26px] font-semibold tracking-tight text-foreground">
+        <h1 className="text-[20px] font-semibold tracking-tight text-foreground">
           {student.nome}
         </h1>
-        <p className="mt-1 text-[14px] text-[#8e8e93]">
+        <p className="mt-1 text-[13px] text-[#8e8e93]">
           {student.turma
             ? `${student.turma.nome} · ${student.turma.segmento} · ${student.turma.turno}`
             : "Turma ainda não definida"}
         </p>
         <Link
           href={`/portal-familia/filhos/${student.id}/boletim`}
-          className="mt-3 inline-flex items-center text-[14px] font-semibold text-primary"
+          className="mt-3 inline-flex items-center text-[13px] font-semibold text-primary"
         >
           Ver boletim
         </Link>
       </header>
 
       <section className="space-y-3">
-        <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[#8e8e93]">
+        <h2 className="text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
           Matrículas e documentos
         </h2>
         {student.matriculas.length === 0 ? (
@@ -214,7 +221,7 @@ export default async function FamilyStudentPage({
               className="rounded-[22px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-[15px] font-semibold text-foreground">
+                <h3 className="text-[14px] font-semibold text-foreground">
                   Ano letivo {enrollment.anoLetivo}
                 </h3>
                 <span className="rounded-full bg-[#f5f5f7] px-2.5 py-1 text-[11px] font-medium text-[#8e8e93]">
@@ -223,7 +230,7 @@ export default async function FamilyStudentPage({
               </div>
               <div className="mt-3 divide-y divide-black/5">
                 {enrollment.documentos.length === 0 ? (
-                  <p className="py-3 text-[13px] text-[#8e8e93]">
+                  <p className="py-3 text-[12px] text-[#8e8e93]">
                     Nenhum documento solicitado.
                   </p>
                 ) : (
@@ -233,15 +240,15 @@ export default async function FamilyStudentPage({
                       className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div>
-                        <p className="text-[14px] font-medium text-foreground">
+                        <p className="text-[13px] font-medium text-foreground">
                           {document.titulo}
                         </p>
-                        <p className="text-[12px] text-[#8e8e93]">
+                        <p className="text-[11px] text-[#8e8e93]">
                           {document.status}
                           {document.obrigatorio ? " · obrigatório" : ""}
                         </p>
                         {document.motivoRejeicao ? (
-                          <p className="mt-1 text-[12px] text-red-600">
+                          <p className="mt-1 text-[11px] text-red-600">
                             {document.motivoRejeicao}
                           </p>
                         ) : null}
@@ -249,7 +256,7 @@ export default async function FamilyStudentPage({
                       {document.chaveArmazenamento ? (
                         <a
                           href={`/api/portal-familia/documentos/${document.id}/arquivo`}
-                          className="text-[13px] font-medium text-primary"
+                          className="text-[12px] font-medium text-primary"
                         >
                           Visualizar
                         </a>
@@ -265,13 +272,13 @@ export default async function FamilyStudentPage({
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[#8e8e93]">
+          <h2 className="text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
             Comunicados
           </h2>
           {communications.length > 0 && (
             <Link
               href="/portal-familia/comunicados"
-              className="text-[13px] font-medium text-primary"
+              className="text-[12px] font-medium text-primary"
             >
               Ver e responder
             </Link>
@@ -289,13 +296,13 @@ export default async function FamilyStudentPage({
                 href={`/portal-familia/comunicados#dest-${recipient.id}`}
                 className="block rounded-[22px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)] transition active:scale-[0.98] active:bg-black/[0.02]"
               >
-                <h3 className="text-[15px] font-semibold text-foreground">
+                <h3 className="text-[14px] font-semibold text-foreground">
                   {recipient.comunicado.titulo}
                 </h3>
-                <p className="mt-1.5 line-clamp-2 whitespace-pre-line text-[13px] text-[#8e8e93]">
+                <p className="mt-1.5 line-clamp-2 whitespace-pre-line text-[12px] text-[#8e8e93]">
                   {recipient.comunicado.conteudo}
                 </p>
-                <p className="mt-2 text-[12px] text-[#8e8e93]">
+                <p className="mt-2 text-[11px] text-[#8e8e93]">
                   {recipient.comunicado.tipo} ·{" "}
                   {recipient.status === "RESPONDIDO" ||
                   recipient.respostas.length > 0
@@ -309,7 +316,7 @@ export default async function FamilyStudentPage({
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[#8e8e93]">
+        <h2 className="text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
           Atividades e trabalhos
         </h2>
         <div className="space-y-3">
@@ -318,48 +325,61 @@ export default async function FamilyStudentPage({
               Nenhuma atividade publicada pelos professores ainda.
             </p>
           ) : (
-            atividades.map((atividade) => (
-              <article
-                key={atividade.id}
-                className="rounded-[22px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    {atividade.titulo}
-                  </h3>
-                  <span className="rounded-full bg-[#f5f5f7] px-2.5 py-1 text-[11px] font-medium text-[#8e8e93]">
-                    {getTipoAtividadeLabel(atividade.tipo)}
-                  </span>
-                </div>
+            atividades.map((atividade) => {
+              const estilo =
+                ESTILO_ATIVIDADE[atividade.tipo] ?? ESTILO_ATIVIDADE.ATIVIDADE;
+              const Icone = estilo.icone;
 
-                {atividade.disciplina && (
-                  <p className="mt-1 text-[12px] font-medium text-primary">
-                    {atividade.disciplina.nome}
-                  </p>
-                )}
+              return (
+                <article
+                  key={atividade.id}
+                  className="flex gap-3.5 rounded-[22px] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]"
+                >
+                  <div
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+                  >
+                    <Icone size={17} />
+                  </div>
 
-                {atividade.descricao && (
-                  <p className="mt-2 whitespace-pre-line text-[13px] text-[#8e8e93]">
-                    {atividade.descricao}
-                  </p>
-                )}
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className="text-[11px] font-semibold uppercase tracking-wide text-[#8e8e93]"
+                    >
+                      {estilo.rotulo}
+                      {atividade.disciplina
+                        ? ` · ${atividade.disciplina.nome}`
+                        : ""}
+                    </p>
 
-                {atividade.dataEntrega && (
-                  <p className="mt-2 text-[12px] font-medium text-foreground">
-                    Entrega:{" "}
-                    {new Intl.DateTimeFormat("pt-BR", {
-                      timeZone: "UTC",
-                    }).format(atividade.dataEntrega)}
-                  </p>
-                )}
-              </article>
-            ))
+                    <h3 className="mt-0.5 text-[14px] font-semibold text-foreground">
+                      {atividade.titulo}
+                    </h3>
+
+                    {atividade.descricao && (
+                      <p className="mt-1.5 whitespace-pre-line text-[12px] leading-5 text-[#8e8e93]">
+                        {atividade.descricao}
+                      </p>
+                    )}
+
+                    {atividade.dataEntrega && (
+                      <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#f5f5f7] px-2.5 py-1 text-[11px] font-medium text-foreground">
+                        <CalendarDays size={13} />
+                        Entrega{" "}
+                        {new Intl.DateTimeFormat("pt-BR", {
+                          timeZone: "UTC",
+                        }).format(atividade.dataEntrega)}
+                      </p>
+                    )}
+                  </div>
+                </article>
+              );
+            })
           )}
         </div>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[#8e8e93]">
+        <h2 className="text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
           Prontuário e avisos
         </h2>
         <div className="space-y-3">
@@ -374,21 +394,35 @@ export default async function FamilyStudentPage({
                 id={`ocorrencia-${ocorrencia.id}`}
                 className="rounded-[22px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]"
               >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    {ocorrencia.titulo}
-                  </h3>
-                  <span className="rounded-full bg-[#f5f5f7] px-2.5 py-1 text-[11px] font-medium text-[#8e8e93]">
-                    {getTipoOcorrenciaLabel(ocorrencia.tipo)}
-                  </span>
+                <div className="flex items-start gap-3">
+                  <div
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+                  >
+                    <ClipboardList size={17} />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className="text-[11px] font-semibold uppercase tracking-wide text-[#8e8e93]"
+                    >
+                      {getTipoOcorrenciaLabel(ocorrencia.tipo)}
+                    </p>
+                    <h3 className="mt-0.5 text-[14px] font-semibold text-foreground">
+                      {ocorrencia.titulo}
+                    </h3>
+                  </div>
+
+                  {!ocorrencia.cienciaConfirmada && (
+                    <span className="mt-1 flex h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
+                  )}
                 </div>
 
-                <p className="mt-2 whitespace-pre-line text-[13px] text-[#8e8e93]">
+                <p className="mt-2 whitespace-pre-line text-[12px] text-[#8e8e93]">
                   {ocorrencia.textoFinal || ocorrencia.descricao}
                 </p>
 
                 {ocorrencia.cienciaConfirmada ? (
-                  <p className="mt-3 text-[12px] text-[#8e8e93]">
+                  <p className="mt-3 text-[11px] text-[#8e8e93]">
                     Ciência confirmada por{" "}
                     {ocorrencia.nomeConfirmante || "responsável"}
                     {ocorrencia.dataCiencia
@@ -401,12 +435,12 @@ export default async function FamilyStudentPage({
                   </p>
                 ) : (
                   <details className="mt-3">
-                    <summary className="cursor-pointer text-[13px] font-medium text-primary">
+                    <summary className="cursor-pointer text-[12px] font-medium text-primary">
                       Confirmar ciência
                     </summary>
 
                     {query.erro === "dados" && (
-                      <p className="mt-3 rounded-xl bg-[#f5f5f7] p-3 text-[12px] text-foreground">
+                      <p className="mt-3 rounded-xl bg-[#f5f5f7] p-3 text-[11px] text-foreground">
                         Informe seu nome e parentesco para confirmar.
                       </p>
                     )}
@@ -427,13 +461,13 @@ export default async function FamilyStudentPage({
                           required
                           defaultValue={auth.nome}
                           placeholder="Seu nome"
-                          className="h-11 w-full rounded-xl bg-[#f5f5f7] px-3 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
+                          className="h-11 w-full rounded-xl bg-[#f5f5f7] px-3 text-[13px] outline-none focus:ring-2 focus:ring-primary/30"
                         />
                         <input
                           name="parentescoConfirmante"
                           required
                           placeholder="Parentesco (ex: mãe, pai)"
-                          className="h-11 w-full rounded-xl bg-[#f5f5f7] px-3 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
+                          className="h-11 w-full rounded-xl bg-[#f5f5f7] px-3 text-[13px] outline-none focus:ring-2 focus:ring-primary/30"
                         />
                       </div>
 
@@ -441,12 +475,12 @@ export default async function FamilyStudentPage({
                         name="observacaoCiencia"
                         rows={2}
                         placeholder="Observação, se desejar"
-                        className="w-full resize-none rounded-xl bg-[#f5f5f7] px-3 py-2 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
+                        className="w-full resize-none rounded-xl bg-[#f5f5f7] px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-primary/30"
                       />
 
                       <button
                         type="submit"
-                        className="rounded-xl bg-primary px-4 py-2.5 text-[14px] font-semibold text-primary-foreground transition active:opacity-80"
+                        className="rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground transition active:opacity-80"
                       >
                         Estou ciente
                       </button>

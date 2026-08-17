@@ -33,17 +33,17 @@ export default async function ProfessorBoletinsPage({
     <main className="mx-auto w-full max-w-md space-y-6 px-4 pt-4 sm:px-6">
       <Link
         href={`/professor/turmas/${turmaId}`}
-        className="inline-flex items-center gap-1 text-[15px] font-medium text-primary"
+        className="inline-flex items-center gap-1 text-[14px] font-medium text-primary"
       >
         <ChevronLeft size={18} />
         {atribuicao.turma.nome}
       </Link>
 
       <header>
-        <h1 className="text-[24px] font-semibold tracking-tight text-foreground">
+        <h1 className="text-[19px] font-semibold tracking-tight text-foreground">
           Boletins
         </h1>
-        <p className="mt-1 text-[13px] text-[#8e8e93]">
+        <p className="mt-1 text-[12px] text-[#8e8e93]">
           Consulte o boletim completo de cada aluno da turma.
         </p>
       </header>
@@ -74,7 +74,7 @@ export default async function ProfessorBoletinsPage({
                   {aluno.nome.slice(0, 1).toUpperCase()}
                 </div>
               )}
-              <span className="min-w-0 flex-1 truncate text-[14px] text-foreground">
+              <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
                 {aluno.nome}
               </span>
               <ChevronRight size={18} className="shrink-0 text-[#c7c7cc]" />

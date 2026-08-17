@@ -98,17 +98,17 @@ export default async function ProfessorBilhetePage({
     <main className="mx-auto w-full max-w-md space-y-6 px-4 pt-4 sm:px-6">
       <Link
         href={`/professor/turmas/${turmaId}`}
-        className="inline-flex items-center gap-1 text-[15px] font-medium text-primary"
+        className="inline-flex items-center gap-1 text-[14px] font-medium text-primary"
       >
         <ChevronLeft size={18} />
         {turma.nome}
       </Link>
 
       <header>
-        <h1 className="text-[24px] font-semibold tracking-tight text-foreground">
+        <h1 className="text-[19px] font-semibold tracking-tight text-foreground">
           Enviar bilhete
         </h1>
-        <p className="mt-1 text-[13px] text-[#8e8e93]">
+        <p className="mt-1 text-[12px] text-[#8e8e93]">
           Vai por e-mail e no Portal da Família de todos os alunos de{" "}
           {turma.nome}.
         </p>
@@ -119,32 +119,32 @@ export default async function ProfessorBilhetePage({
         className="space-y-4 rounded-[22px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]"
       >
         <div>
-          <label className="mb-2 block text-[13px] font-medium text-[#8e8e93]">
+          <label className="mb-2 block text-[12px] font-medium text-[#8e8e93]">
             Título
           </label>
           <input
             name="titulo"
             required
             placeholder="Ex: Lembrete sobre a prova de amanhã"
-            className="h-12 w-full rounded-xl bg-[#f5f5f7] px-4 text-[15px] outline-none placeholder:text-[#c7c7cc]"
+            className="h-12 w-full rounded-xl bg-[#f5f5f7] px-4 text-[14px] outline-none placeholder:text-[#c7c7cc]"
           />
         </div>
 
         <div>
-          <label className="mb-2 block text-[13px] font-medium text-[#8e8e93]">
+          <label className="mb-2 block text-[12px] font-medium text-[#8e8e93]">
             Mensagem
           </label>
           <textarea
             name="conteudo"
             required
             rows={5}
-            className="w-full resize-none rounded-xl bg-[#f5f5f7] px-4 py-3 text-[15px] outline-none"
+            className="w-full resize-none rounded-xl bg-[#f5f5f7] px-4 py-3 text-[14px] outline-none"
           />
         </div>
 
         <button
           type="submit"
-          className="w-full rounded-xl bg-primary px-5 py-3.5 text-[15px] font-semibold text-primary-foreground transition active:opacity-80"
+          className="w-full rounded-xl bg-primary px-5 py-3.5 text-[14px] font-semibold text-primary-foreground transition active:opacity-80"
         >
           Enviar para a turma
         </button>

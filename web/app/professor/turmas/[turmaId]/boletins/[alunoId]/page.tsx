@@ -52,7 +52,7 @@ export default async function ProfessorBoletimPage({
       <div className="flex items-center justify-between print:hidden">
         <Link
           href={`/professor/turmas/${turmaId}/boletins`}
-          className="inline-flex items-center gap-1 text-[15px] font-medium text-primary"
+          className="inline-flex items-center gap-1 text-[14px] font-medium text-primary"
         >
           <ChevronLeft size={18} />
           Boletins
@@ -60,7 +60,7 @@ export default async function ProfessorBoletimPage({
 
         <PrintButton
           label="Imprimir"
-          className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-[13px] font-semibold text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]"
+          className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-[12px] font-semibold text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]"
         />
       </div>
 

@@ -44,7 +44,7 @@ export default async function PerfilPage() {
         {responsavel?.email && (
           <div className="flex items-center gap-3 border-b border-black/5 px-4 py-3.5">
             <Mail size={18} className="shrink-0 text-[#8e8e93]" />
-            <span className="min-w-0 flex-1 truncate text-[15px] text-foreground">
+            <span className="min-w-0 flex-1 truncate text-[14px] text-foreground">
               {responsavel.email}
             </span>
           </div>
@@ -52,7 +52,7 @@ export default async function PerfilPage() {
         {responsavel?.telefone && (
           <div className="flex items-center gap-3 px-4 py-3.5">
             <Phone size={18} className="shrink-0 text-[#8e8e93]" />
-            <span className="text-[15px] text-foreground">
+            <span className="text-[14px] text-foreground">
               {responsavel.telefone}
             </span>
           </div>
@@ -65,7 +65,7 @@ export default async function PerfilPage() {
           className="flex items-center gap-3 px-4 py-3.5 active:bg-black/[0.03]"
         >
           <KeyRound size={18} className="shrink-0 text-[#8e8e93]" />
-          <span className="flex-1 text-[15px] text-foreground">
+          <span className="flex-1 text-[14px] text-foreground">
             Trocar senha
           </span>
           <ChevronRight size={18} className="shrink-0 text-[#c7c7cc]" />
@@ -75,7 +75,7 @@ export default async function PerfilPage() {
       <form action={logoutAction}>
         <button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-[18px] bg-white px-4 py-3.5 text-[15px] font-medium text-red-500 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)] active:bg-black/[0.03]"
+          className="flex w-full items-center justify-center gap-2 rounded-[18px] bg-white px-4 py-3.5 text-[14px] font-medium text-red-500 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)] active:bg-black/[0.03]"
         >
           <LogOut size={18} />
           Sair da conta

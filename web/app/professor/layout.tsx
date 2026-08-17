@@ -32,7 +32,7 @@ export default async function ProfessorLayout({
                 {(escola?.nome ?? "L").slice(0, 1)}
               </div>
             )}
-            <span className="truncate text-[15px] font-semibold text-foreground">
+            <span className="truncate text-[14px] font-semibold text-foreground">
               {escola?.nome ?? "Portal do Professor"}
             </span>
           </Link>

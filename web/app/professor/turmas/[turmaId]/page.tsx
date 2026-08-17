@@ -72,17 +72,17 @@ export default async function ProfessorTurmaPage({
     <main className="mx-auto w-full max-w-md space-y-6 px-4 pt-4 sm:px-6">
       <Link
         href="/professor"
-        className="inline-flex items-center gap-1 text-[15px] font-medium text-primary"
+        className="inline-flex items-center gap-1 text-[14px] font-medium text-primary"
       >
         <ChevronLeft size={18} />
         Turmas
       </Link>
 
       <header>
-        <h1 className="text-[26px] font-semibold tracking-tight text-foreground">
+        <h1 className="text-[20px] font-semibold tracking-tight text-foreground">
           {turma.nome}
         </h1>
-        <p className="mt-1 text-[14px] text-[#8e8e93]">
+        <p className="mt-1 text-[13px] text-[#8e8e93]">
           {turma.segmento} ·{" "}
           {atribuicoes.map((atribuicao) => atribuicao.disciplina.nome).join(", ")}
         </p>
@@ -102,10 +102,10 @@ export default async function ProfessorTurmaPage({
                 <Icon size={20} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-semibold text-foreground">
+                <p className="text-[14px] font-semibold text-foreground">
                   {acao.label}
                 </p>
-                <p className="mt-0.5 text-[12px] text-[#8e8e93]">
+                <p className="mt-0.5 text-[11px] text-[#8e8e93]">
                   {acao.description}
                 </p>
               </div>
@@ -115,7 +115,7 @@ export default async function ProfessorTurmaPage({
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[#8e8e93]">
+        <h2 className="text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
           Alunos ({alunos.length})
         </h2>
 
@@ -144,7 +144,7 @@ export default async function ProfessorTurmaPage({
                     {aluno.nome.slice(0, 1).toUpperCase()}
                   </div>
                 )}
-                <span className="text-[14px] text-foreground">{aluno.nome}</span>
+                <span className="text-[13px] text-foreground">{aluno.nome}</span>
               </div>
             ))
           )}

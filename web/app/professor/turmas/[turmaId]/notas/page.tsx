@@ -136,24 +136,24 @@ export default async function ProfessorNotasPage({
     <main className="mx-auto w-full max-w-md space-y-6 px-4 pt-4 sm:px-6">
       <Link
         href={`/professor/turmas/${turmaId}`}
-        className="inline-flex items-center gap-1 text-[15px] font-medium text-primary"
+        className="inline-flex items-center gap-1 text-[14px] font-medium text-primary"
       >
         <ChevronLeft size={18} />
         {turma.nome}
       </Link>
 
       <header>
-        <h1 className="text-[24px] font-semibold tracking-tight text-foreground">
+        <h1 className="text-[19px] font-semibold tracking-tight text-foreground">
           Lançar notas
         </h1>
-        <p className="mt-1 text-[13px] text-[#8e8e93]">
+        <p className="mt-1 text-[12px] text-[#8e8e93]">
           Notas de 0 a 100. Ano letivo {ANO_ATUAL}.
         </p>
       </header>
 
       <section className="space-y-3">
         <div>
-          <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#8e8e93]">
             Disciplina
           </p>
           <div className="flex flex-wrap gap-2">
@@ -164,7 +164,7 @@ export default async function ProfessorNotasPage({
                 <Link
                   key={atribuicao.disciplina.id}
                   href={`/professor/turmas/${turmaId}/notas?disciplinaId=${atribuicao.disciplina.id}&bimestre=${bimestre}`}
-                  className={`rounded-full px-4 py-2 text-[13px] font-semibold transition ${
+                  className={`rounded-full px-4 py-2 text-[12px] font-semibold transition ${
                     ativa
                       ? "bg-primary text-primary-foreground"
                       : "bg-white text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
@@ -178,7 +178,7 @@ export default async function ProfessorNotasPage({
         </div>
 
         <div>
-          <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#8e8e93]">
             Bimestre
           </p>
           <div className="flex flex-wrap gap-2">
@@ -189,7 +189,7 @@ export default async function ProfessorNotasPage({
                 <Link
                   key={numero}
                   href={`/professor/turmas/${turmaId}/notas?disciplinaId=${disciplinaId}&bimestre=${numero}`}
-                  className={`rounded-full px-4 py-2 text-[13px] font-semibold transition ${
+                  className={`rounded-full px-4 py-2 text-[12px] font-semibold transition ${
                     ativo
                       ? "bg-primary text-primary-foreground"
                       : "bg-white text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
@@ -204,7 +204,7 @@ export default async function ProfessorNotasPage({
       </section>
 
       {query.salvo === "1" && (
-        <div className="rounded-2xl bg-emerald-50 p-3 text-center text-[13px] font-medium text-emerald-700">
+        <div className="rounded-2xl bg-emerald-50 p-3 text-center text-[12px] font-medium text-emerald-700">
           Notas salvas.
         </div>
       )}
@@ -226,7 +226,7 @@ export default async function ProfessorNotasPage({
                   index > 0 ? "border-t border-black/5" : ""
                 }`}
               >
-                <span className="min-w-0 flex-1 truncate text-[14px] text-foreground">
+                <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
                   {aluno.nome}
                 </span>
                 <input
@@ -235,7 +235,7 @@ export default async function ProfessorNotasPage({
                   name={`nota-${aluno.id}`}
                   defaultValue={notasPorAluno.get(aluno.id)?.toString() ?? ""}
                   placeholder="—"
-                  className="h-10 w-16 rounded-lg bg-[#f5f5f7] px-2 text-center text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
+                  className="h-10 w-16 rounded-lg bg-[#f5f5f7] px-2 text-center text-[13px] outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
             ))
@@ -244,7 +244,7 @@ export default async function ProfessorNotasPage({
 
         <button
           type="submit"
-          className="w-full rounded-xl bg-primary px-5 py-3.5 text-[15px] font-semibold text-primary-foreground transition active:opacity-80"
+          className="w-full rounded-xl bg-primary px-5 py-3.5 text-[14px] font-semibold text-primary-foreground transition active:opacity-80"
         >
           Salvar notas
         </button>

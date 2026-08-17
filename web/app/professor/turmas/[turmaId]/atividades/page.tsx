@@ -87,33 +87,33 @@ export default async function ProfessorAtividadesPage({
     <main className="mx-auto w-full max-w-md space-y-6 px-4 pt-4 sm:px-6">
       <Link
         href={`/professor/turmas/${turmaId}`}
-        className="inline-flex items-center gap-1 text-[15px] font-medium text-primary"
+        className="inline-flex items-center gap-1 text-[14px] font-medium text-primary"
       >
         <ChevronLeft size={18} />
         {turma.nome}
       </Link>
 
       <header>
-        <h1 className="text-[24px] font-semibold tracking-tight text-foreground">
+        <h1 className="text-[19px] font-semibold tracking-tight text-foreground">
           Atividades
         </h1>
       </header>
 
       <details className="group overflow-hidden rounded-[22px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]">
-        <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-[15px] font-semibold text-primary">
+        <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-[14px] font-semibold text-primary">
           Nova atividade
           <span className="text-lg transition group-open:rotate-45">+</span>
         </summary>
 
         <form action={criarAtividade} className="space-y-4 px-5 pb-5">
           <div>
-            <label className="mb-2 block text-[13px] font-medium text-[#8e8e93]">
+            <label className="mb-2 block text-[12px] font-medium text-[#8e8e93]">
               Tipo
             </label>
             <select
               name="tipo"
               defaultValue="ATIVIDADE"
-              className="h-12 w-full rounded-xl bg-[#f5f5f7] px-4 text-[15px] outline-none"
+              className="h-12 w-full rounded-xl bg-[#f5f5f7] px-4 text-[14px] outline-none"
             >
               <option value="ATIVIDADE">Atividade</option>
               <option value="TRABALHO">Trabalho</option>
@@ -122,13 +122,13 @@ export default async function ProfessorAtividadesPage({
           </div>
 
           <div>
-            <label className="mb-2 block text-[13px] font-medium text-[#8e8e93]">
+            <label className="mb-2 block text-[12px] font-medium text-[#8e8e93]">
               Disciplina (opcional)
             </label>
             <select
               name="disciplinaId"
               defaultValue=""
-              className="h-12 w-full rounded-xl bg-[#f5f5f7] px-4 text-[15px] outline-none"
+              className="h-12 w-full rounded-xl bg-[#f5f5f7] px-4 text-[14px] outline-none"
             >
               <option value="">Geral da turma</option>
               {atribuicoes.map((atribuicao) => (
@@ -140,41 +140,41 @@ export default async function ProfessorAtividadesPage({
           </div>
 
           <div>
-            <label className="mb-2 block text-[13px] font-medium text-[#8e8e93]">
+            <label className="mb-2 block text-[12px] font-medium text-[#8e8e93]">
               Título
             </label>
             <input
               name="titulo"
               required
-              className="h-12 w-full rounded-xl bg-[#f5f5f7] px-4 text-[15px] outline-none"
+              className="h-12 w-full rounded-xl bg-[#f5f5f7] px-4 text-[14px] outline-none"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-[13px] font-medium text-[#8e8e93]">
+            <label className="mb-2 block text-[12px] font-medium text-[#8e8e93]">
               Descrição
             </label>
             <textarea
               name="descricao"
               rows={3}
-              className="w-full resize-none rounded-xl bg-[#f5f5f7] px-4 py-3 text-[15px] outline-none"
+              className="w-full resize-none rounded-xl bg-[#f5f5f7] px-4 py-3 text-[14px] outline-none"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-[13px] font-medium text-[#8e8e93]">
+            <label className="mb-2 block text-[12px] font-medium text-[#8e8e93]">
               Data de entrega (opcional)
             </label>
             <input
               type="date"
               name="dataEntrega"
-              className="h-12 w-full rounded-xl bg-[#f5f5f7] px-4 text-[15px] outline-none"
+              className="h-12 w-full rounded-xl bg-[#f5f5f7] px-4 text-[14px] outline-none"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full rounded-xl bg-primary px-5 py-3.5 text-[15px] font-semibold text-primary-foreground transition active:opacity-80"
+            className="w-full rounded-xl bg-primary px-5 py-3.5 text-[14px] font-semibold text-primary-foreground transition active:opacity-80"
           >
             Publicar
           </button>
@@ -193,7 +193,7 @@ export default async function ProfessorAtividadesPage({
               className="rounded-[22px] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-[15px] font-semibold text-foreground">
+                <h3 className="text-[14px] font-semibold text-foreground">
                   {atividade.titulo}
                 </h3>
                 <span className="rounded-full bg-[#f5f5f7] px-2.5 py-1 text-[11px] font-medium text-[#8e8e93]">
@@ -201,17 +201,17 @@ export default async function ProfessorAtividadesPage({
                 </span>
               </div>
               {atividade.disciplina && (
-                <p className="mt-1 text-[12px] text-primary">
+                <p className="mt-1 text-[11px] text-primary">
                   {atividade.disciplina.nome}
                 </p>
               )}
               {atividade.descricao && (
-                <p className="mt-2 whitespace-pre-line text-[13px] text-[#8e8e93]">
+                <p className="mt-2 whitespace-pre-line text-[12px] text-[#8e8e93]">
                   {atividade.descricao}
                 </p>
               )}
               {atividade.dataEntrega && (
-                <p className="mt-2 text-[12px] text-[#8e8e93]">
+                <p className="mt-2 text-[11px] text-[#8e8e93]">
                   Entrega:{" "}
                   {new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(
                     atividade.dataEntrega,

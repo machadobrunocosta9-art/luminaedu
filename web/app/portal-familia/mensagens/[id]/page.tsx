@@ -83,14 +83,14 @@ export default async function FamilyMensagemDetailPage({
     <main className="mx-auto w-full max-w-md space-y-5 px-4 pt-4 sm:px-6">
       <Link
         href="/portal-familia/mensagens"
-        className="inline-flex items-center gap-1 text-[15px] font-medium text-primary"
+        className="inline-flex items-center gap-1 text-[14px] font-medium text-primary"
       >
         <ChevronLeft size={18} />
         Mensagens
       </Link>
 
       <header>
-        <h1 className="text-[22px] font-semibold tracking-tight text-foreground">
+        <h1 className="text-[18px] font-semibold tracking-tight text-foreground">
           {mensagem.assunto}
         </h1>
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
@@ -98,7 +98,7 @@ export default async function FamilyMensagemDetailPage({
             {STATUS_LABELS[mensagem.status] ?? mensagem.status}
           </span>
           {mensagem.aluno && (
-            <span className="text-[12px] text-[#8e8e93]">
+            <span className="text-[11px] text-[#8e8e93]">
               Sobre: {mensagem.aluno.nome}
             </span>
           )}
@@ -121,7 +121,7 @@ export default async function FamilyMensagemDetailPage({
                     : "rounded-br-[6px] bg-primary text-primary-foreground"
                 }`}
               >
-                <p className="whitespace-pre-line text-[15px] leading-snug">
+                <p className="whitespace-pre-line text-[14px] leading-snug">
                   {item.texto}
                 </p>
                 <p
@@ -138,7 +138,7 @@ export default async function FamilyMensagemDetailPage({
       </section>
 
       {mensagem.status === "ENCERRADA" ? (
-        <p className="rounded-[18px] bg-white p-4 text-center text-[13px] text-[#8e8e93] shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]">
+        <p className="rounded-[18px] bg-white p-4 text-center text-[12px] text-[#8e8e93] shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_8px_rgba(0,0,0,0.04)]">
           Esta conversa foi encerrada pela escola.
         </p>
       ) : (
@@ -151,11 +151,11 @@ export default async function FamilyMensagemDetailPage({
             required
             rows={3}
             placeholder="Escreva sua resposta..."
-            className="w-full resize-none rounded-xl bg-[#f5f5f7] px-4 py-3 text-[15px] outline-none placeholder:text-[#c7c7cc] focus:ring-2 focus:ring-primary/30"
+            className="w-full resize-none rounded-xl bg-[#f5f5f7] px-4 py-3 text-[14px] outline-none placeholder:text-[#c7c7cc] focus:ring-2 focus:ring-primary/30"
           />
           <button
             type="submit"
-            className="w-full rounded-xl bg-primary px-5 py-3 text-[15px] font-semibold text-primary-foreground transition active:opacity-80"
+            className="w-full rounded-xl bg-primary px-5 py-3 text-[14px] font-semibold text-primary-foreground transition active:opacity-80"
           >
             Enviar
           </button>

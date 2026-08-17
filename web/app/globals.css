@@ -139,6 +139,10 @@
 
   html {
     @apply font-sans;
+    /* Impede o iOS de aumentar o texto por conta propria, o que fazia
+       as telas parecerem "com zoom" no celular. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
